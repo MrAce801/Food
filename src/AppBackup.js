@@ -152,7 +152,7 @@ export default function App() {
     catch { return []; }
   });
 
-  // Neuen Eintrag
+  // Neuer Eintrag
   const [newForm, setNewForm] = useState({
     food: "", imgs: [], symptomInput: "", symptomTime: 0
   });
@@ -355,15 +355,26 @@ export default function App() {
             }}
           />
           <CameraButton onClick={() => fileRefNew.current?.click()} />
-          <input
-            ref={fileRefNew}
-            type="file"
-            accept="image/*"
-            multiple
-            capture={isMobile ? "environment" : undefined}
-            onChange={handleNewFile}
-            style={{ display: "none" }}
-          />
+          {isMobile ? (
+            <input
+              ref={fileRefNew}
+              type="file"
+              accept="image/*"
+              multiple
+              capture="environment"
+              onChange={handleNewFile}
+              style={{ display: "none" }}
+            />
+          ) : (
+            <input
+              ref={fileRefNew}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleNewFile}
+              style={{ display: "none" }}
+            />
+          )}
         </div>
         {newForm.imgs.length > 0 && (
           <div style={{ marginBottom: 16 }}>
@@ -487,15 +498,26 @@ export default function App() {
                     }}
                   />
                   <CameraButton onClick={() => fileRefEdit.current?.click()} />
-                  <input
-                    ref={fileRefEdit}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    capture={isMobile ? "environment" : undefined}
-                    onChange={handleEditFile}
-                    style={{ display: "none" }}
-                  />
+                  {isMobile ? (
+                    <input
+                      ref={fileRefEdit}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      capture="environment"
+                      onChange={handleEditFile}
+                      style={{ display: "none" }}
+                    />
+                  ) : (
+                    <input
+                      ref={fileRefEdit}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleEditFile}
+                      style={{ display: "none" }}
+                    />
+                  )}
                 </div>
                 {editForm.imgs.length > 0 && (
                   <div style={{ marginBottom: 12 }}>

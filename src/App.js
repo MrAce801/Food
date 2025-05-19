@@ -31,10 +31,7 @@ const ThemeSwitch = ({ dark, setDark }) => (
   <button
     onClick={() => setDark(d => !d)}
     title="Theme wechseln"
-    style={{
-      background: "none", border: "none",
-      cursor: "pointer", fontSize: 24
-    }}
+    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 24 }}
   >
     {dark ? "🌙" : "☀️"}
   </button>
@@ -50,9 +47,7 @@ const PdfButton = ({ onClick }) => (
       padding: "6px 16px", fontWeight: 600,
       cursor: "pointer"
     }}
-  >
-    PDF
-  </button>
+  >PDF</button>
 );
 
 const CameraButton = ({ onClick }) => (
@@ -65,30 +60,20 @@ const CameraButton = ({ onClick }) => (
       display: "flex", alignItems: "center",
       justifyContent: "center", cursor: "pointer"
     }}
-  >
-    📷
-  </button>
+  >📷</button>
 );
 
 const ImgStack = ({ imgs, onDelete }) => (
   <div style={{ display: "flex", alignItems: "center" }}>
     {imgs.map((src, i) => (
-      <div
-        key={i}
-        style={{
-          position: "relative",
-          marginLeft: i === 0 ? 0 : -12,
-          zIndex: imgs.length - i
-        }}
-      >
+      <div key={i} style={{ position: "relative", marginLeft: i === 0 ? 0 : -12, zIndex: imgs.length - i }}>
         <img
           src={src}
           alt=""
           style={{
             width: 40, height: 40,
             objectFit: "cover", borderRadius: 6,
-            border: "2px solid #fff",
-            boxShadow: "0 1px 4px #0003"
+            border: "2px solid #fff", boxShadow: "0 1px 4px #0003"
           }}
         />
         {onDelete && (
@@ -102,9 +87,7 @@ const ImgStack = ({ imgs, onDelete }) => (
               justifyContent: "center", fontSize: 12,
               cursor: "pointer"
             }}
-          >
-            ×
-          </span>
+          >×</span>
         )}
       </div>
     ))}
@@ -130,13 +113,8 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
     {onDel && (
       <span
         onClick={e => { e.stopPropagation(); onDel(); }}
-        style={{
-          marginLeft: 6, cursor: "pointer",
-          fontSize: 16, color: "#c00", fontWeight: 700
-        }}
-      >
-        ×
-      </span>
+        style={{ marginLeft: 6, cursor: "pointer", fontSize: 16, color: "#c00", fontWeight: 700 }}
+      >×</span>
     )}
   </div>
 );
@@ -166,6 +144,17 @@ export default function App() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
+  // Fokus-Handler für sanftes Zentrieren
+  const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  // Scroll on edit start
+  useEffect(() => {
+    if (editingIdx !== null) {
+      const el = document.getElementById(`entry-${editingIdx}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [editingIdx]);
+
   // Persist & Theme
   useEffect(() => {
     localStorage.setItem("fd-entries", JSON.stringify(entries));
@@ -189,15 +178,12 @@ export default function App() {
     if (!el) return;
     const canvas = await html2canvas(el, { scale: 2 });
     const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      unit: "px",
-      format: [canvas.width, canvas.height]
-    });
+    const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
     pdf.addImage(img, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
   };
 
-  // Image-Handling mit Object URLs
+  // Image-Handling
   const handleNewFile = e => {
     const files = e.target.files;
     if (!files) return;
@@ -228,25 +214,15 @@ export default function App() {
   // Symptome neu
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
-    setNewSymptoms(s => [...s, {
-      txt: newForm.symptomInput.trim(),
-      time: newForm.symptomTime
-    }]);
+    setNewSymptoms(s => [...s, { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }]);
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0 }));
   };
-  const removeNewSymptom = idx => {
-    setNewSymptoms(s => s.filter((_, i) => i !== idx));
-  };
+  const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
   // Eintrag hinzufügen
   const addEntry = () => {
     if (!newForm.food.trim()) return;
-    setEntries(e => [...e, {
-      food: newForm.food,
-      imgs: newForm.imgs,
-      symptoms: newSymptoms,
-      date: now()
-    }]);
+    setEntries(e => [...e, { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, date: now() }]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
   };
@@ -255,42 +231,22 @@ export default function App() {
   const startEdit = i => {
     setEditingIdx(i);
     const e = entries[i];
-    setEditForm({
-      food: e.food,
-      imgs: [...e.imgs],
-      symptoms: [...e.symptoms],
-      symptomInput: "",
-      symptomTime: 0
-    });
+    setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0 });
   };
-  const cancelEdit = () => {
-    setEditingIdx(null);
-    setEditForm(null);
-  };
+  const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
+
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
       ...fm,
-      symptoms: [...fm.symptoms, {
-        txt: fm.symptomInput.trim(),
-        time: fm.symptomTime
-      }],
-      symptomInput: "",
-      symptomTime: 0
+      symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
+      symptomInput: "", symptomTime: 0
     }));
   };
-  const removeEditSymptom = idx => {
-    setEditForm(fm => ({
-      ...fm,
-      symptoms: fm.symptoms.filter((_, i) => i !== idx)
-    }));
-  };
+  const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
-    const val = prompt(
-      `Neue Zeit für "${curr.txt}" (Minuten):`,
-      String(curr.time)
-    );
+    const val = prompt(`Neue Zeit für "${curr.txt}" (Minuten):`, String(curr.time));
     const t = Number(val);
     if (!isNaN(t)) {
       setEditForm(fm => {
@@ -301,13 +257,7 @@ export default function App() {
     }
   };
   const saveEdit = () => {
-    setEntries(e =>
-      e.map((ent, i) =>
-        i === editingIdx
-          ? { ...editForm, date: ent.date }
-          : ent
-      )
-    );
+    setEntries(e => e.map((ent, i) => i === editingIdx ? { ...editForm, date: ent.date } : ent));
     cancelEdit();
   };
   const deleteEntry = i => {
@@ -320,60 +270,36 @@ export default function App() {
     <div style={{
       maxWidth: 600,
       margin: "0 auto",
-      padding: isMobile ? "0 12px" : "0 24px"
+      padding: isMobile ? "0 12px" : "0 24px",
+      overflowAnchor: "none"
     }}>
       {/* Top-Bar */}
-      <div style={{
-        display: "flex", justifyContent: "space-between",
-        alignItems: "center", padding: "12px 0"
-      }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" }}>
         <ThemeSwitch dark={dark} setDark={setDark} />
         <PdfButton onClick={handleExportPDF} />
       </div>
 
       {/* Titel */}
-      <h2 style={{
-        textAlign: "center", margin: "8px 0 24px",
-        fontSize: 28, fontWeight: 700
-      }}>Food Diary</h2>
+      <h2 style={{ textAlign: "center", margin: "8px 0 24px", fontSize: 28, fontWeight: 700 }}>
+        Food Diary
+      </h2>
 
       {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
         {/* Essen + Foto */}
-        <div style={{
-          display: "flex", alignItems: "center",
-          gap: 8, marginBottom: 16
-        }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
           <input
             placeholder="Essen..."
             value={newForm.food}
             onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
-            style={{
-              flex: 1, padding: "10px 12px",
-              fontSize: 16, borderRadius: 6,
-              border: "1px solid #ccc"
-            }}
+            onFocus={handleFocus}
+            style={{ flex: 1, padding: "10px 12px", fontSize: 16, borderRadius: 6, border: "1px solid #ccc" }}
           />
           <CameraButton onClick={() => fileRefNew.current?.click()} />
           {isMobile ? (
-            <input
-              ref={fileRefNew}
-              type="file"
-              accept="image/*"
-              multiple
-              capture="environment"
-              onChange={handleNewFile}
-              style={{ display: "none" }}
-            />
+            <input ref={fileRefNew} type="file" accept="image/*" multiple capture="environment" onChange={handleNewFile} style={{ display: "none" }} />
           ) : (
-            <input
-              ref={fileRefNew}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleNewFile}
-              style={{ display: "none" }}
-            />
+            <input ref={fileRefNew} type="file" accept="image/*" multiple onChange={handleNewFile} style={{ display: "none" }} />
           )}
         </div>
         {newForm.imgs.length > 0 && (
@@ -384,83 +310,36 @@ export default function App() {
 
         {/* Symptome */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{
-            display: "flex", alignItems: "center",
-            gap: 8, marginBottom: 8
-          }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <input
               list="symptom-list"
               placeholder="Symptom..."
               value={newForm.symptomInput}
-              onChange={e => setNewForm(fm => ({
-                ...fm, symptomInput: e.target.value
-              }))}
-              style={{
-                flex: 1, padding: "8px 12px",
-                fontSize: 14, borderRadius: 6,
-                border: "1px solid #ccc"
-              }}
+              onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+              onFocus={handleFocus}
+              style={{ flex: 1, padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
             />
-            <datalist id="symptom-list">
-              {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
-            </datalist>
+            <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
             <select
               value={newForm.symptomTime}
-              onChange={e => setNewForm(fm => ({
-                ...fm, symptomTime: Number(e.target.value)
-              }))}
-              style={{
-                padding: "8px 12px",
-                fontSize: 14,
-                borderRadius: 6,
-                border: "1px solid #ccc"
-              }}
+              onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+              onFocus={handleFocus}
+              style={{ padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
             >
-              {TIME_CHOICES.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
+              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <button
-              onClick={addNewSymptom}
-              style={{
-                padding: "8px 16px",
-                fontSize: 14,
-                borderRadius: 6,
-                border: 0,
-                background: "#247be5",
-                color: "#fff",
-                cursor: "pointer"
-              }}
-            >
+            <button onClick={addNewSymptom} style={{ padding: "8px 16px", fontSize: 14, borderRadius: 6, border: 0, background: "#247be5", color: "#fff", cursor: "pointer" }}>
               Hinzufügen
             </button>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {newSymptoms.map((s, i) => (
-              <SymTag
-                key={i}
-                txt={s.txt}
-                time={s.time}
-                dark={dark}
-                onDel={() => removeNewSymptom(i)}
-              />
+              <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />
             ))}
           </div>
         </div>
 
-        <button
-          onClick={addEntry}
-          style={{
-            width: "100%",
-            padding: "12px 0",
-            fontSize: 16,
-            borderRadius: 6,
-            border: 0,
-            background: "#388e3c",
-            color: "#fff",
-            cursor: "pointer"
-          }}
-        >
+        <button onClick={addEntry} style={{ width: "100%", padding: "12px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#388e3c", color: "#fff", cursor: "pointer" }}>
           Eintrag hinzufügen
         </button>
       </div>
@@ -468,55 +347,32 @@ export default function App() {
       {/* Einträge-Liste */}
       <div id="fd-table">
         {entries.map((e, i) => (
-          <div key={i} style={{
-            marginBottom: 16,
-            padding: 12,
-            borderRadius: 8,
-            background: dark ? "#2a2a32" : "#fff",
-            boxShadow: "0 1px 4px #0002"
-          }}>
+          <div
+            id={`entry-${i}`}
+            key={i}
+            style={{
+              marginBottom: 16,
+              padding: 12,
+              borderRadius: 8,
+              background: dark ? "#2a2a32" : "#fff",
+              boxShadow: "0 1px 4px #0002"
+            }}
+          >
             {editingIdx === i ? (
               <>
-                {/* Inline-Bearbeitung */}
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 12
-                }}>
+                {/* Inline-Bearbeitung (Inputs ebenfalls mit onFocus) */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                   <input
                     value={editForm.food}
-                    onChange={e => setEditForm(fm => ({
-                      ...fm, food: e.target.value
-                    }))}
-                    style={{
-                      flex: 1,
-                      padding: "8px 12px",
-                      fontSize: 16,
-                      borderRadius: 6,
-                      border: "1px solid #ccc"
-                    }}
+                    onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                    onFocus={handleFocus}
+                    style={{ flex: 1, padding: "8px 12px", fontSize: 16, borderRadius: 6, border: "1px solid #ccc" }}
                   />
                   <CameraButton onClick={() => fileRefEdit.current?.click()} />
                   {isMobile ? (
-                    <input
-                      ref={fileRefEdit}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      capture="environment"
-                      onChange={handleEditFile}
-                      style={{ display: "none" }}
-                    />
+                    <input ref={fileRefEdit} type="file" accept="image/*" multiple capture="environment" onChange={handleEditFile} style={{ display: "none" }} />
                   ) : (
-                    <input
-                      ref={fileRefEdit}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleEditFile}
-                      style={{ display: "none" }}
-                    />
+                    <input ref={fileRefEdit} type="file" accept="image/*" multiple onChange={handleEditFile} style={{ display: "none" }} />
                   )}
                 </div>
                 {editForm.imgs.length > 0 && (
@@ -524,56 +380,25 @@ export default function App() {
                     <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />
                   </div>
                 )}
-
-                {/* Symptome bearbeiten */}
                 <div style={{ marginBottom: 12 }}>
-                  <div style={{
-                    display: "flex", alignItems: "center",
-                    gap: 8, marginBottom: 8
-                  }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <input
                       list="symptom-list"
                       placeholder="Symptom..."
                       value={editForm.symptomInput}
-                      onChange={e => setEditForm(fm => ({
-                        ...fm, symptomInput: e.target.value
-                      }))}
-                      style={{
-                        flex: 1,
-                        padding: "8px 12px",
-                        fontSize: 14,
-                        borderRadius: 6,
-                        border: "1px solid #ccc"
-                      }}
+                      onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                      onFocus={handleFocus}
+                      style={{ flex: 1, padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
                     />
                     <select
                       value={editForm.symptomTime}
-                      onChange={e => setEditForm(fm => ({
-                        ...fm, symptomTime: Number(e.target.value)
-                      }))}
-                      style={{
-                        padding: "8px 12px",
-                        fontSize: 14,
-                        borderRadius: 6,
-                        border: "1px solid #ccc"
-                      }}
+                      onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+                      onFocus={handleFocus}
+                      style={{ padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
                     >
-                      {TIME_CHOICES.map(t => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
+                      {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                     </select>
-                    <button
-                      onClick={addEditSymptom}
-                      style={{
-                        padding: "8px 16px",
-                        fontSize: 14,
-                        borderRadius: 6,
-                        border: 0,
-                        background: "#247be5",
-                        color: "#fff",
-                        cursor: "pointer"
-                      }}
-                    >
+                    <button onClick={addEditSymptom} style={{ padding: "8px 16px", fontSize: 14, borderRadius: 6, border: 0, background: "#247be5", color: "#fff", cursor: "pointer" }}>
                       Hinzufügen
                     </button>
                   </div>
@@ -590,37 +415,11 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-
-                {/* Save/Cancel */}
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    onClick={saveEdit}
-                    style={{
-                      flex: 1,
-                      padding: "10px 0",
-                      fontSize: 16,
-                      borderRadius: 6,
-                      border: 0,
-                      background: "#1976d2",
-                      color: "#fff",
-                      cursor: "pointer"
-                    }}
-                  >
+                  <button onClick={saveEdit} style={{ flex: 1, padding: "10px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#1976d2", color: "#fff", cursor: "pointer" }}>
                     Speichern
                   </button>
-                  <button
-                    onClick={cancelEdit}
-                    style={{
-                      flex: 1,
-                      padding: "10px 0",
-                      fontSize: 16,
-                      borderRadius: 6,
-                      border: 0,
-                      background: "#888",
-                      color: "#fff",
-                      cursor: "pointer"
-                    }}
-                  >
+                  <button onClick={cancelEdit} style={{ flex: 1, padding: "10px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#888", color: "#fff", cursor: "pointer" }}>
                     Abbrechen
                   </button>
                 </div>
@@ -628,16 +427,10 @@ export default function App() {
             ) : (
               <>
                 {/* Anzeige-Modus */}
-                <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
-                  {e.date}
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
-                  {e.food}
-                </div>
+                <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{e.date}</div>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{e.food}</div>
                 {e.imgs.length > 0 && (
-                  <div style={{ marginBottom: 8 }}>
-                    <ImgStack imgs={e.imgs} />
-                  </div>
+                  <div style={{ marginBottom: 8 }}><ImgStack imgs={e.imgs} /></div>
                 )}
                 <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 12 }}>
                   {e.symptoms.map((s, j) => (
@@ -645,34 +438,10 @@ export default function App() {
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    onClick={() => startEdit(i)}
-                    style={{
-                      flex: 1,
-                      padding: "8px 0",
-                      fontSize: 14,
-                      borderRadius: 6,
-                      border: 0,
-                      background: "#1976d2",
-                      color: "#fff",
-                      cursor: "pointer"
-                    }}
-                  >
+                  <button onClick={() => startEdit(i)} style={{ flex: 1, padding: "8px 0", fontSize: 14, borderRadius: 6, border: 0, background: "#1976d2", color: "#fff", cursor: "pointer" }}>
                     Bearbeiten
                   </button>
-                  <button
-                    onClick={() => deleteEntry(i)}
-                    style={{
-                      flex: 1,
-                      padding: "8px 0",
-                      fontSize: 14,
-                      borderRadius: 6,
-                      border: 0,
-                      background: "#d32f2f",
-                      color: "#fff",
-                      cursor: "pointer"
-                    }}
-                  >
+                  <button onClick={() => deleteEntry(i)} style={{ flex: 1, padding: "8px 0", fontSize: 14, borderRadius: 6, border: 0, background: "#d32f2f", color: "#fff", cursor: "pointer" }}>
                     Löschen
                   </button>
                 </div>
