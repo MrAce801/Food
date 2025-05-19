@@ -2,10 +2,96 @@ import React, { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+// --- Styles ausgelagert ---
+const styles = {
+  container: isMobile => ({
+    maxWidth: 600,
+    margin: "0 auto",
+    padding: isMobile ? "0 12px" : "0 24px",
+    overflowAnchor: "none"
+  }),
+  topBar: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" },
+  title: { textAlign: "center", margin: "8px 0 24px", fontSize: 28, fontWeight: 700 },
+  input: { flex: 1, padding: "10px 12px", fontSize: 16, borderRadius: 6, border: "1px solid #ccc" },
+  smallInput: { flex: 1, padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" },
+  buttonPrimary: { padding: "12px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#388e3c", color: "#fff", cursor: "pointer", width: "100%" },
+  buttonSecondary: bg => ({ padding: "8px 16px", fontSize: 14, borderRadius: 6, border: 0, background: bg, color: "#fff", cursor: "pointer" }),
+  entryCard: dark => ({
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    background: dark ? "#2a2a32" : "#fff",
+    boxShadow: "0 1px 4px #0002"
+  }),
+  groupHeader: { fontSize: 18, fontWeight: 600, margin: "24px 0 8px" },
+  toast: { position: "fixed", top: 16, right: 16, background: "#333", color: "#fff", padding: "8px 12px", borderRadius: 4, opacity: 0.9 }
+};
+
+// --- UI-Komponenten ---
+const PdfButton = ({ onClick }) => (
+  <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
+    PDF
+  </button>
+);
+
+const CameraButton = ({ onClick }) => (
+  <button onClick={onClick} title="Foto aufnehmen/hochladen" style={{
+    width: 36, height: 36, borderRadius: "50%", border: 0,
+    background: "#247be5", display: "flex", alignItems: "center",
+    justifyContent: "center", cursor: "pointer"
+  }}>
+    📷
+  </button>
+);
+
+const ImgStack = ({ imgs, onDelete }) => (
+  <div style={{ display: "flex", alignItems: "center" }}>
+    {imgs.map((src, i) => (
+      <div key={i} style={{ position: "relative", marginLeft: i === 0 ? 0 : -12, zIndex: imgs.length - i }}>
+        <img src={src} alt="" style={{
+          width: 40, height: 40, objectFit: "cover",
+          borderRadius: 6, border: "2px solid #fff",
+          boxShadow: "0 1px 4px #0003"
+        }} />
+        {onDelete && (
+          <span onClick={e => { e.stopPropagation(); onDelete(i); }} style={{
+            position: "absolute", top: -6, right: -6,
+            background: "#c00", color: "#fff", borderRadius: "50%",
+            width: 18, height: 18, display: "flex", alignItems: "center",
+            justifyContent: "center", fontSize: 12, cursor: "pointer"
+          }}>×</span>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+const SymTag = ({ txt, time, dark, onDel, onClick }) => (
+  <div onClick={onClick} style={{
+    display: "inline-flex", alignItems: "center",
+    background: dark ? "#343445" : "#e8f0ff",
+    color: dark ? "#f1f1f6" : "#1a1f3d",
+    borderRadius: 6, padding: "5px 10px", margin: "3px 4px 3px 0", fontSize: 14,
+    cursor: onClick ? "pointer" : "default"
+  }}>
+    {txt}
+    <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>
+      {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
+    </span>
+    {onDel && (
+      <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
+        marginLeft: 6, cursor: "pointer", fontSize: 16,
+        color: "#c00", fontWeight: 700
+      }}>×</span>
+    )}
+  </div>
+);
+
+// --- Konstanten ---
 const SYMPTOM_CHOICES = [
-  "Bauchschmerzen", "Durchfall", "Blähungen", "Hautausschlag",
-  "Juckreiz", "Schwellung am Gaumen", "Schleim im Hals",
-  "Niesen", "Kopfschmerzen", "Rötung Haut"
+  "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
+  "Juckreiz","Schwellung am Gaumen","Schleim im Hals",
+  "Niesen","Kopfschmerzen","Rötung Haut"
 ];
 const TIME_CHOICES = [
   { label: "sofort", value: 0 },
@@ -18,121 +104,27 @@ const TIME_CHOICES = [
   { label: "nach 1,5 h", value: 90 },
   { label: "nach 3 h", value: 180 }
 ];
-
 const now = () => {
   const d = new Date();
-  return d.toLocaleDateString() + " " +
-    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-// --- Kleine UI-Komponenten ---
-
-const ThemeSwitch = ({ dark, setDark }) => (
-  <button
-    onClick={() => setDark(d => !d)}
-    title="Theme wechseln"
-    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 24 }}
-  >
-    {dark ? "🌙" : "☀️"}
-  </button>
-);
-
-const PdfButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    title="Export PDF"
-    style={{
-      background: "#d32f2f", color: "#fff",
-      border: 0, borderRadius: 6,
-      padding: "6px 16px", fontWeight: 600,
-      cursor: "pointer"
-    }}
-  >PDF</button>
-);
-
-const CameraButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    title="Foto aufnehmen/hochladen"
-    style={{
-      width: 36, height: 36, borderRadius: "50%",
-      border: 0, background: "#247be5",
-      display: "flex", alignItems: "center",
-      justifyContent: "center", cursor: "pointer"
-    }}
-  >📷</button>
-);
-
-const ImgStack = ({ imgs, onDelete }) => (
-  <div style={{ display: "flex", alignItems: "center" }}>
-    {imgs.map((src, i) => (
-      <div key={i} style={{ position: "relative", marginLeft: i === 0 ? 0 : -12, zIndex: imgs.length - i }}>
-        <img
-          src={src}
-          alt=""
-          style={{
-            width: 40, height: 40,
-            objectFit: "cover", borderRadius: 6,
-            border: "2px solid #fff", boxShadow: "0 1px 4px #0003"
-          }}
-        />
-        {onDelete && (
-          <span
-            onClick={e => { e.stopPropagation(); onDelete(i); }}
-            style={{
-              position: "absolute", top: -6, right: -6,
-              background: "#c00", color: "#fff",
-              borderRadius: "50%", width: 18, height: 18,
-              display: "flex", alignItems: "center",
-              justifyContent: "center", fontSize: 12,
-              cursor: "pointer"
-            }}
-          >×</span>
-        )}
-      </div>
-    ))}
-  </div>
-);
-
-const SymTag = ({ txt, time, dark, onDel, onClick }) => (
-  <div
-    onClick={onClick}
-    style={{
-      display: "inline-flex", alignItems: "center",
-      background: dark ? "#343445" : "#e8f0ff",
-      color: dark ? "#f1f1f6" : "#1a1f3d",
-      borderRadius: 6, padding: "5px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14,
-      cursor: onClick ? "pointer" : "default"
-    }}
-  >
-    {txt}
-    <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>
-      {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
-    </span>
-    {onDel && (
-      <span
-        onClick={e => { e.stopPropagation(); onDel(); }}
-        style={{ marginLeft: 6, cursor: "pointer", fontSize: 16, color: "#c00", fontWeight: 700 }}
-      >×</span>
-    )}
-  </div>
-);
-
-// --- Haupt-App ---
-
+// --- Haupt-Komponente ---
 export default function App() {
-  const [dark, setDark] = useState(
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches
+  const [dark, setDark] = useState(() =>
+    window.matchMedia("(prefers-color-scheme: dark)").matches
   );
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem("fd-entries") || "[]"); }
     catch { return []; }
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [displayCount, setDisplayCount] = useState(20);
 
-  // Neuer Eintrag
-  const [newForm, setNewForm] = useState({
-    food: "", imgs: [], symptomInput: "", symptomTime: 0
+  // Neuer Eintrag + Auto-Save
+  const [newForm, setNewForm] = useState(() => {
+    const saved = localStorage.getItem("fd-form-new");
+    return saved ? JSON.parse(saved) : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
   const fileRefNew = useRef();
@@ -142,12 +134,16 @@ export default function App() {
   const [editForm, setEditForm] = useState(null);
   const fileRefEdit = useRef();
 
+  // Toasts
+  const [toasts, setToasts] = useState([]);
+
+  // Mobile check
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
-  // Fokus-Handler für sanftes Zentrieren
+  // Fokus-Handler
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  // Scroll on edit start
+  // Scroll on edit
   useEffect(() => {
     if (editingIdx !== null) {
       const el = document.getElementById(`entry-${editingIdx}`);
@@ -155,22 +151,30 @@ export default function App() {
     }
   }, [editingIdx]);
 
-  // Persist & Theme
+  // Persist entries & newForm
   useEffect(() => {
     localStorage.setItem("fd-entries", JSON.stringify(entries));
   }, [entries]);
+  useEffect(() => {
+    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
+  }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
     localStorage.setItem("fd-theme", dark ? "dark" : "light");
   }, [dark]);
-
-  // Responsive
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 700);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // Toast helper
+  const addToast = msg => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
+  };
 
   // PDF Export
   const handleExportPDF = async () => {
@@ -183,35 +187,39 @@ export default function App() {
     pdf.save("FoodDiary.pdf");
   };
 
-  // Image-Handling
+  // Image Handling
   const handleNewFile = e => {
-    const files = e.target.files;
-    if (!files) return;
-    const urls = Array.from(files).map(f => URL.createObjectURL(f));
+    const urls = Array.from(e.target.files).map(f => URL.createObjectURL(f));
     setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, ...urls] }));
     e.target.value = "";
+    navigator.vibrate?.(50);
+    addToast("Foto hinzugefügt");
   };
   const removeNewImg = idx => {
     setNewForm(fm => {
       URL.revokeObjectURL(fm.imgs[idx]);
       return { ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) };
     });
+    navigator.vibrate?.(50);
+    addToast("Foto gelöscht");
   };
   const handleEditFile = e => {
-    const files = e.target.files;
-    if (!files) return;
-    const urls = Array.from(files).map(f => URL.createObjectURL(f));
+    const urls = Array.from(e.target.files).map(f => URL.createObjectURL(f));
     setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, ...urls] }));
     e.target.value = "";
+    navigator.vibrate?.(50);
+    addToast("Foto hinzugefügt");
   };
   const removeEditImg = idx => {
     setEditForm(fm => {
       URL.revokeObjectURL(fm.imgs[idx]);
       return { ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) };
     });
+    navigator.vibrate?.(50);
+    addToast("Foto gelöscht");
   };
 
-  // Symptome neu
+  // Symptome
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
     setNewSymptoms(s => [...s, { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }]);
@@ -222,231 +230,232 @@ export default function App() {
   // Eintrag hinzufügen
   const addEntry = () => {
     if (!newForm.food.trim()) return;
-    setEntries(e => [...e, { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, date: now() }]);
+    const entry = { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, date: now() };
+    setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
+    navigator.vibrate?.(50);
+    addToast("Eintrag gespeichert");
   };
 
-  // Bearbeiten starten
+  // Bearbeiten
   const startEdit = i => {
     setEditingIdx(i);
     const e = entries[i];
     setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0 });
   };
   const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
-
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
-    setEditForm(fm => ({
-      ...fm,
-      symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
-      symptomInput: "", symptomTime: 0
-    }));
+    setEditForm(fm => ({ ...fm, symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }], symptomInput: "", symptomTime: 0 }));
   };
   const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
     const val = prompt(`Neue Zeit für "${curr.txt}" (Minuten):`, String(curr.time));
     const t = Number(val);
-    if (!isNaN(t)) {
-      setEditForm(fm => {
-        const arr = [...fm.symptoms];
-        arr[idx] = { ...arr[idx], time: t };
-        return { ...fm, symptoms: arr };
-      });
-    }
+    if (!isNaN(t)) setEditForm(fm => { const arr = [...fm.symptoms]; arr[idx] = { ...arr[idx], time: t }; return { ...fm, symptoms: arr }; });
   };
   const saveEdit = () => {
     setEntries(e => e.map((ent, i) => i === editingIdx ? { ...editForm, date: ent.date } : ent));
     cancelEdit();
+    navigator.vibrate?.(50);
+    addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
+    navigator.vibrate?.(50);
+    addToast("Eintrag gelöscht");
   };
 
-  // --- Render ---
+  // Filter + Gruppierung + Pagination
+  const filteredWithIdx = entries
+    .map((e, idx) => ({ entry: e, idx }))
+    .filter(({ entry }) =>
+      entry.food.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  const toDisplay = filteredWithIdx.slice(0, displayCount);
+  const grouped = toDisplay.reduce((acc, { entry, idx }) => {
+    const day = entry.date.split(" ")[0];
+    (acc[day] = acc[day] || []).push({ entry, idx });
+    return acc;
+  }, {});
+  const dates = Object.keys(grouped);
+
   return (
-    <div style={{
-      maxWidth: 600,
-      margin: "0 auto",
-      padding: isMobile ? "0 12px" : "0 24px",
-      overflowAnchor: "none"
-    }}>
+    <div style={styles.container(isMobile)}>
+      {/* Toasts */}
+      {toasts.map(t => (
+        <div key={t.id} style={styles.toast}>{t.msg}</div>
+      ))}
+
       {/* Top-Bar */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" }}>
-        <ThemeSwitch dark={dark} setDark={setDark} />
+      <div style={styles.topBar}>
+        <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }} title="Theme wechseln">
+          {dark ? "🌙" : "☀️"}
+        </button>
         <PdfButton onClick={handleExportPDF} />
       </div>
 
       {/* Titel */}
-      <h2 style={{ textAlign: "center", margin: "8px 0 24px", fontSize: 28, fontWeight: 700 }}>
-        Food Diary
-      </h2>
+      <h2 style={styles.title}>Food Diary</h2>
+
+      {/* Suche + Laden */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <input
+          placeholder="Suche..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          style={styles.smallInput}
+        />
+        <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
+          Mehr laden
+        </button>
+      </div>
 
       {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
-        {/* Essen + Foto */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <input
-            placeholder="Essen..."
-            value={newForm.food}
-            onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
-            onFocus={handleFocus}
-            style={{ flex: 1, padding: "10px 12px", fontSize: 16, borderRadius: 6, border: "1px solid #ccc" }}
-          />
+        <input
+          placeholder="Essen..."
+          value={newForm.food}
+          onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
+          onFocus={handleFocus}
+          style={styles.input}
+        />
+        <div style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
           <CameraButton onClick={() => fileRefNew.current?.click()} />
-          {isMobile ? (
-            <input ref={fileRefNew} type="file" accept="image/*" multiple capture="environment" onChange={handleNewFile} style={{ display: "none" }} />
-          ) : (
-            <input ref={fileRefNew} type="file" accept="image/*" multiple onChange={handleNewFile} style={{ display: "none" }} />
-          )}
+          <input
+            ref={fileRefNew}
+            type="file"
+            accept="image/*"
+            multiple
+            capture={isMobile ? "environment" : undefined}
+            onChange={handleNewFile}
+            style={{ display: "none" }}
+          />
+          {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
         </div>
-        {newForm.imgs.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />
-          </div>
-        )}
-
-        {/* Symptome */}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <input
-              list="symptom-list"
-              placeholder="Symptom..."
-              value={newForm.symptomInput}
-              onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-              onFocus={handleFocus}
-              style={{ flex: 1, padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
-            />
-            <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
-            <select
-              value={newForm.symptomTime}
-              onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
-              onFocus={handleFocus}
-              style={{ padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
-            >
-              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            <button onClick={addNewSymptom} style={{ padding: "8px 16px", fontSize: 14, borderRadius: 6, border: 0, background: "#247be5", color: "#fff", cursor: "pointer" }}>
-              Hinzufügen
-            </button>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {newSymptoms.map((s, i) => (
-              <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />
-            ))}
-          </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <input
+            list="symptom-list"
+            placeholder="Symptom..."
+            value={newForm.symptomInput}
+            onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+            onFocus={handleFocus}
+            style={styles.smallInput}
+          />
+          <datalist id="symptom-list">
+            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
+          </datalist>
+          <select
+            value={newForm.symptomTime}
+            onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+            onFocus={handleFocus}
+            style={styles.smallInput}
+          >
+            {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <button onClick={addNewSymptom} style={styles.buttonSecondary("#247be5")}>+ Symptom</button>
         </div>
-
-        <button onClick={addEntry} style={{ width: "100%", padding: "12px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#388e3c", color: "#fff", cursor: "pointer" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+          {newSymptoms.map((s, i) => (
+            <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />
+          ))}
+        </div>
+        <button
+          onClick={addEntry}
+          disabled={!newForm.food.trim()}
+          style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() ? 1 : 0.5 }}
+        >
           Eintrag hinzufügen
         </button>
       </div>
 
-      {/* Einträge-Liste */}
+      {/* Einträge nach Datum abgrenzen */}
       <div id="fd-table">
-        {entries.map((e, i) => (
-          <div
-            id={`entry-${i}`}
-            key={i}
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              borderRadius: 8,
-              background: dark ? "#2a2a32" : "#fff",
-              boxShadow: "0 1px 4px #0002"
-            }}
-          >
-            {editingIdx === i ? (
-              <>
-                {/* Inline-Bearbeitung (Inputs ebenfalls mit onFocus) */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <input
-                    value={editForm.food}
-                    onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
-                    onFocus={handleFocus}
-                    style={{ flex: 1, padding: "8px 12px", fontSize: 16, borderRadius: 6, border: "1px solid #ccc" }}
-                  />
-                  <CameraButton onClick={() => fileRefEdit.current?.click()} />
-                  {isMobile ? (
-                    <input ref={fileRefEdit} type="file" accept="image/*" multiple capture="environment" onChange={handleEditFile} style={{ display: "none" }} />
-                  ) : (
-                    <input ref={fileRefEdit} type="file" accept="image/*" multiple onChange={handleEditFile} style={{ display: "none" }} />
-                  )}
-                </div>
-                {editForm.imgs.length > 0 && (
-                  <div style={{ marginBottom: 12 }}>
-                    <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />
-                  </div>
-                )}
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        {dates.map(day => (
+          <div key={day}>
+            <div style={styles.groupHeader}>{day}</div>
+            {grouped[day].map(({ entry, idx }) => (
+              <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
+                {editingIdx === idx ? (
+                  <>
+                    {/* Inline-Bearbeitung */}
                     <input
-                      list="symptom-list"
-                      placeholder="Symptom..."
-                      value={editForm.symptomInput}
-                      onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                      value={editForm.food}
+                      onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
                       onFocus={handleFocus}
-                      style={{ flex: 1, padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
+                      style={styles.input}
                     />
-                    <select
-                      value={editForm.symptomTime}
-                      onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
-                      onFocus={handleFocus}
-                      style={{ padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" }}
-                    >
-                      {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                    </select>
-                    <button onClick={addEditSymptom} style={{ padding: "8px 16px", fontSize: 14, borderRadius: 6, border: 0, background: "#247be5", color: "#fff", cursor: "pointer" }}>
-                      Hinzufügen
-                    </button>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap" }}>
-                    {editForm.symptoms.map((s, j) => (
-                      <SymTag
-                        key={j}
-                        txt={s.txt}
-                        time={s.time}
-                        dark={dark}
-                        onDel={() => removeEditSymptom(j)}
-                        onClick={() => changeEditSymptomTime(j)}
+                    <div style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
+                      <CameraButton onClick={() => fileRefEdit.current?.click()} />
+                      <input
+                        ref={fileRefEdit}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        capture={isMobile ? "environment" : undefined}
+                        onChange={handleEditFile}
+                        style={{ display: "none" }}
                       />
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={saveEdit} style={{ flex: 1, padding: "10px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#1976d2", color: "#fff", cursor: "pointer" }}>
-                    Speichern
-                  </button>
-                  <button onClick={cancelEdit} style={{ flex: 1, padding: "10px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#888", color: "#fff", cursor: "pointer" }}>
-                    Abbrechen
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Anzeige-Modus */}
-                <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{e.date}</div>
-                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{e.food}</div>
-                {e.imgs.length > 0 && (
-                  <div style={{ marginBottom: 8 }}><ImgStack imgs={e.imgs} /></div>
+                      {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                      <input
+                        list="symptom-list"
+                        placeholder="Symptom..."
+                        value={editForm.symptomInput}
+                        onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                        onFocus={handleFocus}
+                        style={styles.smallInput}
+                      />
+                      <select
+                        value={editForm.symptomTime}
+                        onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+                        onFocus={handleFocus}
+                        style={styles.smallInput}
+                      >
+                        {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                      </select>
+                      <button onClick={addEditSymptom} style={styles.buttonSecondary("#247be5")}>+ Symptom</button>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+                      {editForm.symptoms.map((s, j) => (
+                        <SymTag
+                          key={j}
+                          txt={s.txt}
+                          time={s.time}
+                          dark={dark}
+                          onDel={() => removeEditSymptom(j)}
+                          onClick={() => changeEditSymptomTime(j)}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
+                      <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
+                    <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
+                    {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
+                    <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
+                      {entry.symptoms.map((s, j) => (
+                        <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
+                      <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
+                    </div>
+                  </>
                 )}
-                <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 12 }}>
-                  {e.symptoms.map((s, j) => (
-                    <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
-                  ))}
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => startEdit(i)} style={{ flex: 1, padding: "8px 0", fontSize: 14, borderRadius: 6, border: 0, background: "#1976d2", color: "#fff", cursor: "pointer" }}>
-                    Bearbeiten
-                  </button>
-                  <button onClick={() => deleteEntry(i)} style={{ flex: 1, padding: "8px 0", fontSize: 14, borderRadius: 6, border: 0, background: "#d32f2f", color: "#fff", cursor: "pointer" }}>
-                    Löschen
-                  </button>
-                </div>
-              </>
-            )}
+              </div>
+            ))}
           </div>
         ))}
       </div>
