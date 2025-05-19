@@ -1,622 +1,528 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
-// Theme icons
-const Sun = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" style={{ display: "block" }}>
-    <circle cx="12" cy="12" r="5.2" fill="#fcd34d" />
-    <g stroke="#fcd34d" strokeWidth="2" strokeLinecap="round">
-      <line x1="12" y1="2.4" x2="12" y2="5" />
-      <line x1="12" y1="19" x2="12" y2="21.6" />
-      <line x1="2.4" y1="12" x2="5" y2="12" />
-      <line x1="19" y1="12" x2="21.6" y2="12" />
-      <line x1="4.2" y1="4.2" x2="6" y2="6" />
-      <line x1="18" y1="18" x2="19.8" y2="19.8" />
-      <line x1="18" y1="6" x2="19.8" y2="4.2" />
-      <line x1="4.2" y1="19.8" x2="6" y2="18" />
-    </g>
-  </svg>
-);
-const Moon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" style={{ display: "block" }}>
-    <path d="M21 12.5A9 9 0 0111.5 3a8 8 0 000 18 9 9 0 009.5-8.5z" fill="#fcd34d" />
-  </svg>
-);
-
+// ---------- Hilfsdaten ----------
 const SYMPTOM_CHOICES = [
-  "Bauchschmerzen", "Durchfall", "Blähungen", "Hautausschlag", "Juckreiz",
-  "Schwellung am Gaumen", "Schleim im Hals", "Niesen", "Kopfschmerzen", "Rötung Haut"
+  "Bauchschmerzen", "Durchfall", "Blähungen", "Hautausschlag",
+  "Juckreiz", "Schwellung am Gaumen", "Schleim im Hals",
+  "Niesen", "Kopfschmerzen", "Rötung Haut"
 ];
 const TIMES = [0, 5, 10, 15, 30, 60];
-
-function now() {
+const now = () => {
   let d = new Date();
-  return d.toLocaleDateString() + " " +
-    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
+  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
 
-const CameraButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    style={{
-      background: "#1976d2", border: 0, borderRadius: "50%",
-      width: 32, height: 32, marginLeft: 6, display: "flex", alignItems: "center", justifyContent: "center",
-      cursor: "pointer"
-    }}
-    title="Bild hinzufügen"
-    tabIndex={-1}
-    type="button"
-  >
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="7" width="20" height="11" rx="4" fill="#fff" />
-      <circle cx="12" cy="13" r="4" fill="#1976d2" />
-      <rect x="7" y="2" width="10" height="5" rx="2.5" fill="#1976d2" />
-    </svg>
-  </button>
-);
-
-const SymTag = ({ txt, time, onDel, dark }) => (
-  <div style={{
-    background: dark ? "#264e9a" : "#e3f0ff",
-    color: dark ? "#fff" : "#143b5b",
-    borderRadius: 8,
-    display: "inline-flex", alignItems: "center", padding: "5px 12px", margin: 2, fontSize: 15, fontWeight: 500
-  }}>
-    {txt}
-    <span style={{ fontSize: 11, marginLeft: 6, color: dark ? "#ffe57f" : "#295185", fontWeight: 400 }}>
-      {time === 0 ? "direkt" : "+" + time + "min"}
-    </span>
-    {onDel && (
-      <span onClick={onDel} style={{
-        marginLeft: 8, color: dark ? "#ffe57f" : "#d03", fontWeight: 700, cursor: "pointer", fontSize: 17
-      }}>&times;</span>
-    )}
-  </div>
-);
-
-const ImgStack = ({ imgs = [], onClick, editable, onDel }) =>
-  imgs.length ? (
-    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+function ImgStack({ imgs, onClick }) {
+  if (!imgs?.length) return null;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: -9, cursor: "pointer" }}>
       {imgs.map((im, i) => (
-        <div key={i} style={{
-          position: "relative", zIndex: imgs.length - i,
-          marginLeft: i > 0 ? -10 : 0
-        }}>
-          <img
-            src={im}
-            alt=""
-            onClick={onClick ? () => onClick(i) : undefined}
-            style={{
-              width: 32, height: 32, objectFit: "cover", borderRadius: 8,
-              border: "2px solid #fff", boxShadow: "0 1px 4px #0002", cursor: onClick ? "pointer" : "default"
-            }}
-          />
-          {editable && onDel &&
-            <span onClick={() => onDel(i)} style={{
-              position: "absolute", top: -6, right: -6,
-              background: "#fff", color: "#c00", borderRadius: "50%",
-              width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 14, fontWeight: 700, cursor: "pointer", border: "1px solid #ddd"
-            }}>×</span>
-          }
-        </div>
+        <img
+          key={i}
+          src={im}
+          alt=""
+          style={{
+            width: 34, height: 34, objectFit: "cover", borderRadius: 7,
+            border: "2px solid #fff", boxShadow: "0 2px 6px #0003",
+            marginLeft: i > 0 ? -16 : 0, zIndex: imgs.length - i,
+            background: "#eee"
+          }}
+          onClick={e => { e.stopPropagation(); onClick?.(i); }}
+        />
       ))}
     </div>
-  ) : null;
-
-function useIsMobile() {
-  const [mobile, setMobile] = useState(window.innerWidth < 600);
-  useEffect(() => {
-    const fn = () => setMobile(window.innerWidth < 600);
-    window.addEventListener("resize", fn);
-    return () => window.removeEventListener("resize", fn);
-  }, []);
-  return mobile;
+  );
+}
+function SymTag({ txt, time, dark, onDel }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", fontSize: 14, fontWeight: 500,
+      background: dark ? "#2d343f" : "#e7edfd", color: dark ? "#fafafd" : "#1c2331",
+      borderRadius: 6, padding: "5px 10px", margin: "2px 2px 2px 0"
+    }}>
+      {txt}{time !== undefined ? <span style={{ fontSize: 11, color: "#a7b" }}> {time === 0 ? "direkt" : "+" + time + "min"}</span> : ""}
+      {onDel && (
+        <span onClick={onDel} style={{
+          marginLeft: 7, color: "#e47", fontWeight: 700, cursor: "pointer",
+          fontSize: 17, lineHeight: "15px", userSelect: "none"
+        }} title="Entfernen">×</span>
+      )}
+    </span>
+  );
+}
+function CameraButton({ onClick }) {
+  return (
+    <button onClick={onClick}
+      style={{
+        background: "#2059e7",
+        border: "none", borderRadius: "50%",
+        width: 34, height: 34, marginLeft: 8,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer"
+      }}
+      title="Foto aufnehmen/hinzufügen"
+      tabIndex={-1}
+      type="button"
+    >
+      <svg width="22" height="22" viewBox="0 0 48 48">
+        <rect x="11" y="18" width="26" height="14" rx="7" fill="#fff" />
+        <circle cx="24" cy="25" r="6" fill="#2059e7" />
+        <circle cx="24" cy="25" r="3.2" fill="#fff" />
+        <rect x="17" y="11" width="14" height="5" rx="2" fill="#2059e7" />
+      </svg>
+    </button>
+  );
+}
+function ThemeSwitch({ value, onChange }) {
+  return (
+    <button onClick={() => onChange(v => !v)}
+      style={{
+        background: "none", border: "none", outline: "none", cursor: "pointer",
+        margin: "0 0 0 4px", padding: 0
+      }} aria-label="Theme wechseln">
+      <span style={{
+        fontSize: 29, marginTop: 1,
+        filter: value ? "none" : "grayscale(1)"
+      }}>{value ? "🌙" : "🌞"}</span>
+    </button>
+  );
 }
 
-function useDarkTheme() {
-  const [dark, setDark] = useState(() => {
+export default function FoodDiary() {
+  // --- States
+  const [entries, setEntries] = useState(() => {
+    // Local Storage Load
     try {
-      return localStorage.getItem("fd-theme") === "dark" ||
-        (!("fd-theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      return JSON.parse(localStorage.getItem("food-diary-entries") || "[]");
     } catch {
-      return true;
+      return [];
     }
   });
-  useEffect(() => {
-    document.body.style.background = dark ? "#13141a" : "#e6eef5";
-    localStorage.setItem("fd-theme", dark ? "dark" : "light");
-  }, [dark]);
-  return [dark, setDark];
-}
-
-// ========== Hauptkomponente ==========
-export default function FoodDiary() {
   const [form, setForm] = useState({
-    food: "", symptoms: [], symptomInput: "", symptomTime: 0, foodImgs: []
+    food: "",
+    foodImgs: [],
+    symptomInput: "",
+    symptomSelect: "",
+    symptomTime: 0,
+    symptoms: []
   });
-  const [entries, setEntries] = useState(() => {
+  const [dark, setDark] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("fd-entries") || "[]");
-    } catch { return []; }
+      return localStorage.getItem("food-diary-theme") === "dark";
+    } catch { return true; }
   });
   const [editIdx, setEditIdx] = useState(null);
   const [imgView, setImgView] = useState(null);
-  const [imgLoading, setImgLoading] = useState(false);
   const fileRef = useRef();
-  const mobile = useIsMobile();
-  const [dark, setDark] = useDarkTheme();
+  const [imgLoading, setImgLoading] = useState(false);
 
+  // --- Theme + Entries Persistenz
   useEffect(() => {
-    localStorage.setItem("fd-entries", JSON.stringify(entries));
+    try { localStorage.setItem("food-diary-theme", dark ? "dark" : "light"); } catch { }
+  }, [dark]);
+  useEffect(() => {
+    try { localStorage.setItem("food-diary-entries", JSON.stringify(entries)); } catch { }
   }, [entries]);
 
-  function addImgs(e, arrKey = "foodImgs") {
-    let files = Array.from(e.target.files);
-    if (!files.length) return;
-    setImgLoading(true);
-    Promise.all(files.map(f => {
-      return new Promise(res => {
-        try {
-          let r = new FileReader();
-          r.onload = ev => res(ev.target.result);
-          r.onerror = () => res(null);
-          r.readAsDataURL(f);
-        } catch {
-          res(null);
-        }
-      });
-    })).then(imgs => {
-      setForm(f => ({
-        ...f, [arrKey]: [...(f[arrKey] || []), ...imgs.filter(Boolean)]
-      }));
-      fileRef.current.value = null;
-      setImgLoading(false);
-    }).catch(() => setImgLoading(false));
+  // --- Entry Hinzufügen / Bearbeiten
+  function resetForm() {
+    setForm({ food: "", foodImgs: [], symptomInput: "", symptomSelect: "", symptomTime: 0, symptoms: [] });
+    setEditIdx(null);
   }
-
-  function handleAddSymptom() {
-    if (!form.symptomInput.trim()) return;
-    setForm(f => ({
-      ...f,
-      symptoms: [
-        ...(f.symptoms || []),
-        { custom: form.symptomInput.trim(), time: form.symptomTime }
-      ],
-      symptomInput: ""
-    }));
-  }
-
   function addEntry() {
-    if (!form.food.trim() && !form.symptoms.length) return;
-    const newEntry = {
+    if (!form.food.trim()) return;
+    const entry = {
       date: now(),
-      food: form.food,
-      foodImgs: form.foodImgs,
-      symptoms: form.symptoms
+      food: form.food.trim(),
+      foodImgs: [...form.foodImgs],
+      symptoms: [...form.symptoms]
     };
     if (editIdx !== null) {
-      setEntries(e =>
-        e.map((x, i) => (i === editIdx ? newEntry : x))
-      );
+      setEntries(es => es.map((e, i) => i === editIdx ? entry : e));
       setEditIdx(null);
     } else {
-      setEntries(e => [newEntry, ...e]);
+      setEntries(es => [entry, ...es]);
     }
-    setForm({
-      food: "", symptoms: [], symptomInput: "", symptomTime: 0, foodImgs: []
-    });
+    resetForm();
   }
-
   function handleEdit(i) {
     const e = entries[i];
     setForm({
       food: e.food,
       foodImgs: [...(e.foodImgs || [])],
-      symptoms: e.symptoms ? [...e.symptoms] : [],
       symptomInput: "",
-      symptomTime: 0
+      symptomSelect: "",
+      symptomTime: 0,
+      symptoms: [...(e.symptoms || [])]
     });
     setEditIdx(i);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
-
   function handleDelete(i) {
-    setEntries(e => e.filter((_, j) => j !== i));
-    if (editIdx === i) setEditIdx(null);
+    setEntries(es => es.filter((_, j) => j !== i));
+    resetForm();
   }
 
-  function handleDelFoodImg(idx) {
+  // --- Food Image hinzufügen/entfernen
+  async function handleImgAdd(e) {
+    const files = e.target.files;
+    if (!files || !files[0]) return;
+    setImgLoading(true);
+    try {
+      const imgs = await Promise.all(Array.from(files).map(f => {
+        return new Promise(res => {
+          const r = new FileReader();
+          r.onload = ev => res(ev.target.result);
+          r.readAsDataURL(f);
+        });
+      }));
+      setForm(f => ({ ...f, foodImgs: [...f.foodImgs, ...imgs] }));
+    } finally { setImgLoading(false); }
+    e.target.value = "";
+  }
+  function handleImgDelete(idx) {
+    setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, i) => i !== idx) }));
+  }
+
+  // --- Symptome hinzufügen/entfernen
+  function handleAddSymptom() {
+    let val = form.symptomInput?.trim() || form.symptomSelect?.trim();
+    if (!val) return;
     setForm(f => ({
-      ...f, foodImgs: f.foodImgs.filter((_, i) => i !== idx)
+      ...f,
+      symptoms: [...(f.symptoms || []), { custom: val, time: f.symptomTime }],
+      symptomInput: "", symptomSelect: "", symptomTime: 0
     }));
   }
-
-  async function handleExportPDF() {
-    const el = document.getElementById("food-diary-table");
-    if (!el) return;
-    const canvas = await html2canvas(el, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "px",
-      format: [canvas.width, canvas.height]
-    });
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save("food-diary.pdf");
+  function handleDeleteSymptom(idx) {
+    setForm(f => ({ ...f, symptoms: f.symptoms.filter((_, i) => i !== idx) }));
   }
 
-  // iOS Fontsize Fix: force min 16px
-  const minInputFont = mobile ? 16 : 15;
+  // --- PDF Export
+  function handleExportPDF() {
+    const pdf = new jsPDF();
+    pdf.setFont("helvetica");
+    pdf.setFontSize(18);
+    pdf.text("Food Diary", 14, 16);
+    let y = 28;
+    pdf.setFontSize(11);
+    entries.forEach((e, idx) => {
+      pdf.text(`${e.date}`, 14, y);
+      pdf.text(`Essen: ${e.food}`, 14, y + 7);
+      if (e.symptoms?.length)
+        pdf.text(
+          `Symptome: ${e.symptoms.map(s => `${s.custom} (${s.time === 0 ? "direkt" : "+" + s.time + "min"})`).join(", ")}`,
+          14, y + 14
+        );
+      // Bilder einfügen
+      if (e.foodImgs?.length) {
+        let imgY = y + 18;
+        e.foodImgs.forEach((im, j) => {
+          try {
+            pdf.addImage(im, "JPEG", 15 + j * 28, imgY, 24, 24);
+          } catch { /* skip invalid img */ }
+        });
+        y = imgY + 28;
+      } else {
+        y += 20;
+      }
+      y += 18;
+      if (y > 270 && idx < entries.length - 1) {
+        pdf.addPage(); y = 18;
+      }
+    });
+    pdf.save("FoodDiary.pdf");
+  }
 
+  // --- Responsives Layout
+  const isMobile = window.innerWidth < 620;
+  const minInputFont = 16; // Kein Zoom auf Mobile
+
+  // -- Render --
   return (
-    <div
-      style={{
-        maxWidth: 600,
-        margin: "20px auto",
-        background: dark ? "#181a20" : "#f4f8fa",
-        color: dark ? "#f6f6fa" : "#1c2128",
-        borderRadius: 18,
-        boxShadow: dark ? "0 2px 24px #0003" : "0 1px 10px #a4b9cc55",
-        padding: mobile ? "16px 4px" : 32,
-        fontFamily: "Inter,sans-serif",
-        position: "relative",
-        minHeight: "100vh",
-        overflowX: "hidden"
-      }}
-    >
-      {/* Light/Dark Theme Switch */}
+    <div style={{
+      minHeight: "100vh", background: dark ? "#1a1b22" : "#f5f7fd", color: dark ? "#f6f6fa" : "#181a20",
+      transition: "background 0.2s,color 0.2s", padding: 0, fontFamily: "Inter,sans-serif"
+    }}>
+      {/* EIGENE OBERE ZEILE NUR FÜR THEME SWITCH */}
       <div style={{
-        position: "absolute", top: 13, left: 13, zIndex: 12,
-        display: "flex", alignItems: "center", gap: 8
+        width: "100%", height: 44, display: "flex", alignItems: "center",
+        padding: isMobile ? "2px 4px" : "2px 26px", justifyContent: "flex-start"
       }}>
-        <button
-          onClick={() => setDark(d => !d)}
-          style={{
-            background: dark ? "#21294a" : "#e2e8f0",
-            border: "none",
-            borderRadius: 19,
-            width: 44,
-            height: 29,
-            boxShadow: "0 1px 4px #0001",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: dark ? "flex-end" : "flex-start",
-            padding: 3,
-            transition: "background .2s"
-          }}
-          title={dark ? "Hell" : "Dunkel"}
-        >
-          <span style={{
-            width: 24,
-            height: 24,
-            borderRadius: "50%",
-            background: dark ? "#2d5bf6" : "#fcd34d",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "background .2s"
-          }}>
-            {dark ? <Moon /> : <Sun />}
-          </span>
-        </button>
+        <ThemeSwitch value={dark} onChange={setDark} />
       </div>
-
-      {/* Header mit PDF-Button */}
+      {/* HEADER & PDF EXPORT */}
       <div style={{
-        position: "relative",
-        minHeight: 38,
-        marginBottom: 20
+        display: "flex", alignItems: "center",
+        justifyContent: "space-between", padding: isMobile ? "2px 10px" : "0 32px 0 32px", marginBottom: 7
       }}>
+        <h2 style={{
+          fontWeight: 700, fontSize: 27, margin: 0, letterSpacing: 0.2,
+          lineHeight: 1.15
+        }}>Food Diary</h2>
         <button
           onClick={handleExportPDF}
           style={{
-            background: "#b71c1c",
-            color: "#fff",
-            fontWeight: 600,
-            fontSize: 15,
-            padding: "5px 17px",
-            borderRadius: 7,
-            border: 0,
-            position: "absolute",
-            top: 0,
-            right: 0,
-            zIndex: 10,
-            cursor: "pointer",
-            boxShadow: "0 1px 5px #0002"
-          }}
-        >
-          PDF
-        </button>
-        <h2 style={{
-          margin: 0,
-          padding: 0,
-          fontWeight: 600,
-          fontSize: 23,
-          letterSpacing: 0.3,
-          color: dark ? "#f6f6fa" : "#234"
-        }}>
-          Food Diary
-        </h2>
+            padding: "7px 17px", borderRadius: 8,
+            background: "#ce2323", color: "#fff", fontWeight: 600, border: 0, fontSize: 17,
+            boxShadow: "0 1px 4px #0001", cursor: "pointer"
+          }}>PDF</button>
       </div>
-
-      {/* Eingabebereich: Responsive Stacking! */}
+      {/* FORMULAR */}
       <div style={{
-        display: "flex",
-        flexDirection: mobile ? "column" : "row",
-        gap: mobile ? 10 : 14,
-        alignItems: mobile ? "stretch" : "flex-end",
-        marginBottom: 18,
-        position: "relative"
+        display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 10 : 15,
+        alignItems: isMobile ? "stretch" : "center",
+        padding: isMobile ? "0 9px 5px 9px" : "0 32px 0 32px", marginBottom: 8
       }}>
         {/* Essen */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 6,
-          width: mobile ? "100%" : 210
-        }}>
+        <div style={{ display: "flex", alignItems: "center", flex: isMobile ? "1 1 100%" : "1 1 250px", minWidth: isMobile ? undefined : 180 }}>
           <input
             value={form.food}
             onChange={e => setForm(f => ({ ...f, food: e.target.value }))}
             placeholder="Essen..."
             style={{
-              border: "1.4px solid #40444c",
-              background: dark ? "#232531" : "#fff",
-              color: dark ? "#f6f6fa" : "#232531",
-              borderRadius: 7,
-              fontSize: minInputFont,
-              padding: "8px 13px",
-              flex: 1,
-              width: mobile ? "100%" : 160,
-              minWidth: 0,
-              outline: "none"
+              width: isMobile ? "100%" : 130, minWidth: isMobile ? "0" : 90,
+              fontSize: minInputFont, border: "1.4px solid #40444c", borderRadius: 8, padding: "9px 10px",
+              background: dark ? "#232531" : "#fff", color: dark ? "#f6f6fa" : "#232531",
+              marginRight: 6, flex: "1 1 130px"
             }}
+            autoComplete="off"
+            inputMode="text"
           />
           <CameraButton onClick={() => fileRef.current.click()} />
           <input
             ref={fileRef}
             type="file"
             accept="image/*"
+            capture="environment"
             multiple
             style={{ display: "none" }}
-            onChange={e => addImgs(e, "foodImgs")}
+            onChange={handleImgAdd}
           />
         </div>
-        {/* Bilder */}
-        <div style={{ alignSelf: "center", marginTop: mobile ? 6 : 0 }}>
-          <ImgStack
-            imgs={form.foodImgs}
-            onClick={i => setImgView({ imgs: form.foodImgs, idx: i })}
-            editable={editIdx !== null}
-            onDel={handleDelFoodImg}
-          />
-        </div>
-        {/* Symptome als eigene Zeile auf Mobile */}
+        {/* Symptome */}
         <div style={{
-          width: mobile ? "100%" : 320,
-          display: "flex",
-          alignItems: "center",
-          gap: 7,
-          marginTop: mobile ? 8 : 0
+          display: "flex", flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "stretch" : "center",
+          flex: isMobile ? "1 1 100%" : "2 1 340px", minWidth: isMobile ? undefined : 230, gap: 4
         }}>
-          <input
-            value={form.symptomInput || ""}
-            onChange={e => setForm(f => ({ ...f, symptomInput: e.target.value }))}
-            placeholder="Symptom manuell..."
-            style={{
-              width: mobile ? "66%" : 135,
-              border: "1.4px solid #40444c",
-              background: dark ? "#232531" : "#fff",
-              color: dark ? "#f6f6fa" : "#232531",
-              borderRadius: 7,
-              fontSize: minInputFont,
-              padding: "8px 11px",
-              flex: 2
-            }}
-            onKeyDown={e => e.key === "Enter" && handleAddSymptom()}
-          />
-          <select
-            value={form.symptomTime || 0}
-            onChange={e => setForm(f => ({ ...f, symptomTime: Number(e.target.value) }))}
-            style={{
-              height: 33,
-              borderRadius: 6,
-              fontSize: minInputFont,
-              background: dark ? "#232531" : "#fff",
-              color: dark ? "#f6f6fa" : "#232531",
-              border: "1.4px solid #40444c",
-              flex: 1,
-              minWidth: 64
-            }}
-          >
-            {TIMES.map(t => (
-              <option key={t} value={t}>
-                {t === 0 ? "direkt" : "+" + t + "min"}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleAddSymptom}
-            style={{
-              background: "#19d236",
-              color: "#fff",
-              border: 0,
-              borderRadius: "50%",
-              width: 31,
-              height: 31,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-              fontSize: 20,
-              marginLeft: 2
-            }}
-            tabIndex={-1}
-            title="Symptom hinzufügen"
-            type="button"
-          >+</button>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 3, width: isMobile ? "100%" : undefined
+          }}>
+            {/* --- DROPDOWN --- */}
+            <select
+              value={form.symptomSelect}
+              onChange={e => setForm(f => ({ ...f, symptomSelect: e.target.value }))}
+              style={{
+                height: 33, borderRadius: 6, fontSize: minInputFont, border: "1.4px solid #40444c",
+                background: dark ? "#232531" : "#fff", color: dark ? "#f6f6fa" : "#232531", minWidth: 97, marginRight: 4
+              }}>
+              <option value="">Symptom wählen</option>
+              {SYMPTOM_CHOICES.map(sym => <option key={sym} value={sym}>{sym}</option>)}
+            </select>
+            {/* --- Freitextfeld --- */}
+            <input
+              value={form.symptomInput}
+              onChange={e => setForm(f => ({ ...f, symptomInput: e.target.value }))}
+              placeholder="Symptom manuell..."
+              style={{
+                width: 140, fontSize: minInputFont, border: "1.4px solid #40444c",
+                borderRadius: 8, padding: "9px 10px",
+                background: dark ? "#232531" : "#fff", color: dark ? "#f6f6fa" : "#232531"
+              }}
+              onKeyDown={e => e.key === "Enter" && handleAddSymptom()}
+              inputMode="text"
+              autoComplete="off"
+            />
+            <select
+              value={form.symptomTime}
+              onChange={e => setForm(f => ({ ...f, symptomTime: Number(e.target.value) }))}
+              style={{
+                height: 33, borderRadius: 6, fontSize: minInputFont,
+                background: dark ? "#232531" : "#fff", color: dark ? "#f6f6fa" : "#232531",
+                border: "1.4px solid #40444c", minWidth: 64, marginLeft: 5
+              }}
+            >
+              {TIMES.map(t => (
+                <option key={t} value={t}>{t === 0 ? "direkt" : "+" + t + "min"}</option>
+              ))}
+            </select>
+            {/* --- Add Button --- */}
+            <button
+              onClick={handleAddSymptom}
+              style={{
+                background: "#19d236",
+                color: "#fff",
+                border: 0,
+                borderRadius: "50%",
+                width: 31,
+                height: 31,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                fontSize: 20,
+                marginLeft: 4
+              }}
+              tabIndex={-1}
+              title="Symptom hinzufügen"
+              type="button"
+            >+</button>
+          </div>
         </div>
       </div>
 
-      {/* Loading für Bilder */}
-      {imgLoading && (
+      {/* Bild wird geladen */}
+      {imgLoading &&
         <div style={{
           background: "#000c", color: "#ffe57f", borderRadius: 8,
-          padding: 17, margin: "18px 0", textAlign: "center", fontWeight: 700
+          padding: 15, margin: "15px 0", textAlign: "center", fontWeight: 700
         }}>
           Bild wird verarbeitet...
         </div>
-      )}
+      }
 
       {/* Symptome als Tags */}
-      <div style={{ margin: "2px 0 15px 0", minHeight: 24, display: "flex", flexWrap: "wrap", gap: 2 }}>
+      <div style={{
+        margin: "2px 0 15px 0", minHeight: 24, display: "flex", flexWrap: "wrap", gap: 2,
+        paddingLeft: isMobile ? 9 : 32
+      }}>
         {(form.symptoms || []).map((s, i) => (
           <SymTag
             key={i}
             txt={s.custom}
             time={s.time}
             dark={dark}
-            onDel={() => setForm(f => ({ ...f, symptoms: f.symptoms.filter((_, k) => k !== i) }))}
+            onDel={() => handleDeleteSymptom(i)}
           />
         ))}
       </div>
 
-      {/* Hinzufügen/Ändern */}
-      <button
-        onClick={addEntry}
-        style={{
-          display: "block",
-          marginLeft: "auto",
-          marginRight: 0,
-          marginBottom: 10,
-          background: "#2d7bea",
-          color: "#fff",
-          fontWeight: 600,
-          fontSize: 16,
-          padding: "10px 26px",
-          borderRadius: 8,
-          border: 0,
-          cursor: "pointer",
-          boxShadow: "0 1px 6px #0002"
-        }}
-      >{editIdx !== null ? "Ändern" : "Hinzufügen"}</button>
+      {/* HINZUFÜGEN */}
+      <div style={{ paddingLeft: isMobile ? 9 : 32, paddingRight: isMobile ? 9 : 32 }}>
+        <button
+          onClick={addEntry}
+          style={{
+            padding: "13px 26px", borderRadius: 8, background: "#257bf3", color: "#fff",
+            fontWeight: 600, border: 0, fontSize: 17, cursor: "pointer", float: isMobile ? undefined : "right"
+          }}
+        >{editIdx !== null ? "Speichern" : "Hinzufügen"}</button>
+      </div>
 
-      {/* Einträge als Tabelle */}
-      <div
-        id="food-diary-table"
-        style={{
-          background: dark ? "#22232a" : "#fafdff",
-          borderRadius: 15,
-          marginTop: 16,
-          boxShadow: "0 1px 8px #0002",
-          overflowX: "auto"
-        }}
-      >
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      {/* EINTRAG TABELLE */}
+      <div style={{
+        width: "100%",
+        margin: "28px auto 0 auto",
+        padding: isMobile ? "0 4px" : "0 32px",
+        maxWidth: 950
+      }}>
+        <table style={{
+          width: "100%", borderCollapse: "collapse", marginTop: 8, background: "inherit",
+          borderRadius: 14, overflow: "hidden", boxShadow: "0 2px 12px #0001",
+          fontSize: 15
+        }}>
           <thead>
-            <tr style={{ color: dark ? "#fff" : "#222", fontSize: 15, borderBottom: "2px solid #353540" }}>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Datum</th>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Essen</th>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Bilder</th>
-              <th style={{ textAlign: "left", padding: "8px 10px" }}>Symptome</th>
-              <th style={{ textAlign: "center", padding: "8px 10px" }}>Aktionen</th>
+            <tr style={{ background: dark ? "#23242e" : "#e6eef7" }}>
+              <th style={{ textAlign: "left", padding: "9px 8px" }}>Datum</th>
+              <th style={{ textAlign: "left", padding: "9px 8px" }}>Essen</th>
+              <th style={{ textAlign: "left", padding: "9px 8px" }}>Bilder</th>
+              <th style={{ textAlign: "left", padding: "9px 8px" }}>Symptome</th>
+              <th style={{ textAlign: "center", padding: "9px 8px" }}>Aktionen</th>
             </tr>
           </thead>
           <tbody>
-            {entries.map((e, i) => (
+            {entries.length === 0 &&
+              <tr>
+                <td colSpan={5} style={{
+                  textAlign: "center", color: dark ? "#a8a8c0" : "#999",
+                  fontSize: 18, padding: 22
+                }}>Noch keine Einträge</td>
+              </tr>
+            }
+            {entries.map((e, i) =>
               <tr key={i}
                 style={{
-                  borderBottom: "1.5px solid #292936",
-                  background: editIdx === i ? (dark ? "#21294a" : "#d8eafe") : "inherit"
+                  background: editIdx === i ? "#35393e" : dark ? "#20222a" : "#fff",
+                  borderBottom: "1.5px solid #ddd"
                 }}>
-                <td style={{ padding: "8px 10px" }}>{e.date}</td>
-                <td style={{ padding: "8px 10px", fontWeight: 500 }}>{e.food}</td>
-                <td style={{ padding: "8px 10px" }}>
-                  <ImgStack
-                    imgs={e.foodImgs}
-                    onClick={ii => setImgView({ imgs: e.foodImgs, idx: ii })}
-                  />
+                <td style={{ padding: "8px 8px" }}>{e.date}</td>
+                <td style={{ padding: "8px 8px", verticalAlign: "top", fontWeight: 500 }}>{e.food}</td>
+                <td style={{ padding: "8px 8px", verticalAlign: "top" }}>
+                  <ImgStack imgs={e.foodImgs} onClick={idx =>
+                    setImgView({ imgs: e.foodImgs, idx: idx || 0 })
+                  } />
                 </td>
-                <td style={{ padding: "8px 10px" }}>
+                <td style={{ padding: "8px 8px", verticalAlign: "top" }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                    {e.symptoms?.map((s, si) =>
-                      <SymTag
-                        key={si}
-                        txt={s.custom}
-                        time={s.time}
-                        dark={dark}
-                      />
+                    {(e.symptoms || []).map((s, si) =>
+                      <SymTag key={si} txt={s.custom} time={s.time} dark={dark} />
                     )}
                   </div>
                 </td>
-                <td style={{ padding: "8px 10px", textAlign: "center" }}>
+                <td style={{ padding: "8px 8px", textAlign: "center", verticalAlign: "top" }}>
                   <button
                     onClick={() => handleEdit(i)}
                     style={{
-                      background: dark ? "#191e29" : "#eaf3ff", color: dark ? "#fff" : "#345",
-                      border: "1px solid #4763a5",
-                      borderRadius: 6, padding: "6px 14px", margin: 2, fontSize: 13, cursor: "pointer"
-                    }}
-                  >Bearbeiten</button>
+                      background: "none", border: "1.2px solid #7a88a4", borderRadius: 6,
+                      padding: "6px 12px", margin: 2, fontSize: 13, cursor: "pointer", color: dark ? "#fff" : "#181a20"
+                    }}>Bearbeiten</button>
                   <button
                     onClick={() => handleDelete(i)}
                     style={{
-                      background: "#fff0f0", border: "1px solid #e88", borderRadius: 6,
-                      padding: "6px 11px", margin: 2, color: "#c00", fontSize: 15, cursor: "pointer"
-                    }}
-                  >×</button>
-                </td>
-              </tr>
-            ))}
-            {entries.length === 0 && (
-              <tr>
-                <td colSpan={5} style={{ color: "#aaa", textAlign: "center", fontSize: 17, padding: 34 }}>
-                  Noch keine Einträge
+                      background: "#ffefef", border: "1.2px solid #ff4444", borderRadius: 6,
+                      padding: "6px 10px", margin: 2, color: "#c00", fontSize: 18, cursor: "pointer"
+                    }} title="Löschen">×</button>
+                  {/* Im Bearbeitungsmodus Bilder löschen */}
+                  {editIdx === i && e.foodImgs?.length > 0 &&
+                    <div style={{ marginTop: 7, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {e.foodImgs.map((img, idx) =>
+                        <div key={idx} style={{ position: "relative" }}>
+                          <img src={img} alt="" style={{
+                            width: 34, height: 34, borderRadius: 7, objectFit: "cover",
+                            border: "2px solid #fff", boxShadow: "0 2px 6px #0003"
+                          }} />
+                          <button onClick={() => handleImgDelete(idx)} style={{
+                            position: "absolute", top: -10, right: -10, background: "#e47", color: "#fff",
+                            border: "none", borderRadius: "50%", width: 22, height: 22, fontWeight: 700, cursor: "pointer"
+                          }}>×</button>
+                        </div>
+                      )}
+                    </div>
+                  }
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-
-      {/* Image Viewer (Pop-up) */}
+      {/* Image-Modal/Lightbox */}
       {imgView &&
         <div style={{
-          position: "fixed", zIndex: 10000, inset: 0,
-          background: "#222a", display: "flex", alignItems: "center", justifyContent: "center"
+          position: "fixed", left: 0, top: 0, width: "100vw", height: "100vh", zIndex: 22222,
+          background: "#181a", display: "flex", alignItems: "center", justifyContent: "center"
         }}
           onClick={() => setImgView(null)}
         >
-          <img
-            src={imgView.imgs[imgView.idx || 0]}
-            alt=""
-            style={{
-              maxWidth: "97vw", maxHeight: "85vh", borderRadius: 16, boxShadow: "0 2px 16px #000c",
-              background: "#333", padding: 8
-            }}
-            onClick={e => e.stopPropagation()}
-          />
-          {imgView.imgs.length > 1 &&
-            <div style={{
-              position: "absolute", bottom: 33, left: 0, right: 0,
-              display: "flex", justifyContent: "center", gap: 6
-            }}>
-              {imgView.imgs.map((im, i) =>
-                <img
-                  key={i}
-                  src={im}
-                  alt=""
-                  style={{
-                    width: 54, height: 54, objectFit: "cover", borderRadius: 9,
-                    border: "2.5px solid #fff",
-                    opacity: i === imgView.idx ? 1 : 0.65,
-                    cursor: "pointer"
-                  }}
-                  onClick={ev => { ev.stopPropagation(); setImgView(v => ({ ...v, idx: i })); }}
-                />
-              )}
-            </div>
-          }
+          <img src={imgView.imgs[imgView.idx]} alt="" style={{
+            maxWidth: "92vw", maxHeight: "82vh", borderRadius: 10, boxShadow: "0 6px 40px #0008"
+          }} onClick={e => e.stopPropagation()} />
+          {imgView.imgs.length > 1 && (
+            <>
+              <button
+                onClick={e => { e.stopPropagation(); setImgView(v => ({ ...v, idx: (v.idx - 1 + v.imgs.length) % v.imgs.length })); }}
+                style={{
+                  position: "absolute", left: 24, top: "50%", background: "#2d2c38", color: "#fff",
+                  border: "none", borderRadius: 16, width: 38, height: 38, fontWeight: 700, fontSize: 23, cursor: "pointer"
+                }}>‹</button>
+              <button
+                onClick={e => { e.stopPropagation(); setImgView(v => ({ ...v, idx: (v.idx + 1) % v.imgs.length })); }}
+                style={{
+                  position: "absolute", right: 24, top: "50%", background: "#2d2c38", color: "#fff",
+                  border: "none", borderRadius: 16, width: 38, height: 38, fontWeight: 700, fontSize: 23, cursor: "pointer"
+                }}>›</button>
+            </>
+          )}
         </div>
       }
     </div>
