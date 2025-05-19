@@ -288,7 +288,7 @@ export default function App() {
     else setDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
-  const [view, setView] = useState("diary");
+  const [view, setView] = useState("diary"); // "diary" | "insights"
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem("fd-entries") || "[]"); }
     catch { return []; }
@@ -400,7 +400,15 @@ export default function App() {
     setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0 });
   };
   const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
-  const addEditSymptom = () => { if (!editForm.symptomInput.trim()) return; setEditForm(fm => ({ ...fm, symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }], symptomInput: "", symptomTime: 0 })); };
+  const addEditSymptom = () => {
+    if (!editForm.symptomInput.trim()) return;
+    setEditForm(fm => ({
+      ...fm,
+      symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
+      symptomInput: "",
+      symptomTime: 0
+    }));
+  };
   const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
@@ -427,7 +435,9 @@ export default function App() {
     addToast("Eintrag gelöscht");
   };
 
-  const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
+  // Filter + Gruppierung + Pagination
+  const filteredWithIdx = entries
+    .map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       entry.food.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -468,7 +478,7 @@ export default function App() {
 
       {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
-        {/* Food + Camera in einer Zeile */}
+        {/* Food + Camera in einer Zeile, Abstand größer für neues Feld */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 48 }}>
           <input
             placeholder="Essen..."
@@ -489,7 +499,6 @@ export default function App() {
           />
         </div>
 
-        {/* Bilder-Vorschau */}
         {newForm.imgs.length > 0 && (
           <div style={{ marginBottom: 8 }}>
             <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />
@@ -534,7 +543,7 @@ export default function App() {
           Eintrag hinzufügen
         </button>
 
-        {/* Suche + Laden */}
+        {/* Suche + Laden unter Eintrag */}
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
           <input
             placeholder="Suche..."
@@ -556,11 +565,79 @@ export default function App() {
             {grouped[day].map(({ entry, idx }) => (
               <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                 {editingIdx === idx ? (
-                  // Inline-Edit bleibt unverändert
-                  <>{/* ... */}</>
+                  <>
+                    {/* Inline-Bearbeitung */}
+                    <input
+                      value={editForm.food}
+                      onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                      onFocus={handleFocus}
+                      style={styles.input}
+                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}>
+                      <CameraButton onClick={() => fileRefEdit.current?.click()} />
+                      <input
+                        ref={fileRefEdit}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        capture={isMobile ? "environment" : undefined}
+                        onChange={handleEditFile}
+                        style={{ display: "none" }}
+                      />
+                      {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <input
+                        list="symptom-list"
+                        placeholder="Symptom..."
+                        value={editForm.symptomInput}
+                        onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                        onFocus={handleFocus}
+                        style={styles.smallInput}
+                      />
+                      <select
+                        value={editForm.symptomTime}
+                        onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+                        onFocus={handleFocus}
+                        style={styles.smallInput}
+                      >
+                        {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                      </select>
+                      <button onClick={addEditSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+                      {editForm.symptoms.map((s, j) => (
+                        <SymTag
+                          key={j}
+                          txt={s.txt}
+                          time={s.time}
+                          dark={dark}
+                          onDel={() => removeEditSymptom(j)}
+                          onClick={() => changeEditSymptomTime(j)}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
+                      <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
+                    </div>
+                  </>
                 ) : (
-                  // Anzeige-Modus bleibt unverändert
-                  <>{/* ... */}</>
+                  <>
+                    {/* Anzeige-Modus */}
+                    <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
+                    <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
+                    {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
+                    <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
+                      {entry.symptoms.map((s, j) => (
+                        <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
+                      <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
+                    </div>
+                  </>
                 )}
               </div>
             ))}
