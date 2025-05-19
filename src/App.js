@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -8,7 +9,8 @@ const styles = {
     maxWidth: 600,
     margin: "0 auto",
     padding: isMobile ? "0 12px" : "0 24px",
-    overflowAnchor: "none"
+    overflowAnchor: "none",
+    position: "relative"
   }),
   topBar: {
     display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0"
@@ -37,11 +39,18 @@ const styles = {
   groupHeader: { fontSize: 18, fontWeight: 600, margin: "24px 0 8px" },
   toast: {
     position: "fixed", top: 16, right: 16, background: "#333",
-    color: "#fff", padding: "8px 12px", borderRadius: 4, opacity: 0.9
+    color: "#fff", padding: "8px 12px", borderRadius: 4, opacity: 0.9, zIndex: 2000
   },
-  backButton: {
-    padding: "6px 12px", fontSize: 14, borderRadius: 6,
-    border: 0, background: "#1976d2", color: "#fff", cursor: "pointer"
+  modalBackdrop: {
+    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+    background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", flexDirection: "column"
+  },
+  modalHeader: dark => ({
+    padding: 12, display: "flex", alignItems: "center", background: dark ? "#333" : "#fff",
+    borderBottom: "1px solid #ccc"
+  }),
+  modalContent: {
+    padding: 24, overflowY: "auto", flex: 1
   }
 };
 
@@ -59,7 +68,7 @@ const InsightsButton = ({ onClick }) => (
 );
 
 const BackButton = ({ onClick }) => (
-  <button onClick={onClick} title="Zurück" style={styles.backButton}>
+  <button onClick={onClick} title="Zurück" style={styles.buttonSecondary("#1976d2")}>
     ← Zurück
   </button>
 );
@@ -201,6 +210,7 @@ export default function App() {
   const fileRefEdit = useRef();
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("fd-entries", JSON.stringify(entries));
@@ -219,7 +229,10 @@ export default function App() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+  const handleFocus = e => {
+    if (isMobile) setIsModalOpen(true);
+    e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
   useEffect(() => {
     if (editingIdx !== null) {
       const el = document.getElementById(`entry-${editingIdx}`);
@@ -287,6 +300,7 @@ export default function App() {
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
+    setIsModalOpen(false);
     navigator.vibrate?.(50);
     addToast("Eintrag gespeichert");
   };
@@ -350,6 +364,17 @@ export default function App() {
   }, {});
   const dates = Object.keys(grouped);
 
+  // Modal für mobilen Fullscreen-Dialog
+  const Modal = ({ children, onClose }) => ReactDOM.createPortal(
+    <div style={styles.modalBackdrop}>
+      <div style={styles.modalHeader(dark)}>
+        <BackButton onClick={onClose} />
+      </div>
+      <div style={styles.modalContent}>{children}</div>
+    </div>,
+    document.body
+  );
+
   if (view === "insights") {
     return (
       <div style={styles.container(isMobile)}>
@@ -378,7 +403,8 @@ export default function App() {
 
       <h2 style={styles.title}>Food Diary</h2>
 
-      {/* Neuer Eintrag */}
+      {/* Inhalt */}
+      {/* Neuer Eintrag Inline (mobile: öffnet Modal beim Fokussieren) */}
       <div style={{ marginBottom: 24 }}>
         <input
           placeholder="Essen..."
@@ -432,19 +458,19 @@ export default function App() {
         >
           Eintrag hinzufügen
         </button>
+      </div>
 
-        {/* Suche + Laden unter Eintrag hinzufügen */}
-        <div style={{ display: "flex", gap: 8, marginTop: 16, marginBottom: 16 }}>
-          <input
-            placeholder="Suche..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={styles.smallInput}
-          />
-          <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
-            Mehr laden
-          </button>
-        </div>
+      {/* Suchfeld & Mehr Laden unter Eintrag hinzufügen */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <input
+          placeholder="Suche..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          style={styles.smallInput}
+        />
+        <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
+          Mehr laden
+        </button>
       </div>
 
       {/* Einträge nach Datum abgrenzen */}
@@ -532,6 +558,60 @@ export default function App() {
           </div>
         ))}
       </div>
+
+      {isMobile && isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          {/* Gleicher Inhalt wie Neuer Eintrag */}
+          <input
+            placeholder="Essen..."
+            value={newForm.food}
+            onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
+            style={styles.input}
+          />
+          <div style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
+            <CameraButton onClick={() => fileRefNew.current?.click()} />
+            <input
+              ref={fileRefNew}
+              type="file"
+              accept="image/*"
+              multiple
+              capture
+              onChange={handleNewFile}
+              style={{ display: "none" }}
+            />
+            {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <input
+              list="symptom-list"
+              placeholder="Symptom..."
+              value={newForm.symptomInput}
+              onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+              style={styles.smallInput}
+            />
+            <select
+              value={newForm.symptomTime}
+              onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+              style={styles.smallInput}
+            >
+              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <button onClick={addNewSymptom} style={styles.buttonSecondary("#247be5")}>+ Symptom</button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+            {newSymptoms.map((s, i) => (
+              <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />
+            ))}
+          </div>
+          <button
+            onClick={addEntry}
+            disabled={!newForm.food.trim()}
+            style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() ? 1 : 0.5 }}
+          >
+            Eintrag hinzufügen
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }
