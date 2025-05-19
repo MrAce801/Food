@@ -80,6 +80,16 @@ const ImgStack = ({ imgs = [], onClick, editable, onDel }) =>
     </div>
   ) : null;
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(window.innerWidth < 600);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 600);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return mobile;
+}
+
 // ========== Hauptkomponente ==========
 export default function FoodDiary() {
   const [form, setForm] = useState({
@@ -93,7 +103,7 @@ export default function FoodDiary() {
   const [editIdx, setEditIdx] = useState(null);
   const [imgView, setImgView] = useState(null);
   const fileRef = useRef();
-  const mobile = window.innerWidth < 600;
+  const mobile = useIsMobile();
 
   useEffect(() => {
     localStorage.setItem("fd-entries", JSON.stringify(entries));
@@ -171,15 +181,7 @@ export default function FoodDiary() {
     }));
   }
 
-  function handleDelSymptomImg(idx) {
-    setForm(f => ({
-      ...f, symptomsImgs: (f.symptomsImgs || []).filter((_, i) => i !== idx)
-    }));
-  }
-
-  // PDF EXPORT (Export der Tabelle als PDF, Bilder werden als Miniatur exportiert)
   async function handleExportPDF() {
-    // Wir nehmen den Tabellen-Bereich als Screenshot für den PDF Export
     const el = document.getElementById("food-diary-table");
     if (!el) return;
     const canvas = await html2canvas(el, { scale: 2 });
@@ -247,25 +249,19 @@ export default function FoodDiary() {
         </h2>
       </div>
 
-      {/* Eingabebereich */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: mobile ? 7 : 12,
-          alignItems: "flex-end",
-          marginBottom: 19,
-          position: "relative"
-        }}
-      >
-        {/* Essen-Eingabe */}
+      {/* Eingabebereich: Responsive Stacking! */}
+      <div style={{
+        display: "flex",
+        flexDirection: mobile ? "column" : "row",
+        gap: mobile ? 10 : 14,
+        alignItems: mobile ? "stretch" : "flex-end",
+        marginBottom: 18,
+        position: "relative"
+      }}>
+        {/* Essen */}
         <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
-          flex: "2 1 140px",
-          minWidth: mobile ? 0 : 120,
-          maxWidth: mobile ? "76%" : 225
+          display: "flex", alignItems: "center", gap: 6,
+          width: mobile ? "100%" : 210
         }}>
           <input
             value={form.food}
@@ -279,7 +275,7 @@ export default function FoodDiary() {
               fontSize: 15,
               padding: "8px 13px",
               flex: 1,
-              width: mobile ? 120 : 160,
+              width: mobile ? "100%" : 160,
               minWidth: 0,
               outline: "none"
             }}
@@ -295,40 +291,40 @@ export default function FoodDiary() {
           />
         </div>
 
-        {/* Bilder (nur im Bearbeitungsmodus löschbar) */}
-        <ImgStack
-          imgs={form.foodImgs}
-          onClick={i => setImgView({ imgs: form.foodImgs, idx: i })}
-          editable={editIdx !== null}
-          onDel={handleDelFoodImg}
-        />
+        {/* Bilder */}
+        <div style={{ alignSelf: "center", marginTop: mobile ? 6 : 0 }}>
+          <ImgStack
+            imgs={form.foodImgs}
+            onClick={i => setImgView({ imgs: form.foodImgs, idx: i })}
+            editable={editIdx !== null}
+            onDel={handleDelFoodImg}
+          />
+        </div>
 
-        {/* Symptome */}
+        {/* Symptome als eigene Zeile auf Mobile */}
         <div style={{
+          width: mobile ? "100%" : 320,
           display: "flex",
           alignItems: "center",
-          gap: 4,
-          flex: "2 1 140px",
-          minWidth: mobile ? 0 : 120,
-          maxWidth: mobile ? "76%" : 300
+          gap: 7,
+          marginTop: mobile ? 8 : 0
         }}>
-          {/* Manuelleingabe */}
           <input
             value={form.symptomInput || ""}
             onChange={e => setForm(f => ({ ...f, symptomInput: e.target.value }))}
             placeholder="Symptom manuell..."
             style={{
-              width: mobile ? 88 : 135,
+              width: mobile ? "66%" : 135,
               border: "1.4px solid #40444c",
               background: "#232531",
               color: "#f6f6fa",
               borderRadius: 7,
               fontSize: 15,
-              padding: "8px 11px"
+              padding: "8px 11px",
+              flex: 2
             }}
             onKeyDown={e => e.key === "Enter" && handleAddSymptom()}
           />
-          {/* Zeitwahl */}
           <select
             value={form.symptomTime || 0}
             onChange={e => setForm(f => ({ ...f, symptomTime: Number(e.target.value) }))}
@@ -338,7 +334,9 @@ export default function FoodDiary() {
               fontSize: 14,
               background: "#232531",
               color: "#f6f6fa",
-              border: "1.4px solid #40444c"
+              border: "1.4px solid #40444c",
+              flex: 1,
+              minWidth: 64
             }}
           >
             {TIMES.map(t => (
@@ -347,7 +345,6 @@ export default function FoodDiary() {
               </option>
             ))}
           </select>
-          {/* Grünes Plus */}
           <button
             onClick={handleAddSymptom}
             style={{
@@ -360,10 +357,9 @@ export default function FoodDiary() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginLeft: 6,
-              cursor: "pointer",
               fontWeight: 700,
-              fontSize: 18
+              fontSize: 18,
+              marginLeft: 2
             }}
             tabIndex={-1}
             title="Symptom hinzufügen"
