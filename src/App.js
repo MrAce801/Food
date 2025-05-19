@@ -2,6 +2,28 @@ import React, { useRef, useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+// Theme icons
+const Sun = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" style={{ display: "block" }}>
+    <circle cx="12" cy="12" r="5.2" fill="#fcd34d" />
+    <g stroke="#fcd34d" strokeWidth="2" strokeLinecap="round">
+      <line x1="12" y1="2.4" x2="12" y2="5" />
+      <line x1="12" y1="19" x2="12" y2="21.6" />
+      <line x1="2.4" y1="12" x2="5" y2="12" />
+      <line x1="19" y1="12" x2="21.6" y2="12" />
+      <line x1="4.2" y1="4.2" x2="6" y2="6" />
+      <line x1="18" y1="18" x2="19.8" y2="19.8" />
+      <line x1="18" y1="6" x2="19.8" y2="4.2" />
+      <line x1="4.2" y1="19.8" x2="6" y2="18" />
+    </g>
+  </svg>
+);
+const Moon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" style={{ display: "block" }}>
+    <path d="M21 12.5A9 9 0 0111.5 3a8 8 0 000 18 9 9 0 009.5-8.5z" fill="#fcd34d" />
+  </svg>
+);
+
 const SYMPTOM_CHOICES = [
   "Bauchschmerzen", "Durchfall", "Blähungen", "Hautausschlag", "Juckreiz",
   "Schwellung am Gaumen", "Schleim im Hals", "Niesen", "Kopfschmerzen", "Rötung Haut"
@@ -24,6 +46,7 @@ const CameraButton = ({ onClick }) => (
     }}
     title="Bild hinzufügen"
     tabIndex={-1}
+    type="button"
   >
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <rect x="2" y="7" width="20" height="11" rx="4" fill="#fff" />
@@ -33,18 +56,20 @@ const CameraButton = ({ onClick }) => (
   </button>
 );
 
-const SymTag = ({ txt, time, onDel }) => (
+const SymTag = ({ txt, time, onDel, dark }) => (
   <div style={{
-    background: "#2d7bea22", color: "#1b1f2b", borderRadius: 8,
-    display: "inline-flex", alignItems: "center", padding: "5px 11px", margin: 2, fontSize: 14
+    background: dark ? "#264e9a" : "#e3f0ff",
+    color: dark ? "#fff" : "#143b5b",
+    borderRadius: 8,
+    display: "inline-flex", alignItems: "center", padding: "5px 12px", margin: 2, fontSize: 15, fontWeight: 500
   }}>
     {txt}
-    <span style={{ fontSize: 11, marginLeft: 4, color: "#888" }}>
+    <span style={{ fontSize: 11, marginLeft: 6, color: dark ? "#ffe57f" : "#295185", fontWeight: 400 }}>
       {time === 0 ? "direkt" : "+" + time + "min"}
     </span>
     {onDel && (
       <span onClick={onDel} style={{
-        marginLeft: 6, color: "#d03", fontWeight: 700, cursor: "pointer", fontSize: 17, lineHeight: "13px"
+        marginLeft: 8, color: dark ? "#ffe57f" : "#d03", fontWeight: 700, cursor: "pointer", fontSize: 17
       }}>&times;</span>
     )}
   </div>
@@ -90,6 +115,22 @@ function useIsMobile() {
   return mobile;
 }
 
+function useDarkTheme() {
+  const [dark, setDark] = useState(() => {
+    try {
+      return localStorage.getItem("fd-theme") === "dark" ||
+        (!("fd-theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    document.body.style.background = dark ? "#13141a" : "#e6eef5";
+    localStorage.setItem("fd-theme", dark ? "dark" : "light");
+  }, [dark]);
+  return [dark, setDark];
+}
+
 // ========== Hauptkomponente ==========
 export default function FoodDiary() {
   const [form, setForm] = useState({
@@ -102,8 +143,10 @@ export default function FoodDiary() {
   });
   const [editIdx, setEditIdx] = useState(null);
   const [imgView, setImgView] = useState(null);
+  const [imgLoading, setImgLoading] = useState(false);
   const fileRef = useRef();
   const mobile = useIsMobile();
+  const [dark, setDark] = useDarkTheme();
 
   useEffect(() => {
     localStorage.setItem("fd-entries", JSON.stringify(entries));
@@ -111,18 +154,26 @@ export default function FoodDiary() {
 
   function addImgs(e, arrKey = "foodImgs") {
     let files = Array.from(e.target.files);
+    if (!files.length) return;
+    setImgLoading(true);
     Promise.all(files.map(f => {
       return new Promise(res => {
-        let r = new FileReader();
-        r.onload = ev => res(ev.target.result);
-        r.readAsDataURL(f);
+        try {
+          let r = new FileReader();
+          r.onload = ev => res(ev.target.result);
+          r.onerror = () => res(null);
+          r.readAsDataURL(f);
+        } catch {
+          res(null);
+        }
       });
     })).then(imgs => {
       setForm(f => ({
-        ...f, [arrKey]: [...(f[arrKey] || []), ...imgs]
+        ...f, [arrKey]: [...(f[arrKey] || []), ...imgs.filter(Boolean)]
       }));
       fileRef.current.value = null;
-    });
+      setImgLoading(false);
+    }).catch(() => setImgLoading(false));
   }
 
   function handleAddSymptom() {
@@ -131,7 +182,7 @@ export default function FoodDiary() {
       ...f,
       symptoms: [
         ...(f.symptoms || []),
-        { custom: f.symptomInput.trim(), time: f.symptomTime }
+        { custom: form.symptomInput.trim(), time: form.symptomTime }
       ],
       symptomInput: ""
     }));
@@ -195,15 +246,18 @@ export default function FoodDiary() {
     pdf.save("food-diary.pdf");
   }
 
+  // iOS Fontsize Fix: force min 16px
+  const minInputFont = mobile ? 16 : 15;
+
   return (
     <div
       style={{
         maxWidth: 600,
         margin: "20px auto",
-        background: "#181a20",
-        color: "#f6f6fa",
+        background: dark ? "#181a20" : "#f4f8fa",
+        color: dark ? "#f6f6fa" : "#1c2128",
         borderRadius: 18,
-        boxShadow: "0 2px 24px #0003",
+        boxShadow: dark ? "0 2px 24px #0003" : "0 1px 10px #a4b9cc55",
         padding: mobile ? "16px 4px" : 32,
         fontFamily: "Inter,sans-serif",
         position: "relative",
@@ -211,6 +265,44 @@ export default function FoodDiary() {
         overflowX: "hidden"
       }}
     >
+      {/* Light/Dark Theme Switch */}
+      <div style={{
+        position: "absolute", top: 13, left: 13, zIndex: 12,
+        display: "flex", alignItems: "center", gap: 8
+      }}>
+        <button
+          onClick={() => setDark(d => !d)}
+          style={{
+            background: dark ? "#21294a" : "#e2e8f0",
+            border: "none",
+            borderRadius: 19,
+            width: 44,
+            height: 29,
+            boxShadow: "0 1px 4px #0001",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: dark ? "flex-end" : "flex-start",
+            padding: 3,
+            transition: "background .2s"
+          }}
+          title={dark ? "Hell" : "Dunkel"}
+        >
+          <span style={{
+            width: 24,
+            height: 24,
+            borderRadius: "50%",
+            background: dark ? "#2d5bf6" : "#fcd34d",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background .2s"
+          }}>
+            {dark ? <Moon /> : <Sun />}
+          </span>
+        </button>
+      </div>
+
       {/* Header mit PDF-Button */}
       <div style={{
         position: "relative",
@@ -243,7 +335,7 @@ export default function FoodDiary() {
           fontWeight: 600,
           fontSize: 23,
           letterSpacing: 0.3,
-          color: "#f6f6fa"
+          color: dark ? "#f6f6fa" : "#234"
         }}>
           Food Diary
         </h2>
@@ -269,10 +361,10 @@ export default function FoodDiary() {
             placeholder="Essen..."
             style={{
               border: "1.4px solid #40444c",
-              background: "#232531",
-              color: "#f6f6fa",
+              background: dark ? "#232531" : "#fff",
+              color: dark ? "#f6f6fa" : "#232531",
               borderRadius: 7,
-              fontSize: 15,
+              fontSize: minInputFont,
               padding: "8px 13px",
               flex: 1,
               width: mobile ? "100%" : 160,
@@ -290,7 +382,6 @@ export default function FoodDiary() {
             onChange={e => addImgs(e, "foodImgs")}
           />
         </div>
-
         {/* Bilder */}
         <div style={{ alignSelf: "center", marginTop: mobile ? 6 : 0 }}>
           <ImgStack
@@ -300,7 +391,6 @@ export default function FoodDiary() {
             onDel={handleDelFoodImg}
           />
         </div>
-
         {/* Symptome als eigene Zeile auf Mobile */}
         <div style={{
           width: mobile ? "100%" : 320,
@@ -316,10 +406,10 @@ export default function FoodDiary() {
             style={{
               width: mobile ? "66%" : 135,
               border: "1.4px solid #40444c",
-              background: "#232531",
-              color: "#f6f6fa",
+              background: dark ? "#232531" : "#fff",
+              color: dark ? "#f6f6fa" : "#232531",
               borderRadius: 7,
-              fontSize: 15,
+              fontSize: minInputFont,
               padding: "8px 11px",
               flex: 2
             }}
@@ -331,9 +421,9 @@ export default function FoodDiary() {
             style={{
               height: 33,
               borderRadius: 6,
-              fontSize: 14,
-              background: "#232531",
-              color: "#f6f6fa",
+              fontSize: minInputFont,
+              background: dark ? "#232531" : "#fff",
+              color: dark ? "#f6f6fa" : "#232531",
               border: "1.4px solid #40444c",
               flex: 1,
               minWidth: 64
@@ -358,14 +448,25 @@ export default function FoodDiary() {
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 700,
-              fontSize: 18,
+              fontSize: 20,
               marginLeft: 2
             }}
             tabIndex={-1}
             title="Symptom hinzufügen"
+            type="button"
           >+</button>
         </div>
       </div>
+
+      {/* Loading für Bilder */}
+      {imgLoading && (
+        <div style={{
+          background: "#000c", color: "#ffe57f", borderRadius: 8,
+          padding: 17, margin: "18px 0", textAlign: "center", fontWeight: 700
+        }}>
+          Bild wird verarbeitet...
+        </div>
+      )}
 
       {/* Symptome als Tags */}
       <div style={{ margin: "2px 0 15px 0", minHeight: 24, display: "flex", flexWrap: "wrap", gap: 2 }}>
@@ -374,6 +475,7 @@ export default function FoodDiary() {
             key={i}
             txt={s.custom}
             time={s.time}
+            dark={dark}
             onDel={() => setForm(f => ({ ...f, symptoms: f.symptoms.filter((_, k) => k !== i) }))}
           />
         ))}
@@ -403,7 +505,7 @@ export default function FoodDiary() {
       <div
         id="food-diary-table"
         style={{
-          background: "#22232a",
+          background: dark ? "#22232a" : "#fafdff",
           borderRadius: 15,
           marginTop: 16,
           boxShadow: "0 1px 8px #0002",
@@ -412,7 +514,7 @@ export default function FoodDiary() {
       >
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ color: "#fff", fontSize: 15, borderBottom: "2px solid #353540" }}>
+            <tr style={{ color: dark ? "#fff" : "#222", fontSize: 15, borderBottom: "2px solid #353540" }}>
               <th style={{ textAlign: "left", padding: "8px 10px" }}>Datum</th>
               <th style={{ textAlign: "left", padding: "8px 10px" }}>Essen</th>
               <th style={{ textAlign: "left", padding: "8px 10px" }}>Bilder</th>
@@ -425,7 +527,7 @@ export default function FoodDiary() {
               <tr key={i}
                 style={{
                   borderBottom: "1.5px solid #292936",
-                  background: editIdx === i ? "#21294a" : "inherit"
+                  background: editIdx === i ? (dark ? "#21294a" : "#d8eafe") : "inherit"
                 }}>
                 <td style={{ padding: "8px 10px" }}>{e.date}</td>
                 <td style={{ padding: "8px 10px", fontWeight: 500 }}>{e.food}</td>
@@ -442,6 +544,7 @@ export default function FoodDiary() {
                         key={si}
                         txt={s.custom}
                         time={s.time}
+                        dark={dark}
                       />
                     )}
                   </div>
@@ -450,7 +553,8 @@ export default function FoodDiary() {
                   <button
                     onClick={() => handleEdit(i)}
                     style={{
-                      background: "#191e29", color: "#fff", border: "1px solid #4763a5",
+                      background: dark ? "#191e29" : "#eaf3ff", color: dark ? "#fff" : "#345",
+                      border: "1px solid #4763a5",
                       borderRadius: 6, padding: "6px 14px", margin: 2, fontSize: 13, cursor: "pointer"
                     }}
                   >Bearbeiten</button>
