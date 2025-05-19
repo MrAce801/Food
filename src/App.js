@@ -21,11 +21,8 @@ const TIME_CHOICES = [
 
 const now = () => {
   const d = new Date();
-  return (
-    d.toLocaleDateString() +
-    " " +
-    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
+  return d.toLocaleDateString() + " " +
+    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
 // --- Kleine UI-Komponenten ---
@@ -35,10 +32,8 @@ const ThemeSwitch = ({ dark, setDark }) => (
     onClick={() => setDark(d => !d)}
     title="Theme wechseln"
     style={{
-      background: "none",
-      border: "none",
-      cursor: "pointer",
-      fontSize: 24
+      background: "none", border: "none",
+      cursor: "pointer", fontSize: 24
     }}
   >
     {dark ? "🌙" : "☀️"}
@@ -50,12 +45,9 @@ const PdfButton = ({ onClick }) => (
     onClick={onClick}
     title="Export PDF"
     style={{
-      background: "#d32f2f",
-      color: "#fff",
-      border: 0,
-      borderRadius: 6,
-      padding: "6px 16px",
-      fontWeight: 600,
+      background: "#d32f2f", color: "#fff",
+      border: 0, borderRadius: 6,
+      padding: "6px 16px", fontWeight: 600,
       cursor: "pointer"
     }}
   >
@@ -68,15 +60,10 @@ const CameraButton = ({ onClick }) => (
     onClick={onClick}
     title="Foto aufnehmen/hochladen"
     style={{
-      width: 36,
-      height: 36,
-      borderRadius: "50%",
-      border: 0,
-      background: "#247be5",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer"
+      width: 36, height: 36, borderRadius: "50%",
+      border: 0, background: "#247be5",
+      display: "flex", alignItems: "center",
+      justifyContent: "center", cursor: "pointer"
     }}
   >
     📷
@@ -86,35 +73,33 @@ const CameraButton = ({ onClick }) => (
 const ImgStack = ({ imgs, onDelete }) => (
   <div style={{ display: "flex", alignItems: "center" }}>
     {imgs.map((src, i) => (
-      <div key={i} style={{ position: "relative", marginLeft: i === 0 ? 0 : -12, zIndex: imgs.length - i }}>
+      <div
+        key={i}
+        style={{
+          position: "relative",
+          marginLeft: i === 0 ? 0 : -12,
+          zIndex: imgs.length - i
+        }}
+      >
         <img
           src={src}
           alt=""
           style={{
-            width: 40,
-            height: 40,
-            objectFit: "cover",
-            borderRadius: 6,
+            width: 40, height: 40,
+            objectFit: "cover", borderRadius: 6,
             border: "2px solid #fff",
             boxShadow: "0 1px 4px #0003"
           }}
         />
         {onDelete && (
           <span
-            onClick={(e) => { e.stopPropagation(); onDelete(i); }}
+            onClick={e => { e.stopPropagation(); onDelete(i); }}
             style={{
-              position: "absolute",
-              top: -6,
-              right: -6,
-              background: "#c00",
-              color: "#fff",
-              borderRadius: "50%",
-              width: 18,
-              height: 18,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 12,
+              position: "absolute", top: -6, right: -6,
+              background: "#c00", color: "#fff",
+              borderRadius: "50%", width: 18, height: 18,
+              display: "flex", alignItems: "center",
+              justifyContent: "center", fontSize: 12,
               cursor: "pointer"
             }}
           >
@@ -130,14 +115,11 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
   <div
     onClick={onClick}
     style={{
-      display: "inline-flex",
-      alignItems: "center",
+      display: "inline-flex", alignItems: "center",
       background: dark ? "#343445" : "#e8f0ff",
       color: dark ? "#f1f1f6" : "#1a1f3d",
-      borderRadius: 6,
-      padding: "5px 10px",
-      margin: "3px 4px 3px 0",
-      fontSize: 14,
+      borderRadius: 6, padding: "5px 10px",
+      margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default"
     }}
   >
@@ -147,8 +129,11 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
     </span>
     {onDel && (
       <span
-        onClick={(e) => { e.stopPropagation(); onDel(); }}
-        style={{ marginLeft: 6, cursor: "pointer", fontSize: 16, color: "#c00", fontWeight: 700 }}
+        onClick={e => { e.stopPropagation(); onDel(); }}
+        style={{
+          marginLeft: 6, cursor: "pointer",
+          fontSize: 16, color: "#c00", fontWeight: 700
+        }}
       >
         ×
       </span>
@@ -159,24 +144,26 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
 // --- Haupt-App ---
 
 export default function App() {
-  const [dark, setDark] = useState(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches
+  const [dark, setDark] = useState(
+    () => window.matchMedia("(prefers-color-scheme: dark)").matches
   );
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem("fd-entries") || "[]"); }
     catch { return []; }
   });
+
+  // Neuen Eintrag
   const [newForm, setNewForm] = useState({
-    food: "",
-    imgs: [],
-    symptomInput: "",
-    symptomTime: 0
+    food: "", imgs: [], symptomInput: "", symptomTime: 0
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
   const fileRefNew = useRef();
+
+  // Inline-Bearbeitung
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const fileRefEdit = useRef();
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
   // Persist & Theme
@@ -202,109 +189,106 @@ export default function App() {
     if (!el) return;
     const canvas = await html2canvas(el, { scale: 2 });
     const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
+    const pdf = new jsPDF({
+      unit: "px",
+      format: [canvas.width, canvas.height]
+    });
     pdf.addImage(img, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
   };
 
-  // --- Neue Einträge ---
-
+  // Image-Handling mit Object URLs
   const handleNewFile = e => {
     const files = e.target.files;
-    if (!files?.length) return;
-    Array.from(files).forEach(f => {
-      const r = new FileReader();
-      r.onload = ev => {
-        setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, ev.target.result] }));
-      };
-      r.readAsDataURL(f);
-    });
+    if (!files) return;
+    const urls = Array.from(files).map(f => URL.createObjectURL(f));
+    setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, ...urls] }));
     e.target.value = "";
   };
-
-  const addNewSymptom = () => {
-    if (!newForm.symptomInput.trim()) return;
-    setNewSymptoms(s => [
-      ...s,
-      { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }
-    ]);
-    setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0 }));
+  const removeNewImg = idx => {
+    setNewForm(fm => {
+      URL.revokeObjectURL(fm.imgs[idx]);
+      return { ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) };
+    });
+  };
+  const handleEditFile = e => {
+    const files = e.target.files;
+    if (!files) return;
+    const urls = Array.from(files).map(f => URL.createObjectURL(f));
+    setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, ...urls] }));
+    e.target.value = "";
+  };
+  const removeEditImg = idx => {
+    setEditForm(fm => {
+      URL.revokeObjectURL(fm.imgs[idx]);
+      return { ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) };
+    });
   };
 
+  // Symptome neu
+  const addNewSymptom = () => {
+    if (!newForm.symptomInput.trim()) return;
+    setNewSymptoms(s => [...s, {
+      txt: newForm.symptomInput.trim(),
+      time: newForm.symptomTime
+    }]);
+    setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0 }));
+  };
   const removeNewSymptom = idx => {
     setNewSymptoms(s => s.filter((_, i) => i !== idx));
   };
 
+  // Eintrag hinzufügen
   const addEntry = () => {
     if (!newForm.food.trim()) return;
-    setEntries(e => [
-      ...e,
-      {
-        food: newForm.food,
-        imgs: newForm.imgs,
-        symptoms: newSymptoms,
-        date: now()
-      }
-    ]);
+    setEntries(e => [...e, {
+      food: newForm.food,
+      imgs: newForm.imgs,
+      symptoms: newSymptoms,
+      date: now()
+    }]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
   };
 
-  // --- Bearbeiten Inline ---
-
+  // Bearbeiten starten
   const startEdit = i => {
     setEditingIdx(i);
+    const e = entries[i];
     setEditForm({
-      food: entries[i].food,
-      imgs: [...entries[i].imgs],
-      symptoms: [...entries[i].symptoms],
+      food: e.food,
+      imgs: [...e.imgs],
+      symptoms: [...e.symptoms],
       symptomInput: "",
       symptomTime: 0
     });
   };
-
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
   };
-
-  const handleEditFile = e => {
-    const files = e.target.files;
-    if (!files?.length) return;
-    Array.from(files).forEach(f => {
-      const r = new FileReader();
-      r.onload = ev => {
-        setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, ev.target.result] }));
-      };
-      r.readAsDataURL(f);
-    });
-    e.target.value = "";
-  };
-
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
       ...fm,
-      symptoms: [
-        ...fm.symptoms,
-        { txt: fm.symptomInput.trim(), time: fm.symptomTime }
-      ],
+      symptoms: [...fm.symptoms, {
+        txt: fm.symptomInput.trim(),
+        time: fm.symptomTime
+      }],
       symptomInput: "",
       symptomTime: 0
     }));
   };
-
   const removeEditSymptom = idx => {
     setEditForm(fm => ({
       ...fm,
       symptoms: fm.symptoms.filter((_, i) => i !== idx)
     }));
   };
-
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
     const val = prompt(
-      `Neue Zeit für "${curr.txt}" (in Minuten):`,
+      `Neue Zeit für "${curr.txt}" (Minuten):`,
       String(curr.time)
     );
     const t = Number(val);
@@ -316,25 +300,22 @@ export default function App() {
       });
     }
   };
-
   const saveEdit = () => {
     setEntries(e =>
-      e.map((entry, i) =>
+      e.map((ent, i) =>
         i === editingIdx
-          ? { ...editForm, date: entry.date }
-          : entry
+          ? { ...editForm, date: ent.date }
+          : ent
       )
     );
     cancelEdit();
   };
-
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
   };
 
   // --- Render ---
-
   return (
     <div style={{
       maxWidth: 600,
@@ -343,8 +324,8 @@ export default function App() {
     }}>
       {/* Top-Bar */}
       <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "12px 0"
+        display: "flex", justifyContent: "space-between",
+        alignItems: "center", padding: "12px 0"
       }}>
         <ThemeSwitch dark={dark} setDark={setDark} />
         <PdfButton onClick={handleExportPDF} />
@@ -352,32 +333,24 @@ export default function App() {
 
       {/* Titel */}
       <h2 style={{
-        textAlign: "center",
-        margin: "8px 0 24px",
-        fontSize: 28,
-        fontWeight: 700
-      }}>
-        Food Diary
-      </h2>
+        textAlign: "center", margin: "8px 0 24px",
+        fontSize: 28, fontWeight: 700
+      }}>Food Diary</h2>
 
       {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
-        {/* Essen */}
+        {/* Essen + Foto */}
         <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 16
+          display: "flex", alignItems: "center",
+          gap: 8, marginBottom: 16
         }}>
           <input
             placeholder="Essen..."
             value={newForm.food}
             onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
             style={{
-              flex: 1,
-              padding: "10px 12px",
-              fontSize: 16,
-              borderRadius: 6,
+              flex: 1, padding: "10px 12px",
+              fontSize: 16, borderRadius: 6,
               border: "1px solid #ccc"
             }}
           />
@@ -386,22 +359,23 @@ export default function App() {
             ref={fileRefNew}
             type="file"
             accept="image/*"
-            capture="environment"
             multiple
+            capture={isMobile ? "environment" : undefined}
             onChange={handleNewFile}
             style={{ display: "none" }}
           />
         </div>
         {newForm.imgs.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <ImgStack imgs={newForm.imgs} onDelete={removeNewSymptom} />
+            <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />
           </div>
         )}
 
         {/* Symptome */}
         <div style={{ marginBottom: 16 }}>
           <div style={{
-            display: "flex", alignItems: "center", gap: 8, marginBottom: 8
+            display: "flex", alignItems: "center",
+            gap: 8, marginBottom: 8
           }}>
             <input
               list="symptom-list"
@@ -411,17 +385,13 @@ export default function App() {
                 ...fm, symptomInput: e.target.value
               }))}
               style={{
-                flex: 1,
-                padding: "8px 12px",
-                fontSize: 14,
-                borderRadius: 6,
+                flex: 1, padding: "8px 12px",
+                fontSize: 14, borderRadius: 6,
                 border: "1px solid #ccc"
               }}
             />
             <datalist id="symptom-list">
-              {SYMPTOM_CHOICES.map(s => (
-                <option key={s} value={s} />
-              ))}
+              {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
             </datalist>
             <select
               value={newForm.symptomTime}
@@ -436,9 +406,7 @@ export default function App() {
               }}
             >
               {TIME_CHOICES.map(t => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
+                <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
             <button
@@ -497,15 +465,19 @@ export default function App() {
             boxShadow: "0 1px 4px #0002"
           }}>
             {editingIdx === i ? (
-              // Inline-Bearbeitung
               <>
-                {/* Essen */}
+                {/* Inline-Bearbeitung */}
                 <div style={{
-                  display: "flex", alignItems: "center", gap: 8, marginBottom: 12
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 12
                 }}>
                   <input
                     value={editForm.food}
-                    onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                    onChange={e => setEditForm(fm => ({
+                      ...fm, food: e.target.value
+                    }))}
                     style={{
                       flex: 1,
                       padding: "8px 12px",
@@ -519,27 +491,23 @@ export default function App() {
                     ref={fileRefEdit}
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     multiple
+                    capture={isMobile ? "environment" : undefined}
                     onChange={handleEditFile}
                     style={{ display: "none" }}
                   />
                 </div>
                 {editForm.imgs.length > 0 && (
                   <div style={{ marginBottom: 12 }}>
-                    <ImgStack imgs={editForm.imgs} onDelete={idx => {
-                      setEditForm(fm => ({
-                        ...fm,
-                        imgs: fm.imgs.filter((_, j) => j !== idx)
-                      }));
-                    }} />
+                    <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />
                   </div>
                 )}
 
                 {/* Symptome bearbeiten */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{
-                    display: "flex", alignItems: "center", gap: 8, marginBottom: 8
+                    display: "flex", alignItems: "center",
+                    gap: 8, marginBottom: 8
                   }}>
                     <input
                       list="symptom-list"
@@ -569,9 +537,7 @@ export default function App() {
                       }}
                     >
                       {TIME_CHOICES.map(t => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
+                        <option key={t.value} value={t.value}>{t.label}</option>
                       ))}
                     </select>
                     <button
@@ -638,8 +604,8 @@ export default function App() {
                 </div>
               </>
             ) : (
-              // Anzeige-Modus
               <>
+                {/* Anzeige-Modus */}
                 <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
                   {e.date}
                 </div>
