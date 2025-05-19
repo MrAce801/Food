@@ -7,8 +7,7 @@ const SYMPTOMS = [
   "Schwellung am Gaumen", "Schleim im Hals", "Niesen", "Kopfschmerzen", "Rötung Haut"
 ];
 const TIMES = [0, 5, 10, 15, 30, 60];
-const LS_KEY = "fooddiary_v4";
-const LS_STOOL = "fooddiary_stool_v4";
+const LS_KEY = "fooddiary_v5";
 
 // ========== Mobilerkennung ==========
 const useMobile = () => {
@@ -25,13 +24,27 @@ const useMobile = () => {
 const CameraButton = ({ onClick }) =>
   <button onClick={onClick} style={{
     background: "#4070ea", border: 0, borderRadius: "50%", width: 34, height: 34,
-    display: "flex", alignItems: "center", justifyContent: "center", margin: "0 4px",
-    cursor: "pointer"
+    display: "flex", alignItems: "center", justifyContent: "center", margin: 0,
+    cursor: "pointer", marginLeft: 4
   }} title="Bild hinzufügen" tabIndex={-1}>
     <svg width={20} height={20} fill="#fff" viewBox="0 0 24 24">
       <circle cx={12} cy={12} r={7.5} stroke="#fff" strokeWidth="1.7" fill="#4070ea"/>
       <rect x={7.6} y={9.4} width={8.8} height={6.2} rx={2.3} fill="#fff"/>
       <circle cx={12} cy={12.5} r={1.5} fill="#4070ea"/>
+    </svg>
+  </button>;
+
+// ========== PlusButton (grün) ==========
+const PlusButton = ({ onClick }) =>
+  <button onClick={onClick} style={{
+    background: "#38d657", border: 0, borderRadius: "50%", width: 34, height: 34,
+    display: "flex", alignItems: "center", justifyContent: "center", margin: 0,
+    cursor: "pointer", marginLeft: 5
+  }} title="Symptom hinzufügen">
+    <svg width={20} height={20} viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="10" fill="#38d657"/>
+      <rect x="5.4" y="9" width="9.2" height="2" rx="1" fill="#fff"/>
+      <rect x="9" y="5.4" width="2" height="9.2" rx="1" fill="#fff"/>
     </svg>
   </button>;
 
@@ -76,7 +89,7 @@ const SymTag = ({ txt, time, onDel }) =>
     }
   </span>;
 
-// ========== Hilfsfunktion: Bilder automatisch verkleinern (max 900x900px) ==========
+// ========== Hilfsfunktion: Bilder automatisch verkleinern ==========
 function resizeImg(file, maxWH = 900) {
   return new Promise(resolve => {
     const reader = new FileReader();
@@ -120,34 +133,24 @@ export default function App() {
   });
   const [editIdx, setEditIdx] = useState(null);
 
-  // Stuhl
-  const [stoolForm, setStoolForm] = useState({ date: "", note: "", imgs: [] });
-  const [stools, setStools] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_STOOL)) || []; } catch { return []; }
-  });
-  const [editStoolIdx, setEditStoolIdx] = useState(null);
-
   // Fehlerbehandlung für Upload
   const [error, setError] = useState("");
 
   // LocalStorage persistieren
   useEffect(() => { localStorage.setItem(LS_KEY, JSON.stringify(entries)); }, [entries]);
-  useEffect(() => { localStorage.setItem(LS_STOOL, JSON.stringify(stools)); }, [stools]);
 
-  // Bilder - jetzt: resizing und Fehlerhandling
+  // Bilder - resizing
   async function handleAddImg(e, typ) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     try {
       const imgs = [];
       for (const f of files) {
-        const data = await resizeImg(f, 900); // Komprimiere auf max 900px
+        const data = await resizeImg(f, 900);
         if (data) imgs.push({ name: f.name, data });
       }
       if (!imgs.length) throw new Error("Fehler beim Bildimport");
       if (typ === "food") setForm(f => ({ ...f, foodImgs: [...(f.foodImgs || []), ...imgs] }));
-      if (typ === "symptoms") setForm(f => ({ ...f, symptomsImgs: [...(f.symptomsImgs || []), ...imgs] }));
-      if (typ === "stool") setStoolForm(f => ({ ...f, imgs: [...(f.imgs || []), ...imgs] }));
       setError("");
     } catch {
       setError("Bild konnte nicht verarbeitet werden – bitte anderes Bild wählen!");
@@ -173,7 +176,8 @@ export default function App() {
   }
 
   // Symptome
-  function addSymptom(sym) {
+  function addSymptom() {
+    const sym = form.symptomInput.trim();
     if (!sym) return;
     setForm(f => ({
       ...f,
@@ -183,21 +187,6 @@ export default function App() {
   }
   function delSymptom(idx) {
     setForm(f => ({ ...f, symptoms: f.symptoms.filter((_, i) => i !== idx) }));
-  }
-
-  // Stuhl
-  function addStool() {
-    if (!stoolForm.date) return;
-    if (editStoolIdx !== null) {
-      setStools(arr => arr.map((e, i) => i === editStoolIdx ? { ...stoolForm } : e));
-      setEditStoolIdx(null);
-    } else {
-      setStools(arr => [...arr, { ...stoolForm }]);
-    }
-    setStoolForm({ date: "", note: "", imgs: [] });
-  }
-  function onEditStool(i) {
-    setEditStoolIdx(i); setStoolForm({ ...stools[i] });
   }
 
   // Export Excel
@@ -250,20 +239,24 @@ export default function App() {
         }}>
           {/* Essen */}
           <div style={{ flex: 2, display: "flex", flexDirection: "column", gap: 6 }}>
-            <input
-              value={form.food}
-              onChange={e => setForm(f => ({ ...f, food: e.target.value }))}
-              placeholder="Essen..."
-              style={{
-                width: "100%", maxWidth: mobile ? 340 : 380,
-                borderRadius: 8, border: "1.5px solid #323441",
-                fontSize: 16, padding: "10px 12px", background: "#23242b", color: "#fff", boxSizing: "border-box"
-              }}
-            />
-            <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{
+              display: "flex", alignItems: "center", position: "relative",
+              maxWidth: mobile ? 340 : 380, width: "100%"
+            }}>
+              <input
+                value={form.food}
+                onChange={e => setForm(f => ({ ...f, food: e.target.value }))}
+                placeholder="Essen..."
+                style={{
+                  width: "100%",
+                  borderRadius: 8, border: "1.5px solid #323441",
+                  fontSize: 16, padding: "10px 12px",
+                  background: "#23242b", color: "#fff", boxSizing: "border-box"
+                }}
+              />
               <CameraButton onClick={() => { setPendingImgType("food"); fileRef.current.click(); }} />
-              <ImgStack imgs={form.foodImgs} />
             </div>
+            <ImgStack imgs={form.foodImgs} />
           </div>
           {/* Symptome */}
           <div style={{ flex: 3, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -277,9 +270,7 @@ export default function App() {
                   fontSize: 16, padding: "10px 12px", background: "#23242b", color: "#fff"
                 }}
                 onKeyDown={e => {
-                  if (e.key === "Enter" && form.symptomInput.trim()) {
-                    addSymptom(form.symptomInput.trim());
-                  }
+                  if (e.key === "Enter" && form.symptomInput.trim()) addSymptom();
                 }}
                 list="symplist"
               />
@@ -298,8 +289,7 @@ export default function App() {
                   <option key={t} value={t}>{t === 0 ? "direkt" : `+${t}min`}</option>
                 )}
               </select>
-              <CameraButton onClick={() => { setPendingImgType("symptoms"); fileRef.current.click(); }} />
-              <ImgStack imgs={form.symptomsImgs} />
+              <PlusButton onClick={addSymptom} />
             </div>
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {form.symptoms.map((s, i) =>
@@ -329,7 +319,6 @@ export default function App() {
             if (!pendingImgType) return;
             handleAddImg(e, pendingImgType);
             setPendingImgType(null);
-            // e.target.value = "" wäre nice, aber nicht bei allen Browsern nötig.
           }} />
 
         {/* Einträge-List (CARD-VIEW auf Mobile) */}
@@ -350,7 +339,6 @@ export default function App() {
                 <span style={{ fontWeight: 500 }}>{e.food}</span>
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 5 }}>
-                <ImgStack imgs={e.symptomsImgs} />
                 <div style={{ display: "flex", flexWrap: "wrap" }}>
                   {(e.symptoms || []).map((s, si) =>
                     <SymTag key={si} txt={s.txt} time={s.time} />
@@ -382,7 +370,6 @@ export default function App() {
               </div>
               <div style={{ flex: 1, fontWeight: 500 }}>{e.food}</div>
               <div style={{ minWidth: 90, display: "flex", flexDirection: "column" }}>
-                <ImgStack imgs={e.symptomsImgs} />
                 <div style={{ display: "flex", flexWrap: "wrap" }}>
                   {(e.symptoms || []).map((s, si) =>
                     <SymTag key={si} txt={s.txt} time={s.time} />
@@ -402,73 +389,6 @@ export default function App() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Stuhlgang-Einträge */}
-        <div style={{ marginTop: 6 }}>
-          <h3 style={{ fontWeight: 700, fontSize: mobile ? 17 : 19, marginBottom: 8 }}>Stuhlgang Einträge</h3>
-          <div style={{
-            display: "flex", flexDirection: mobile ? "column" : "row", gap: 8, alignItems: "center",
-            marginBottom: 10
-          }}>
-            <input
-              type="datetime-local"
-              value={stoolForm.date}
-              onChange={e => setStoolForm(f => ({ ...f, date: e.target.value }))}
-              style={{
-                borderRadius: 8, border: "1.5px solid #323441", background: "#23242b", color: "#fff",
-                fontSize: 16, padding: "10px 10px", marginBottom: mobile ? 6 : 0, maxWidth: 220
-              }}
-            />
-            <input
-              value={stoolForm.note}
-              onChange={e => setStoolForm(f => ({ ...f, note: e.target.value }))}
-              placeholder="Notiz (optional)..."
-              style={{
-                borderRadius: 8, border: "1.5px solid #323441", background: "#23242b", color: "#fff",
-                fontSize: 16, padding: "10px 10px", flex: 1, maxWidth: mobile ? 340 : 420
-              }}
-            />
-            <CameraButton onClick={() => { setPendingImgType("stool"); fileRef.current.click(); }} />
-            <ImgStack imgs={stoolForm.imgs} />
-            <button
-              onClick={addStool}
-              style={{
-                padding: "12px 0", minWidth: mobile ? "97vw" : 120,
-                background: "#4070ea", color: "#fff", fontWeight: 700, fontSize: 16,
-                borderRadius: 10, border: 0, boxShadow: "0 1px 7px #0002", cursor: "pointer"
-              }}>
-              {editStoolIdx !== null ? "Speichern" : "Eintrag speichern"}
-            </button>
-          </div>
-          <div>
-            {stools.length === 0 &&
-              <div style={{ textAlign: "center", color: "#aaa", marginTop: 14, fontSize: 16 }}>
-                Noch keine Stuhlgang-Einträge
-              </div>
-            }
-            {stools.map((e, i) => (
-              <div key={i} style={{
-                background: editStoolIdx === i ? "#252638" : "#23242b", borderRadius: 11, marginBottom: 9,
-                boxShadow: "0 1px 7px #0001", padding: "11px 11px"
-              }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{e.date && (new Date(e.date)).toLocaleString([], { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })}</div>
-                <div style={{ fontSize: 15 }}>{e.note}</div>
-                <ImgStack imgs={e.imgs} />
-                <div style={{ marginTop: 6 }}>
-                  <button onClick={() => onEditStool(i)} style={{
-                    background: "#23233a", color: "#fff", border: "1px solid #7e7e9c",
-                    borderRadius: 8, padding: "8px 15px", marginRight: 7, fontSize: 14, cursor: "pointer"
-                  }}>Bearbeiten</button>
-                  <button onClick={() => setStools(arr => arr.filter((_, j) => j !== i))}
-                    style={{
-                      background: "#fe7e7e", color: "#fff", border: 0,
-                      borderRadius: 7, padding: "7px 13px", fontSize: 16, cursor: "pointer"
-                    }}>×</button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
