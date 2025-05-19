@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 // ========== Helper Daten ==========
 const SYMPTOMS = [
@@ -169,6 +170,34 @@ function resizeImg(file, maxWH = 900) {
   });
 }
 
+// ========== PDF Export ==========
+async function exportPdf(domId = "diary-export-area") {
+  const area = document.getElementById(domId);
+  if (!area) return;
+  // Mache Screenshot vom sichtbaren Bereich
+  const canvas = await html2canvas(area, {
+    scale: 2,
+    backgroundColor: "#181a1b", // dunkler Hintergrund!
+    useCORS: true,
+    logging: false
+  });
+  const imgData = canvas.toDataURL("image/jpeg", 0.96);
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4"
+  });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imgProps = pdf.getImageProperties(imgData);
+  const imgWidth = pageWidth - 10;
+  const imgHeight = imgProps.height * imgWidth / imgProps.width;
+
+  let y = 5;
+  pdf.addImage(imgData, "JPEG", 5, y, imgWidth, imgHeight, undefined, "FAST");
+  pdf.save("FoodDiary.pdf");
+}
+
 // ========== Hauptkomponente ==========
 export default function App() {
   const mobile = useMobile();
@@ -249,32 +278,6 @@ export default function App() {
     setForm(f => ({ ...f, symptoms: f.symptoms.filter((_, i) => i !== idx) }));
   }
 
-  // Export Excel (mit Bild-Links)
-  function exportExcel() {
-    const ws = XLSX.utils.json_to_sheet(
-      entries.map(e => ({
-        Datum: e.date,
-        Essen: e.food,
-        Symptome: (e.symptoms || []).map(s => s.txt + (s.time !== undefined ? ` (${s.time === 0 ? "direkt" : "+" + s.time + "min"})` : "")).join(", "),
-        Bilder: (e.foodImgs || []).map(img => img.data ? "(Anklicken für Bild)" : "").join(" ")
-      }))
-    );
-    // Füge Links zu Bildern als Kommentar in Excel hinzu (so weit es geht)
-    (entries || []).forEach((e, rowIdx) => {
-      (e.foodImgs || []).forEach((img, colIdx) => {
-        const cell = ws[XLSX.utils.encode_cell({ c: 3, r: rowIdx })];
-        if (cell && img.data) {
-          if (!cell.l) cell.l = [];
-          // Only the first image gets link; Excel is limited
-          if (colIdx === 0) cell.l = { Target: img.data, Tooltip: "Bild ansehen" };
-        }
-      });
-    });
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Food Diary");
-    XLSX.writeFile(wb, "FoodDiary.xlsx");
-  }
-
   // ========== Render ==========
   return (
     <div style={{
@@ -298,198 +301,203 @@ export default function App() {
 
       <div style={{ maxWidth: mobile ? 430 : 950, margin: "0 auto", padding: mobile ? "12px 8px 0 8px" : "0 0 0 0" }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-          <button onClick={exportExcel} style={{
-            background: "#3b82f6", color: "#fff", border: 0, borderRadius: 9,
-            padding: "10px 20px", fontSize: 16, fontWeight: 600, boxShadow: "0 1px 4px #0003"
-          }}>Exportieren (.xlsx)</button>
-        </div>
-        <h2 style={{
-          fontWeight: 800, fontSize: mobile ? 21 : 24, margin: "7px 0 17px 2px",
-          letterSpacing: 0.5, textAlign: "left"
-        }}>Food Diary</h2>
-        {/* Fehleranzeige */}
-        {!!error && <div style={{
-          background: "#ffaeae", color: "#600", borderRadius: 7, padding: "10px 15px", fontWeight: 600,
-          marginBottom: 12, fontSize: 16, textAlign: "center"
-        }}>{error}</div>}
-
-        {/* Eingabe */}
-        <div style={{
-          display: "flex", flexDirection: mobile ? "column" : "row", alignItems: mobile ? "stretch" : "flex-end",
-          gap: mobile ? 9 : 16, marginBottom: 16
-        }}>
-          {/* Essen */}
-          <div style={{ flex: 2, display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{
-              display: "flex", alignItems: "center", position: "relative",
-              maxWidth: mobile ? 340 : 380, width: "100%"
+          <button
+            onClick={() => exportPdf("diary-export-area")}
+            style={{
+              background: "#e22d2d", color: "#fff", border: 0, borderRadius: 9,
+              padding: "10px 20px", fontSize: 16, fontWeight: 600, boxShadow: "0 1px 4px #0003"
             }}>
-              <input
-                value={form.food}
-                onChange={e => setForm(f => ({ ...f, food: e.target.value }))}
-                placeholder="Essen..."
-                style={{
-                  width: "100%",
-                  borderRadius: 8, border: "1.5px solid #323441",
-                  fontSize: 16, padding: "10px 12px",
-                  background: "#23242b", color: "#fff", boxSizing: "border-box"
-                }}
-              />
-              <CameraButton onClick={() => { setPendingImgType("food"); fileRef.current.click(); }} />
-            </div>
-            <ImgStack
-              imgs={form.foodImgs}
-              editable={true}
-              onRemove={idx => removeImg("food", idx)}
-              onClick={idx => setImgModal({ open: true, imgs: form.foodImgs, idx })}
-            />
-          </div>
-          {/* Symptome */}
-          <div style={{ flex: 3, display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              <input
-                value={form.symptomInput}
-                onChange={e => setForm(f => ({ ...f, symptomInput: e.target.value }))}
-                placeholder="Symptom oder Auswahl..."
-                style={{
-                  flex: 3, borderRadius: 8, border: "1.5px solid #323441",
-                  fontSize: 16, padding: "10px 12px", background: "#23242b", color: "#fff"
-                }}
-                onKeyDown={e => {
-                  if (e.key === "Enter" && form.symptomInput.trim()) addSymptom();
-                }}
-                list="symplist"
-              />
-              <datalist id="symplist">
-                {SYMPTOMS.map(s => <option key={s} value={s} />)}
-              </datalist>
-              <select
-                value={form.symptomTime}
-                onChange={e => setForm(f => ({ ...f, symptomTime: Number(e.target.value) }))}
-                style={{
-                  flex: 1, minWidth: 70, borderRadius: 8, border: "1.5px solid #323441",
-                  fontSize: 16, padding: "10px 7px", background: "#23242b", color: "#fff"
-                }}
-              >
-                {TIMES.map(t =>
-                  <option key={t} value={t}>{t === 0 ? "direkt" : `+${t}min`}</option>
-                )}
-              </select>
-              <PlusButton onClick={addSymptom} />
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap" }}>
-              {form.symptoms.map((s, i) =>
-                <SymTag key={i} txt={s.txt} time={s.time} onDel={() => delSymptom(i)} />
-              )}
-            </div>
-          </div>
-          {/* Hinzufügen */}
+            Exportieren (PDF)
+          </button>
+        </div>
+        <div id="diary-export-area">
+          <h2 style={{
+            fontWeight: 800, fontSize: mobile ? 21 : 24, margin: "7px 0 17px 2px",
+            letterSpacing: 0.5, textAlign: "left"
+          }}>Food Diary</h2>
+          {/* Fehleranzeige */}
+          {!!error && <div style={{
+            background: "#ffaeae", color: "#600", borderRadius: 7, padding: "10px 15px", fontWeight: 600,
+            marginBottom: 12, fontSize: 16, textAlign: "center"
+          }}>{error}</div>}
+
+          {/* Eingabe */}
           <div style={{
-            flex: mobile ? "unset" : 1, display: "flex", alignItems: "center",
-            justifyContent: mobile ? "flex-end" : "center", marginTop: mobile ? 8 : 0
+            display: "flex", flexDirection: mobile ? "column" : "row", alignItems: mobile ? "stretch" : "flex-end",
+            gap: mobile ? 9 : 16, marginBottom: 16
           }}>
-            <button
-              onClick={addEntry}
-              style={{
-                padding: "12px 0", minWidth: mobile ? "97vw" : 120,
-                background: "#4070ea", color: "#fff", fontWeight: 700, fontSize: 17,
-                borderRadius: 10, border: 0, boxShadow: "0 1px 7px #0002", cursor: "pointer"
+            {/* Essen */}
+            <div style={{ flex: 2, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{
+                display: "flex", alignItems: "center", position: "relative",
+                maxWidth: mobile ? 340 : 380, width: "100%"
               }}>
-              {editIdx !== null ? "Speichern" : "Hinzufügen"}
-            </button>
+                <input
+                  value={form.food}
+                  onChange={e => setForm(f => ({ ...f, food: e.target.value }))}
+                  placeholder="Essen..."
+                  style={{
+                    width: "100%",
+                    borderRadius: 8, border: "1.5px solid #323441",
+                    fontSize: 16, padding: "10px 12px",
+                    background: "#23242b", color: "#fff", boxSizing: "border-box"
+                  }}
+                />
+                <CameraButton onClick={() => { setPendingImgType("food"); fileRef.current.click(); }} />
+              </div>
+              <ImgStack
+                imgs={form.foodImgs}
+                editable={true}
+                onRemove={idx => removeImg("food", idx)}
+                onClick={idx => setImgModal({ open: true, imgs: form.foodImgs, idx })}
+              />
+            </div>
+            {/* Symptome */}
+            <div style={{ flex: 3, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input
+                  value={form.symptomInput}
+                  onChange={e => setForm(f => ({ ...f, symptomInput: e.target.value }))}
+                  placeholder="Symptom oder Auswahl..."
+                  style={{
+                    flex: 3, borderRadius: 8, border: "1.5px solid #323441",
+                    fontSize: 16, padding: "10px 12px", background: "#23242b", color: "#fff"
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && form.symptomInput.trim()) addSymptom();
+                  }}
+                  list="symplist"
+                />
+                <datalist id="symplist">
+                  {SYMPTOMS.map(s => <option key={s} value={s} />)}
+                </datalist>
+                <select
+                  value={form.symptomTime}
+                  onChange={e => setForm(f => ({ ...f, symptomTime: Number(e.target.value) }))}
+                  style={{
+                    flex: 1, minWidth: 70, borderRadius: 8, border: "1.5px solid #323441",
+                    fontSize: 16, padding: "10px 7px", background: "#23242b", color: "#fff"
+                  }}
+                >
+                  {TIMES.map(t =>
+                    <option key={t} value={t}>{t === 0 ? "direkt" : `+${t}min`}</option>
+                  )}
+                </select>
+                <PlusButton onClick={addSymptom} />
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap" }}>
+                {form.symptoms.map((s, i) =>
+                  <SymTag key={i} txt={s.txt} time={s.time} onDel={() => delSymptom(i)} />
+                )}
+              </div>
+            </div>
+            {/* Hinzufügen */}
+            <div style={{
+              flex: mobile ? "unset" : 1, display: "flex", alignItems: "center",
+              justifyContent: mobile ? "flex-end" : "center", marginTop: mobile ? 8 : 0
+            }}>
+              <button
+                onClick={addEntry}
+                style={{
+                  padding: "12px 0", minWidth: mobile ? "97vw" : 120,
+                  background: "#4070ea", color: "#fff", fontWeight: 700, fontSize: 17,
+                  borderRadius: 10, border: 0, boxShadow: "0 1px 7px #0002", cursor: "pointer"
+                }}>
+                {editIdx !== null ? "Speichern" : "Hinzufügen"}
+              </button>
+            </div>
           </div>
-        </div>
-        {/* Upload-Input (versteckt) */}
-        <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
-          onChange={e => {
-            if (!pendingImgType) return;
-            handleAddImg(e, pendingImgType);
-            setPendingImgType(null);
-          }} />
+          {/* Upload-Input (versteckt) */}
+          <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
+            onChange={e => {
+              if (!pendingImgType) return;
+              handleAddImg(e, pendingImgType);
+              setPendingImgType(null);
+            }} />
 
-        {/* Einträge-List (CARD-VIEW auf Mobile) */}
-        <div style={{ marginBottom: 26 }}>
-          {entries.length === 0 &&
-            <div style={{ textAlign: "center", color: "#aaa", marginTop: 22, fontSize: 17 }}>
-              Noch keine Einträge
-            </div>
-          }
-          {entries.map((e, i) => mobile ? (
-            <div key={i} style={{
-              background: editIdx === i ? "#252638" : "#23242b", borderRadius: 11, marginBottom: 10,
-              boxShadow: "0 1px 7px #0001", padding: "13px 11px"
-            }}>
-              <div style={{ fontSize: 14.5, marginBottom: 2, fontWeight: 600 }}>{e.date}</div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 3 }}>
-                <ImgStack
-                  imgs={e.foodImgs}
-                  onClick={idx => setImgModal({ open: true, imgs: e.foodImgs, idx })}
-                  editable={editIdx === i}
-                  onRemove={idx => {
-                    // Entfernen direkt im Bearbeiten-Modus erlaubt
-                    if (editIdx === i) setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, j) => j !== idx) }));
-                  }}
-                />
-                <span style={{ fontWeight: 500 }}>{e.food}</span>
+          {/* Einträge-List (CARD-VIEW auf Mobile) */}
+          <div style={{ marginBottom: 26 }}>
+            {entries.length === 0 &&
+              <div style={{ textAlign: "center", color: "#aaa", marginTop: 22, fontSize: 17 }}>
+                Noch keine Einträge
               </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 5 }}>
-                <div style={{ display: "flex", flexWrap: "wrap" }}>
-                  {(e.symptoms || []).map((s, si) =>
-                    <SymTag key={si} txt={s.txt} time={s.time} />
-                  )}
+            }
+            {entries.map((e, i) => mobile ? (
+              <div key={i} style={{
+                background: editIdx === i ? "#252638" : "#23242b", borderRadius: 11, marginBottom: 10,
+                boxShadow: "0 1px 7px #0001", padding: "13px 11px"
+              }}>
+                <div style={{ fontSize: 14.5, marginBottom: 2, fontWeight: 600 }}>{e.date}</div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 3 }}>
+                  <ImgStack
+                    imgs={e.foodImgs}
+                    onClick={idx => setImgModal({ open: true, imgs: e.foodImgs, idx })}
+                    editable={editIdx === i}
+                    onRemove={idx => {
+                      if (editIdx === i) setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, j) => j !== idx) }));
+                    }}
+                  />
+                  <span style={{ fontWeight: 500 }}>{e.food}</span>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 5 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap" }}>
+                    {(e.symptoms || []).map((s, si) =>
+                      <SymTag key={si} txt={s.txt} time={s.time} />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <button onClick={() => onEditEntry(i)} style={{
+                    background: "#23233a", color: "#fff", border: "1px solid #7e7e9c",
+                    borderRadius: 8, padding: "8px 14px", marginRight: 7, fontSize: 14, cursor: "pointer"
+                  }}>Bearbeiten</button>
+                  <button onClick={() => setEntries(arr => arr.filter((_, j) => j !== i))}
+                    style={{
+                      background: "#fe7e7e", color: "#fff", border: 0,
+                      borderRadius: 7, padding: "7px 13px", fontSize: 16, cursor: "pointer"
+                    }}>×</button>
                 </div>
               </div>
-              <div>
-                <button onClick={() => onEditEntry(i)} style={{
-                  background: "#23233a", color: "#fff", border: "1px solid #7e7e9c",
-                  borderRadius: 8, padding: "8px 14px", marginRight: 7, fontSize: 14, cursor: "pointer"
-                }}>Bearbeiten</button>
-                <button onClick={() => setEntries(arr => arr.filter((_, j) => j !== i))}
-                  style={{
-                    background: "#fe7e7e", color: "#fff", border: 0,
-                    borderRadius: 7, padding: "7px 13px", fontSize: 16, cursor: "pointer"
-                  }}>×</button>
-              </div>
-            </div>
-          ) : (
-            <div key={i} style={{
-              display: "flex", alignItems: "center", gap: 9,
-              background: editIdx === i ? "#252638" : "#23242b",
-              borderRadius: 11, marginBottom: 10, padding: "13px 12px",
-              boxShadow: "0 1px 6px #0001"
-            }}>
-              <div style={{ minWidth: 82 }}>
-                <div style={{ fontSize: 14.2, fontWeight: 600 }}>{e.date}</div>
-                <ImgStack
-                  imgs={e.foodImgs}
-                  onClick={idx => setImgModal({ open: true, imgs: e.foodImgs, idx })}
-                  editable={editIdx === i}
-                  onRemove={idx => {
-                    if (editIdx === i) setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, j) => j !== idx) }));
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1, fontWeight: 500 }}>{e.food}</div>
-              <div style={{ minWidth: 90, display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", flexWrap: "wrap" }}>
-                  {(e.symptoms || []).map((s, si) =>
-                    <SymTag key={si} txt={s.txt} time={s.time} />
-                  )}
+            ) : (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: 9,
+                background: editIdx === i ? "#252638" : "#23242b",
+                borderRadius: 11, marginBottom: 10, padding: "13px 12px",
+                boxShadow: "0 1px 6px #0001"
+              }}>
+                <div style={{ minWidth: 82 }}>
+                  <div style={{ fontSize: 14.2, fontWeight: 600 }}>{e.date}</div>
+                  <ImgStack
+                    imgs={e.foodImgs}
+                    onClick={idx => setImgModal({ open: true, imgs: e.foodImgs, idx })}
+                    editable={editIdx === i}
+                    onRemove={idx => {
+                      if (editIdx === i) setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, j) => j !== idx) }));
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1, fontWeight: 500 }}>{e.food}</div>
+                <div style={{ minWidth: 90, display: "flex", flexDirection: "column" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap" }}>
+                    {(e.symptoms || []).map((s, si) =>
+                      <SymTag key={si} txt={s.txt} time={s.time} />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <button onClick={() => onEditEntry(i)} style={{
+                    background: "#23233a", color: "#fff", border: "1px solid #7e7e9c",
+                    borderRadius: 8, padding: "8px 14px", marginRight: 7, fontSize: 14, cursor: "pointer"
+                  }}>Bearbeiten</button>
+                  <button onClick={() => setEntries(arr => arr.filter((_, j) => j !== i))}
+                    style={{
+                      background: "#fe7e7e", color: "#fff", border: 0,
+                      borderRadius: 7, padding: "7px 13px", fontSize: 16, cursor: "pointer"
+                    }}>×</button>
                 </div>
               </div>
-              <div>
-                <button onClick={() => onEditEntry(i)} style={{
-                  background: "#23233a", color: "#fff", border: "1px solid #7e7e9c",
-                  borderRadius: 8, padding: "8px 14px", marginRight: 7, fontSize: 14, cursor: "pointer"
-                }}>Bearbeiten</button>
-                <button onClick={() => setEntries(arr => arr.filter((_, j) => j !== i))}
-                  style={{
-                    background: "#fe7e7e", color: "#fff", border: 0,
-                    borderRadius: 7, padding: "7px 13px", fontSize: 16, cursor: "pointer"
-                  }}>×</button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
