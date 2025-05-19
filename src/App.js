@@ -7,7 +7,7 @@ const SYMPTOMS = [
   "Schwellung am Gaumen", "Schleim im Hals", "Niesen", "Kopfschmerzen", "Rötung Haut"
 ];
 const TIMES = [0, 5, 10, 15, 30, 60];
-const LS_KEY = "fooddiary_v5";
+const LS_KEY = "fooddiary_v6";
 
 // ========== Mobilerkennung ==========
 const useMobile = () => {
@@ -49,19 +49,29 @@ const PlusButton = ({ onClick }) =>
   </button>;
 
 // ========== Bild-Stack ==========
-const ImgStack = ({ imgs = [], onClick }) =>
+const ImgStack = ({ imgs = [], onClick, onRemove, editable }) => (
   !imgs.length ? null : (
-    <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={onClick}>
+    <div style={{ display: "flex", alignItems: "center", cursor: onClick ? "pointer" : "default" }}>
       {imgs.slice(0, 3).map((img, i) =>
-        <img
-          key={i}
-          src={img.data}
-          alt=""
-          style={{
-            width: 31, height: 31, borderRadius: 8, objectFit: "cover",
-            border: "2px solid #fff", marginLeft: i ? -12 : 0, boxShadow: "0 0 3px #0005"
-          }}
-        />
+        <div key={i} style={{ position: "relative", marginLeft: i ? -12 : 0 }}>
+          <img
+            src={img.data}
+            alt=""
+            style={{
+              width: 31, height: 31, borderRadius: 8, objectFit: "cover",
+              border: "2px solid #fff", boxShadow: "0 0 3px #0005"
+            }}
+            onClick={onClick ? (e) => { e.stopPropagation(); onClick(i); } : undefined}
+          />
+          {editable &&
+            <span onClick={() => onRemove(i)} style={{
+              position: "absolute", top: -7, right: -7, width: 18, height: 18,
+              background: "#fe7e7e", color: "#fff", borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 15, cursor: "pointer", fontWeight: 700, boxShadow: "0 1px 3px #0007"
+            }}>×</span>
+          }
+        </div>
       )}
       {imgs.length > 3 &&
         <span style={{
@@ -70,7 +80,8 @@ const ImgStack = ({ imgs = [], onClick }) =>
         }}>+{imgs.length - 3}</span>
       }
     </div>
-  );
+  )
+);
 
 // ========== Symptombadge ==========
 const SymTag = ({ txt, time, onDel }) =>
@@ -88,6 +99,47 @@ const SymTag = ({ txt, time, onDel }) =>
       }}>×</span>
     }
   </span>;
+
+// ========== Modal-Bild-Viewer ==========
+function ImageModal({ open, imgs, idx, onClose, setIdx }) {
+  if (!open || !imgs.length) return null;
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+      background: "rgba(20,20,30,0.95)", display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 11111, flexDirection: "column"
+    }}
+      onClick={onClose}>
+      <div style={{ marginBottom: 10, color: "#fff", fontSize: 17, fontWeight: 600 }}>
+        Bild {idx + 1} / {imgs.length}
+      </div>
+      <img
+        src={imgs[idx].data}
+        alt=""
+        style={{
+          maxWidth: "96vw", maxHeight: "67vh", borderRadius: 16, border: "3px solid #fff", boxShadow: "0 8px 48px #000c"
+        }}
+        onClick={e => e.stopPropagation()}
+      />
+      <div style={{ marginTop: 18, display: "flex", gap: 20 }}>
+        <button disabled={idx === 0} onClick={e => { e.stopPropagation(); setIdx(idx - 1); }} style={{
+          opacity: idx === 0 ? 0.4 : 1,
+          background: "#23233a", color: "#fff", border: "1px solid #7e7e9c",
+          borderRadius: 7, padding: "9px 21px", fontSize: 17, cursor: "pointer"
+        }}>Zurück</button>
+        <button disabled={idx === imgs.length - 1} onClick={e => { e.stopPropagation(); setIdx(idx + 1); }} style={{
+          opacity: idx === imgs.length - 1 ? 0.4 : 1,
+          background: "#23233a", color: "#fff", border: "1px solid #7e7e9c",
+          borderRadius: 7, padding: "9px 21px", fontSize: 17, cursor: "pointer"
+        }}>Weiter</button>
+        <button onClick={e => { e.stopPropagation(); onClose(); }} style={{
+          background: "#fe7e7e", color: "#fff", border: 0, borderRadius: 7,
+          padding: "9px 21px", fontSize: 17, fontWeight: 700, cursor: "pointer"
+        }}>Schließen</button>
+      </div>
+    </div>
+  );
+}
 
 // ========== Hilfsfunktion: Bilder automatisch verkleinern ==========
 function resizeImg(file, maxWH = 900) {
@@ -126,7 +178,7 @@ export default function App() {
   // Food
   const [form, setForm] = useState({
     food: "", symptoms: [], symptomInput: "", symptomTime: 0,
-    foodImgs: [], symptomsImgs: []
+    foodImgs: []
   });
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; }
@@ -135,6 +187,9 @@ export default function App() {
 
   // Fehlerbehandlung für Upload
   const [error, setError] = useState("");
+
+  // Modal-Viewer
+  const [imgModal, setImgModal] = useState({ open: false, imgs: [], idx: 0 });
 
   // LocalStorage persistieren
   useEffect(() => { localStorage.setItem(LS_KEY, JSON.stringify(entries)); }, [entries]);
@@ -157,6 +212,11 @@ export default function App() {
     }
   }
 
+  // Bilder entfernen (bearbeiten)
+  function removeImg(type, idx) {
+    if (type === "food") setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, i) => i !== idx) }));
+  }
+
   // Entry hinzuf./bearb.
   function addEntry() {
     if (!form.food) return;
@@ -169,7 +229,7 @@ export default function App() {
         { ...form, date: new Date().toLocaleString([], { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" }) }
       ]);
     }
-    setForm({ food: "", symptoms: [], symptomInput: "", symptomTime: 0, foodImgs: [], symptomsImgs: [] });
+    setForm({ food: "", symptoms: [], symptomInput: "", symptomTime: 0, foodImgs: [] });
   }
   function onEditEntry(i) {
     setEditIdx(i); setForm({ ...entries[i] });
@@ -189,15 +249,27 @@ export default function App() {
     setForm(f => ({ ...f, symptoms: f.symptoms.filter((_, i) => i !== idx) }));
   }
 
-  // Export Excel
+  // Export Excel (mit Bild-Links)
   function exportExcel() {
     const ws = XLSX.utils.json_to_sheet(
       entries.map(e => ({
         Datum: e.date,
         Essen: e.food,
         Symptome: (e.symptoms || []).map(s => s.txt + (s.time !== undefined ? ` (${s.time === 0 ? "direkt" : "+" + s.time + "min"})` : "")).join(", "),
+        Bilder: (e.foodImgs || []).map(img => img.data ? "(Anklicken für Bild)" : "").join(" ")
       }))
     );
+    // Füge Links zu Bildern als Kommentar in Excel hinzu (so weit es geht)
+    (entries || []).forEach((e, rowIdx) => {
+      (e.foodImgs || []).forEach((img, colIdx) => {
+        const cell = ws[XLSX.utils.encode_cell({ c: 3, r: rowIdx })];
+        if (cell && img.data) {
+          if (!cell.l) cell.l = [];
+          // Only the first image gets link; Excel is limited
+          if (colIdx === 0) cell.l = { Target: img.data, Tooltip: "Bild ansehen" };
+        }
+      });
+    });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Food Diary");
     XLSX.writeFile(wb, "FoodDiary.xlsx");
@@ -215,6 +287,15 @@ export default function App() {
       boxSizing: "border-box",
       overflowX: "hidden"
     }}>
+      {/* Modal Viewer */}
+      <ImageModal
+        open={imgModal.open}
+        imgs={imgModal.imgs}
+        idx={imgModal.idx}
+        onClose={() => setImgModal({ open: false, imgs: [], idx: 0 })}
+        setIdx={i => setImgModal(im => ({ ...im, idx: i }))}
+      />
+
       <div style={{ maxWidth: mobile ? 430 : 950, margin: "0 auto", padding: mobile ? "12px 8px 0 8px" : "0 0 0 0" }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
           <button onClick={exportExcel} style={{
@@ -256,7 +337,12 @@ export default function App() {
               />
               <CameraButton onClick={() => { setPendingImgType("food"); fileRef.current.click(); }} />
             </div>
-            <ImgStack imgs={form.foodImgs} />
+            <ImgStack
+              imgs={form.foodImgs}
+              editable={true}
+              onRemove={idx => removeImg("food", idx)}
+              onClick={idx => setImgModal({ open: true, imgs: form.foodImgs, idx })}
+            />
           </div>
           {/* Symptome */}
           <div style={{ flex: 3, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -335,7 +421,15 @@ export default function App() {
             }}>
               <div style={{ fontSize: 14.5, marginBottom: 2, fontWeight: 600 }}>{e.date}</div>
               <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 3 }}>
-                <ImgStack imgs={e.foodImgs} />
+                <ImgStack
+                  imgs={e.foodImgs}
+                  onClick={idx => setImgModal({ open: true, imgs: e.foodImgs, idx })}
+                  editable={editIdx === i}
+                  onRemove={idx => {
+                    // Entfernen direkt im Bearbeiten-Modus erlaubt
+                    if (editIdx === i) setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, j) => j !== idx) }));
+                  }}
+                />
                 <span style={{ fontWeight: 500 }}>{e.food}</span>
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 5 }}>
@@ -366,7 +460,14 @@ export default function App() {
             }}>
               <div style={{ minWidth: 82 }}>
                 <div style={{ fontSize: 14.2, fontWeight: 600 }}>{e.date}</div>
-                <ImgStack imgs={e.foodImgs} />
+                <ImgStack
+                  imgs={e.foodImgs}
+                  onClick={idx => setImgModal({ open: true, imgs: e.foodImgs, idx })}
+                  editable={editIdx === i}
+                  onRemove={idx => {
+                    if (editIdx === i) setForm(f => ({ ...f, foodImgs: f.foodImgs.filter((_, j) => j !== idx) }));
+                  }}
+                />
               </div>
               <div style={{ flex: 1, fontWeight: 500 }}>{e.food}</div>
               <div style={{ minWidth: 90, display: "flex", flexDirection: "column" }}>
