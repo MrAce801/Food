@@ -95,23 +95,6 @@ const ImgStack = ({ imgs, onDelete }) => (
   </div>
 );
 
-const SYMPTOM_CHOICES = [
-  "Bauchschmerzen", "Durchfall", "Blähungen", "Hautausschlag",
-  "Juckreiz", "Schwellung am Gaumen", "Schleim im Hals",
-  "Niesen", "Kopfschmerzen", "Rötung Haut"
-];
-const TIME_CHOICES = [
-  { label: "sofort", value: 0 },
-  { label: "nach 5 min", value: 5 },
-  { label: "nach 10 min", value: 10 },
-  { label: "nach 15 min", value: 15 },
-  { label: "nach 30 min", value: 30 },
-  { label: "nach 45 min", value: 45 },
-  { label: "nach 60 min", value: 60 },
-  { label: "nach 1,5 h", value: 90 },
-  { label: "nach 3 h", value: 180 }
-];
-
 const SymTag = ({ txt, time, dark, onDel, onClick }) => (
   <div onClick={onClick} style={{
     display: "inline-flex", alignItems: "center",
@@ -132,6 +115,23 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
     )}
   </div>
 );
+
+const SYMPTOM_CHOICES = [
+  "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
+  "Juckreiz","Schwellung am Gaumen","Schleim im Hals",
+  "Niesen","Kopfschmerzen","Rötung Haut"
+];
+const TIME_CHOICES = [
+  { label: "sofort", value: 0 },
+  { label: "nach 5 min", value: 5 },
+  { label: "nach 10 min", value: 10 },
+  { label: "nach 15 min", value: 15 },
+  { label: "nach 30 min", value: 30 },
+  { label: "nach 45 min", value: 45 },
+  { label: "nach 60 min", value: 60 },
+  { label: "nach 1,5 h", value: 90 },
+  { label: "nach 3 h", value: 180 }
+];
 
 const now = () => {
   const d = new Date();
@@ -175,9 +175,14 @@ function Insights({ entries }) {
 
 // --- Haupt-Komponente ---
 export default function App() {
-  const [dark, setDark] = useState(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
+  // initial theme safe for desktop
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const saved = localStorage.getItem("fd-theme");
+    if (saved) setDark(saved === "dark");
+    else setDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
+
   const [view, setView] = useState("diary"); // "diary" | "insights"
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem("fd-entries") || "[]"); }
@@ -197,16 +202,12 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
-  const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
   useEffect(() => {
-    if (editingIdx !== null) {
-      const el = document.getElementById(`entry-${editingIdx}`);
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [editingIdx]);
-
-  useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
-  useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
+    localStorage.setItem("fd-entries", JSON.stringify(entries));
+  }, [entries]);
+  useEffect(() => {
+    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
+  }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
@@ -217,6 +218,14 @@ export default function App() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+  useEffect(() => {
+    if (editingIdx !== null) {
+      const el = document.getElementById(`entry-${editingIdx}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [editingIdx]);
 
   const addToast = msg => {
     const id = Date.now();
@@ -369,18 +378,7 @@ export default function App() {
 
       <h2 style={styles.title}>Food Diary</h2>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input
-          placeholder="Suche..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          style={styles.smallInput}
-        />
-        <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
-          Mehr laden
-        </button>
-      </div>
-
+      {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
         <input
           placeholder="Essen..."
@@ -423,7 +421,9 @@ export default function App() {
           <button onClick={addNewSymptom} style={styles.buttonSecondary("#247be5")}>+ Symptom</button>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-          {newSymptoms.map((s, i) => <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />)}
+          {newSymptoms.map((s, i) => (
+            <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />
+          ))}
         </div>
         <button
           onClick={addEntry}
@@ -432,8 +432,22 @@ export default function App() {
         >
           Eintrag hinzufügen
         </button>
+
+        {/* Suche + Laden unter Eintrag hinzufügen */}
+        <div style={{ display: "flex", gap: 8, marginTop: 16, marginBottom: 16 }}>
+          <input
+            placeholder="Suche..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={styles.smallInput}
+          />
+          <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
+            Mehr laden
+          </button>
+        </div>
       </div>
 
+      {/* Einträge nach Datum abgrenzen */}
       <div id="fd-table">
         {dates.map(day => (
           <div key={day}>

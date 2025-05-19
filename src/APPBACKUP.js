@@ -10,21 +10,39 @@ const styles = {
     padding: isMobile ? "0 12px" : "0 24px",
     overflowAnchor: "none"
   }),
-  topBar: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" },
-  title: { textAlign: "center", margin: "8px 0 24px", fontSize: 28, fontWeight: 700 },
-  input: { flex: 1, padding: "10px 12px", fontSize: 16, borderRadius: 6, border: "1px solid #ccc" },
-  smallInput: { flex: 1, padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc" },
-  buttonPrimary: { padding: "12px 0", fontSize: 16, borderRadius: 6, border: 0, background: "#388e3c", color: "#fff", cursor: "pointer", width: "100%" },
-  buttonSecondary: bg => ({ padding: "8px 16px", fontSize: 14, borderRadius: 6, border: 0, background: bg, color: "#fff", cursor: "pointer" }),
+  topBar: {
+    display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0"
+  },
+  title: {
+    textAlign: "center", margin: "8px 0 24px", fontSize: 28, fontWeight: 700
+  },
+  input: {
+    flex: 1, padding: "10px 12px", fontSize: 16, borderRadius: 6, border: "1px solid #ccc"
+  },
+  smallInput: {
+    flex: 1, padding: "8px 12px", fontSize: 14, borderRadius: 6, border: "1px solid #ccc"
+  },
+  buttonPrimary: {
+    padding: "12px 0", fontSize: 16, borderRadius: 6, border: 0,
+    background: "#388e3c", color: "#fff", cursor: "pointer", width: "100%"
+  },
+  buttonSecondary: bg => ({
+    padding: "8px 16px", fontSize: 14, borderRadius: 6, border: 0,
+    background: bg, color: "#fff", cursor: "pointer"
+  }),
   entryCard: dark => ({
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 8,
-    background: dark ? "#2a2a32" : "#fff",
-    boxShadow: "0 1px 4px #0002"
+    marginBottom: 16, padding: 12, borderRadius: 8,
+    background: dark ? "#2a2a32" : "#fff", boxShadow: "0 1px 4px #0002"
   }),
   groupHeader: { fontSize: 18, fontWeight: 600, margin: "24px 0 8px" },
-  toast: { position: "fixed", top: 16, right: 16, background: "#333", color: "#fff", padding: "8px 12px", borderRadius: 4, opacity: 0.9 }
+  toast: {
+    position: "fixed", top: 16, right: 16, background: "#333",
+    color: "#fff", padding: "8px 12px", borderRadius: 4, opacity: 0.9
+  },
+  backButton: {
+    padding: "6px 12px", fontSize: 14, borderRadius: 6,
+    border: 0, background: "#1976d2", color: "#fff", cursor: "pointer"
+  }
 };
 
 // --- UI-Komponenten ---
@@ -34,8 +52,20 @@ const PdfButton = ({ onClick }) => (
   </button>
 );
 
+const InsightsButton = ({ onClick }) => (
+  <button onClick={onClick} title="Insights" style={styles.buttonSecondary("#1976d2")}>
+    Insights
+  </button>
+);
+
+const BackButton = ({ onClick }) => (
+  <button onClick={onClick} title="Zurück" style={styles.backButton}>
+    ← Zurück
+  </button>
+);
+
 const CameraButton = ({ onClick }) => (
-  <button onClick={onClick} title="Foto aufnehmen/hochladen" style={{
+  <button onClick={onClick} title="Foto" style={{
     width: 36, height: 36, borderRadius: "50%", border: 0,
     background: "#247be5", display: "flex", alignItems: "center",
     justifyContent: "center", cursor: "pointer"
@@ -49,16 +79,15 @@ const ImgStack = ({ imgs, onDelete }) => (
     {imgs.map((src, i) => (
       <div key={i} style={{ position: "relative", marginLeft: i === 0 ? 0 : -12, zIndex: imgs.length - i }}>
         <img src={src} alt="" style={{
-          width: 40, height: 40, objectFit: "cover",
-          borderRadius: 6, border: "2px solid #fff",
-          boxShadow: "0 1px 4px #0003"
+          width: 40, height: 40, objectFit: "cover", borderRadius: 6,
+          border: "2px solid #fff", boxShadow: "0 1px 4px #0003"
         }} />
         {onDelete && (
           <span onClick={e => { e.stopPropagation(); onDelete(i); }} style={{
-            position: "absolute", top: -6, right: -6,
-            background: "#c00", color: "#fff", borderRadius: "50%",
-            width: 18, height: 18, display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: 12, cursor: "pointer"
+            position: "absolute", top: -6, right: -6, background: "#c00",
+            color: "#fff", borderRadius: "50%", width: 18, height: 18,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 12, cursor: "pointer"
           }}>×</span>
         )}
       </div>
@@ -66,13 +95,30 @@ const ImgStack = ({ imgs, onDelete }) => (
   </div>
 );
 
+const SYMPTOM_CHOICES = [
+  "Bauchschmerzen", "Durchfall", "Blähungen", "Hautausschlag",
+  "Juckreiz", "Schwellung am Gaumen", "Schleim im Hals",
+  "Niesen", "Kopfschmerzen", "Rötung Haut"
+];
+const TIME_CHOICES = [
+  { label: "sofort", value: 0 },
+  { label: "nach 5 min", value: 5 },
+  { label: "nach 10 min", value: 10 },
+  { label: "nach 15 min", value: 15 },
+  { label: "nach 30 min", value: 30 },
+  { label: "nach 45 min", value: 45 },
+  { label: "nach 60 min", value: 60 },
+  { label: "nach 1,5 h", value: 90 },
+  { label: "nach 3 h", value: 180 }
+];
+
 const SymTag = ({ txt, time, dark, onDel, onClick }) => (
   <div onClick={onClick} style={{
     display: "inline-flex", alignItems: "center",
     background: dark ? "#343445" : "#e8f0ff",
     color: dark ? "#f1f1f6" : "#1a1f3d",
-    borderRadius: 6, padding: "5px 10px", margin: "3px 4px 3px 0", fontSize: 14,
-    cursor: onClick ? "pointer" : "default"
+    borderRadius: 6, padding: "5px 10px", margin: "3px 4px 3px 0",
+    fontSize: 14, cursor: onClick ? "pointer" : "default"
   }}>
     {txt}
     <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>
@@ -87,63 +133,71 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
   </div>
 );
 
-// --- Konstanten ---
-const SYMPTOM_CHOICES = [
-  "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
-  "Juckreiz","Schwellung am Gaumen","Schleim im Hals",
-  "Niesen","Kopfschmerzen","Rötung Haut"
-];
-const TIME_CHOICES = [
-  { label: "sofort", value: 0 },
-  { label: "nach 5 min", value: 5 },
-  { label: "nach 10 min", value: 10 },
-  { label: "nach 15 min", value: 15 },
-  { label: "nach 30 min", value: 30 },
-  { label: "nach 45 min", value: 45 },
-  { label: "nach 60 min", value: 60 },
-  { label: "nach 1,5 h", value: 90 },
-  { label: "nach 3 h", value: 180 }
-];
 const now = () => {
   const d = new Date();
-  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString() + " " +
+    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
+
+// --- Insights-Komponente ---
+function Insights({ entries }) {
+  const map = {};
+  entries.forEach(e => {
+    e.symptoms.forEach(s => {
+      if (!map[s.txt]) {
+        map[s.txt] = { count: 0, foods: {} };
+      }
+      map[s.txt].count++;
+      map[s.txt].foods[e.food] = (map[s.txt].foods[e.food] || 0) + 1;
+    });
+  });
+  const sorted = Object.entries(map).sort((a, b) => b[1].count - a[1].count);
+
+  return (
+    <div>
+      <h2 style={{ textAlign: "center", margin: "16px 0" }}>Insights</h2>
+      {sorted.length === 0 && <p>Keine Symptome erfasst.</p>}
+      {sorted.map(([symptom, data]) => (
+        <div key={symptom} style={{ marginBottom: 24 }}>
+          <h3>{symptom} ({data.count})</h3>
+          <ul>
+            {Object.entries(data.foods)
+              .sort((a, b) => b[1] - a[1])
+              .map(([food, cnt]) => (
+                <li key={food}>{food}: {cnt}</li>
+              ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // --- Haupt-Komponente ---
 export default function App() {
   const [dark, setDark] = useState(() =>
     window.matchMedia("(prefers-color-scheme: dark)").matches
   );
+  const [view, setView] = useState("diary"); // "diary" | "insights"
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem("fd-entries") || "[]"); }
     catch { return []; }
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(20);
-
-  // Neuer Eintrag + Auto-Save
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem("fd-form-new");
     return saved ? JSON.parse(saved) : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
   const fileRefNew = useRef();
-
-  // Inline-Bearbeitung
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const fileRefEdit = useRef();
-
-  // Toasts
   const [toasts, setToasts] = useState([]);
-
-  // Mobile check
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
-  // Fokus-Handler
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  // Scroll on edit
   useEffect(() => {
     if (editingIdx !== null) {
       const el = document.getElementById(`entry-${editingIdx}`);
@@ -151,13 +205,8 @@ export default function App() {
     }
   }, [editingIdx]);
 
-  // Persist entries & newForm
-  useEffect(() => {
-    localStorage.setItem("fd-entries", JSON.stringify(entries));
-  }, [entries]);
-  useEffect(() => {
-    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
-  }, [newForm]);
+  useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
+  useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
@@ -169,14 +218,12 @@ export default function App() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Toast helper
   const addToast = msg => {
     const id = Date.now();
     setToasts(t => [...t, { id, msg }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // PDF Export
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
@@ -187,7 +234,6 @@ export default function App() {
     pdf.save("FoodDiary.pdf");
   };
 
-  // Image Handling
   const handleNewFile = e => {
     const urls = Array.from(e.target.files).map(f => URL.createObjectURL(f));
     setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, ...urls] }));
@@ -219,7 +265,6 @@ export default function App() {
     addToast("Foto gelöscht");
   };
 
-  // Symptome
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
     setNewSymptoms(s => [...s, { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }]);
@@ -227,7 +272,6 @@ export default function App() {
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
-  // Eintrag hinzufügen
   const addEntry = () => {
     if (!newForm.food.trim()) return;
     const entry = { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, date: now() };
@@ -238,7 +282,6 @@ export default function App() {
     addToast("Eintrag gespeichert");
   };
 
-  // Bearbeiten
   const startEdit = i => {
     setEditingIdx(i);
     const e = entries[i];
@@ -247,17 +290,31 @@ export default function App() {
   const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
-    setEditForm(fm => ({ ...fm, symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }], symptomInput: "", symptomTime: 0 }));
+    setEditForm(fm => ({
+      ...fm,
+      symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
+      symptomInput: "", symptomTime: 0
+    }));
   };
-  const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
+  const removeEditSymptom = idx => setEditForm(fm => ({
+    ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx)
+  }));
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
     const val = prompt(`Neue Zeit für "${curr.txt}" (Minuten):`, String(curr.time));
     const t = Number(val);
-    if (!isNaN(t)) setEditForm(fm => { const arr = [...fm.symptoms]; arr[idx] = { ...arr[idx], time: t }; return { ...fm, symptoms: arr }; });
+    if (!isNaN(t)) {
+      setEditForm(fm => {
+        const arr = [...fm.symptoms];
+        arr[idx] = { ...arr[idx], time: t };
+        return { ...fm, symptoms: arr };
+      });
+    }
   };
   const saveEdit = () => {
-    setEntries(e => e.map((ent, i) => i === editingIdx ? { ...editForm, date: ent.date } : ent));
+    setEntries(e => e.map((ent, i) =>
+      i === editingIdx ? { ...editForm, date: ent.date } : ent
+    ));
     cancelEdit();
     navigator.vibrate?.(50);
     addToast("Eintrag aktualisiert");
@@ -284,25 +341,34 @@ export default function App() {
   }, {});
   const dates = Object.keys(grouped);
 
+  if (view === "insights") {
+    return (
+      <div style={styles.container(isMobile)}>
+        {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
+        <div style={styles.topBar}>
+          <BackButton onClick={() => setView("diary")} />
+        </div>
+        <Insights entries={entries} />
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container(isMobile)}>
-      {/* Toasts */}
-      {toasts.map(t => (
-        <div key={t.id} style={styles.toast}>{t.msg}</div>
-      ))}
+      {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
 
-      {/* Top-Bar */}
       <div style={styles.topBar}>
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
-        <PdfButton onClick={handleExportPDF} />
+        <div>
+          <PdfButton onClick={handleExportPDF} />{" "}
+          <InsightsButton onClick={() => setView("insights")} />
+        </div>
       </div>
 
-      {/* Titel */}
       <h2 style={styles.title}>Food Diary</h2>
 
-      {/* Suche + Laden */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <input
           placeholder="Suche..."
@@ -315,7 +381,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
         <input
           placeholder="Essen..."
@@ -346,9 +411,7 @@ export default function App() {
             onFocus={handleFocus}
             style={styles.smallInput}
           />
-          <datalist id="symptom-list">
-            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
-          </datalist>
+          <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
           <select
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
@@ -360,9 +423,7 @@ export default function App() {
           <button onClick={addNewSymptom} style={styles.buttonSecondary("#247be5")}>+ Symptom</button>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-          {newSymptoms.map((s, i) => (
-            <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />
-          ))}
+          {newSymptoms.map((s, i) => <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />)}
         </div>
         <button
           onClick={addEntry}
@@ -373,7 +434,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* Einträge nach Datum abgrenzen */}
       <div id="fd-table">
         {dates.map(day => (
           <div key={day}>
@@ -382,7 +442,6 @@ export default function App() {
               <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                 {editingIdx === idx ? (
                   <>
-                    {/* Inline-Bearbeitung */}
                     <input
                       value={editForm.food}
                       onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
