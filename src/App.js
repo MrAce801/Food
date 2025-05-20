@@ -182,7 +182,7 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => {
       <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
         {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
-      {onDel && (
+      {onDelete && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
           marginLeft: 6, cursor: "pointer",
           fontSize: 16, color: "#c00", fontWeight: 700
@@ -561,13 +561,11 @@ export default function App() {
         {dates.map(day => {
           const group = grouped[day];
           const isCollapsed = collapsedDays[day] ?? (day !== today);
-          // calculate stack height dynamically or use fixed
           const stackOffset = 8;
           const stackHeight = 150 + (group.length - 1) * stackOffset;
 
           return (
             <div key={day}>
-              {/* Datum-Kopfzeile */}
               <div style={styles.groupHeader} onClick={() => toggleDay(day)}>
                 {day}
                 {(isCollapsed && group.length > 1) && (
@@ -576,17 +574,22 @@ export default function App() {
                   </span>
                 )}
               </div>
-
               {isCollapsed ? (
-                // Stack-Preview
-                <div style={{ position: "relative", height: stackHeight, marginBottom: 16 }}>
+                <div style={{
+                  position: "relative",
+                  height: stackHeight,
+                  marginBottom: 16,
+                  overflow: "hidden"
+                }}>
                   {group.map(({ entry, idx }, i) => {
-                    // sort symptoms
                     const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
                     const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-                    const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
+                    const sortedAll = [
+                      ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
+                      ...custom
+                    ];
+                    const topBlur = i === 0 ? "blur(4px)" : "none";
 
-                    const topBlur = i === 0 ? "blur(2px)" : "none";
                     return (
                       <div
                         key={idx}
@@ -614,15 +617,15 @@ export default function App() {
                   })}
                 </div>
               ) : (
-                // Vollständige Liste
                 <div style={{ transition: "max-height 0.3s ease" }}>
                   {group.map(({ entry, idx }) => {
-                    // sort symptoms
                     const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
                     const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-                    const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
+                    const sortedAll = [
+                      ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
+                      ...custom
+                    ];
 
-                    const i = grouped[day].findIndex(x => x.idx === idx);
                     return (
                       <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                         {editingIdx === idx ? (
