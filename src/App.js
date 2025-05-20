@@ -591,7 +591,7 @@ export default function App(){
                           <div style={{
                             position:"absolute",top:0,left:0,
                             width:"100%",height:"100%",
-                            backdropFilter:"blur(16px)",
+                            backdropFilter:"blur(4px)",
                             backgroundColor:"rgba(0,0,0,0.2)",
                             borderRadius:8
                           }}/>
