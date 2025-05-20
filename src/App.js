@@ -113,7 +113,7 @@ const styles = {
   })
 };
 
-// --- Symptom-Farb-Mapping ---
+// --- Symptom-Farb-Mapping Variante 2 ---
 const SYMPTOM_COLOR_MAP = {
   Bauchschmerzen: "#D0E1F9",
   Durchfall: "#D6EAE0",
@@ -326,15 +326,6 @@ function Insights({ entries }) {
 // --- Haupt-Komponente ---
 export default function App() {
   const [dark, setDark] = useState(false);
-  useEffect(() => {
-    const saved = localStorage.getItem("fd-theme");
-    setDark(
-      saved
-        ? saved === "dark"
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
-  }, []);
-
   const [view, setView] = useState("diary");
   const [entries, setEntries] = useState(() => {
     try {
@@ -364,21 +355,25 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
-  // Datum-String für heute
-  const todayKey = new Date().toLocaleDateString();
+  // Scroll focus helper
+  const handleFocus = e =>
+    e.target.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  // Accordion: Vergangene Tage automatisch zu, heute offen
-  const [collapsedDays, setCollapsedDays] = useState({ [todayKey]: false });
-  const toggleDay = day =>
-    setCollapsedDays(cd => ({ ...cd, [day]: !cd[day] }));
-
-  // Persist + Theme + Resize + Scroll-Focus
+  // Persist entries & form & theme
   useEffect(() => {
     localStorage.setItem("fd-entries", JSON.stringify(entries));
   }, [entries]);
   useEffect(() => {
     localStorage.setItem("fd-form-new", JSON.stringify(newForm));
   }, [newForm]);
+  useEffect(() => {
+    const saved = localStorage.getItem("fd-theme");
+    setDark(
+      saved
+        ? saved === "dark"
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+  }, []);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
@@ -389,17 +384,15 @@ export default function App() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const handleFocus = e =>
-    e.target.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  // Toast-Helfer
+  // Toast helper
   const addToast = msg => {
     const id = Date.now();
     setToasts(t => [...t, { id, msg }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // --- Datei-Upload für neue Einträge ---
+  // File upload for new entries
   const handleNewFile = e => {
     Array.from(e.target.files || []).forEach(f => {
       const reader = new FileReader();
@@ -412,12 +405,15 @@ export default function App() {
     addToast("Foto hinzugefügt");
   };
   const removeNewImg = idx => {
-    setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
+    setNewForm(fm => ({
+      ...fm,
+      imgs: fm.imgs.filter((_, i) => i !== idx)
+    }));
     navigator.vibrate?.(50);
     addToast("Foto gelöscht");
   };
 
-  // --- Symptome neu / entfernen ---
+  // Symptoms add/remove
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
     setNewSymptoms(s => [
@@ -426,9 +422,10 @@ export default function App() {
     ]);
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0 }));
   };
-  const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
+  const removeNewSymptom = idx =>
+    setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
-  // --- Eintrag hinzufügen (fix im zugeklappten Zustand) ---
+  // Add entry (works in collapsed state too)
   const addEntry = () => {
     if (!newForm.food.trim()) return;
     const entryDate = now();
@@ -443,13 +440,13 @@ export default function App() {
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
-    // Tag öffnen, auch wenn zuvor geklappt
+    // ensure this day opens after adding
     setCollapsedDays(cd => ({ ...cd, [day]: false }));
     navigator.vibrate?.(50);
     addToast("Eintrag gespeichert");
   };
 
-  // --- Bearbeiten, Löschen, Notizen etc. (vollständige Implementierungen wie zuvor) ---
+  // Handlers for editing entries
   const startEdit = i => {
     setEditingIdx(i);
     const e = entries[i];
@@ -462,6 +459,25 @@ export default function App() {
     });
   };
   const cancelEdit = () => setEditingIdx(null);
+  const handleEditFile = e => {
+    Array.from(e.target.files || []).forEach(f => {
+      const reader = new FileReader();
+      reader.onload = () =>
+        setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
+      reader.readAsDataURL(f);
+    });
+    e.target.value = "";
+    navigator.vibrate?.(50);
+    addToast("Foto hinzugefügt");
+  };
+  const removeEditImg = idx => {
+    setEditForm(fm => ({
+      ...fm,
+      imgs: fm.imgs.filter((_, i) => i !== idx)
+    }));
+    navigator.vibrate?.(50);
+    addToast("Foto gelöscht");
+  };
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
@@ -502,6 +518,7 @@ export default function App() {
     navigator.vibrate?.(50);
     addToast("Eintrag aktualisiert");
   };
+
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
@@ -509,7 +526,7 @@ export default function App() {
     addToast("Eintrag gelöscht");
   };
 
-  // --- Notizen ---
+  // Notes
   const toggleNote = idx => {
     setNoteOpenIdx(noteOpenIdx === idx ? null : idx);
     if (noteOpenIdx !== idx) setNoteDraft(entries[idx].comment);
@@ -523,7 +540,7 @@ export default function App() {
     addToast("Notiz gespeichert");
   };
 
-  // --- Filter + Gruppierung + Pagination ---
+  // Filter + Gruppierung + Pagination
   const filteredWithIdx = entries
     .map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
@@ -539,7 +556,13 @@ export default function App() {
   }, {});
   const dates = Object.keys(grouped);
 
-  // --- PDF-Export ---
+  // Collapse state: keep track toggles only
+  const [collapsedDays, setCollapsedDays] = useState({});
+  const toggleDay = day =>
+    setCollapsedDays(cd => ({ ...cd, [day]: !cd[day] }));
+  const today = new Date().toLocaleDateString();
+
+  // PDF export
   const handleExportPDF = async () => {
     const prev = { ...collapsedDays };
     Object.keys(grouped).forEach(day => (collapsedDays[day] = false));
@@ -665,7 +688,9 @@ export default function App() {
       <div id="fd-table">
         {dates.map(day => {
           const group = grouped[day];
-          const isCollapsed = collapsedDays[day] ?? true;
+          const isCollapsed = collapsedDays.hasOwnProperty(day)
+            ? collapsedDays[day]
+            : day !== today;
           const preview = group.slice(0, 3);
           const stackOffset = 8;
           const stackHeight = 150 + (preview.length - 1) * stackOffset;
@@ -680,14 +705,21 @@ export default function App() {
               </div>
               {isCollapsed ? (
                 <div style={{
-                  position: "relative", height: stackHeight, marginBottom: 16,
-                  overflow: "hidden", border: "1px solid #ccc", borderRadius: 8,
+                  position: "relative",
+                  height: stackHeight,
+                  marginBottom: 16,
+                  overflow: "hidden",
+                  border: "1px solid #ccc",
+                  borderRadius: 8,
                   boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
                 }}>
                   {preview.map(({ entry, idx }, i) => {
                     const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
                     const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-                    const sortedAll = [...known.sort((a,b)=>a.txt.localeCompare(b.txt)), ...custom];
+                    const sortedAll = [
+                      ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
+                      ...custom
+                    ];
                     const wrapperStyle = {
                       position: "absolute",
                       top: i * stackOffset,
@@ -700,11 +732,17 @@ export default function App() {
                     return (
                       <div key={idx} style={wrapperStyle}>
                         <div style={styles.entryCard(dark)}>
-                          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
-                          <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
+                          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
+                            {entry.date}
+                          </div>
+                          <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+                            {entry.food}
+                          </div>
                           {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
                           <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
-                            {sortedAll.map((s, j) => <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />)}
+                            {sortedAll.map((s, j) => (
+                              <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -716,19 +754,63 @@ export default function App() {
                   {group.map(({ entry, idx }) => {
                     const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
                     const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-                    const sortedAll = [...known.sort((a,b)=>a.txt.localeCompare(b.txt)), ...custom];
+                    const sortedAll = [
+                      ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
+                      ...custom
+                    ];
                     return (
                       <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                         {editingIdx === idx ? (
                           <>
-                            {/* Bearbeitungsmodus */}
                             <input
                               value={editForm.food}
                               onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
                               onFocus={handleFocus}
                               style={styles.input}
                             />
-                            {/* ... Foto-Upload & Symptom-Eingabe etc. wie oben ... */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}>
+                              <CameraButton onClick={() => fileRefEdit.current?.click()} />
+                              <input
+                                ref={fileRefEdit}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                capture={isMobile ? "environment" : undefined}
+                                onChange={handleEditFile}
+                                style={{ display: "none" }}
+                              />
+                              {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                              <input
+                                list="symptom-list"
+                                placeholder="Symptom..."
+                                value={editForm.symptomInput}
+                                onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                                onFocus={handleFocus}
+                                style={styles.smallInput}
+                              />
+                              <select
+                                value={editForm.symptomTime}
+                                onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+                                onFocus={handleFocus}
+                                style={styles.smallInput}
+                              >
+                                {TIME_CHOICES.map(t => (
+                                  <option key={t.value} value={t.value}>{t.label}</option>
+                                ))}
+                              </select>
+                              <button onClick={addEditSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+                              {editForm.symptoms.map((s, j) => (
+                                <SymTag key={j} txt={s.txt} time={s.time} dark={dark} onDel={() => removeEditSymptom(j)} onClick={() => changeEditSymptomTime(j)} />
+                              ))}
+                            </div>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
+                              <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
+                            </div>
                           </>
                         ) : (
                           <>
@@ -758,9 +840,13 @@ export default function App() {
                             )}
                             {entry.comment && noteOpenIdx !== idx && (
                               <div style={{
-                                marginTop: 8, background: "#FFF9C4", padding: "6px 8px",
-                                borderRadius: 4, color: dark ? "#111" : "#000",
-                                overflowWrap: "break-word", whiteSpace: "pre-wrap"
+                                marginTop: 8,
+                                background: "#FFF9C4",
+                                padding: "6px 8px",
+                                borderRadius: 4,
+                                color: dark ? "#111" : "#000",
+                                overflowWrap: "break-word",
+                                whiteSpace: "pre-wrap"
                               }}>
                                 {entry.comment}
                               </div>
