@@ -360,13 +360,11 @@ export default function App() {
       reader.readAsDataURL(file);
     });
     e.target.value = "";
-    navigator.vibrate?.(50);
-    addToast("Foto hinzugefügt");
+    navigator.vibrate?.(50); addToast("Foto hinzugefügt");
   };
   const removeEditImg = idx => {
     setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
-    navigator.vibrate?.(50);
-    addToast("Foto gelöscht");
+    navigator.vibrate?.(50); addToast("Foto gelöscht");
   };
 
   // Symptome neu
@@ -384,14 +382,11 @@ export default function App() {
       food: newForm.food,
       imgs: newForm.imgs,
       symptoms: newSymptoms,
-      comment: "",
-      date: now()
+      comment: "", date: now()
     };
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
-    setNewSymptoms([]);
-    navigator.vibrate?.(50);
-    addToast("Eintrag gespeichert");
+    setNewSymptoms([]); navigator.vibrate?.(50); addToast("Eintrag gespeichert");
   };
 
   // Editieren
@@ -416,8 +411,7 @@ export default function App() {
     const t = Number(val);
     if (!isNaN(t)) {
       setEditForm(fm => {
-        const arr = [...fm.symptoms];
-        arr[idx] = { ...arr[idx], time: t };
+        const arr = [...fm.symptoms]; arr[idx] = { ...arr[idx], time: t };
         return { ...fm, symptoms: arr };
       });
     }
@@ -426,15 +420,12 @@ export default function App() {
     setEntries(e => e.map((ent, i) =>
       i === editingIdx ? { ...editForm, comment: ent.comment, date: ent.date } : ent
     ));
-    cancelEdit();
-    navigator.vibrate?.(50);
-    addToast("Eintrag aktualisiert");
+    cancelEdit(); navigator.vibrate?.(50); addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
-    navigator.vibrate?.(50);
-    addToast("Eintrag gelöscht");
+    navigator.vibrate?.(50); addToast("Eintrag gelöscht");
   };
 
   // Notizen
@@ -444,9 +435,7 @@ export default function App() {
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
-    navigator.vibrate?.(50);
-    addToast("Notiz gespeichert");
+    setNoteOpenIdx(null); navigator.vibrate?.(50); addToast("Notiz gespeichert");
   };
 
   // Filter + Gruppierung + Pagination
@@ -567,105 +556,50 @@ export default function App() {
         </div>
       </div>
 
-      {/* Gruppierte Einträge mit Accordion */}
+      {/* Gruppierte Einträge mit Accordion und Stack-Preview */}
       <div id="fd-table">
         {dates.map(day => {
           const group = grouped[day];
-          // Sortierung der Symptome pro Eintrag
+          const isCollapsed = collapsedDays[day] ?? (day !== today);
+          // calculate stack height dynamically or use fixed
+          const stackOffset = 8;
+          const stackHeight = 150 + (group.length - 1) * stackOffset;
+
           return (
             <div key={day}>
+              {/* Datum-Kopfzeile */}
               <div style={styles.groupHeader} onClick={() => toggleDay(day)}>
                 {day}
-                { (collapsedDays[day] ?? (day !== today)) && group.length > 1 && (
+                {(isCollapsed && group.length > 1) && (
                   <span style={{ marginLeft: 8, opacity: 0.7 }}>
                     +{group.length - 1} weitere
                   </span>
                 )}
               </div>
-              <div
-                style={{
-                  overflow: "hidden",
-                  transition: "max-height 0.3s ease",
-                  maxHeight: (collapsedDays[day] ?? (day !== today))
-                    ? 0
-                    : `${group.length * 200}px`
-                }}
-              >
-                {group.map(({ entry, idx }, i) => {
-                  // sortiere bekannt alphabetisch, custom am Ende
-                  const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
-                  const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-                  const sortedAll = [
-                    ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
-                    ...custom
-                  ];
 
-                  return (
-                    <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
-                      {editingIdx === idx ? (
-                        <>
-                          {/* Inline-Bearbeitung */}
-                          <input
-                            value={editForm.food}
-                            onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
-                            onFocus={handleFocus}
-                            style={styles.input}
-                          />
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}>
-                            <CameraButton onClick={() => fileRefEdit.current?.click()} />
-                            <input
-                              ref={fileRefEdit}
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              capture={isMobile ? "environment" : undefined}
-                              onChange={handleEditFile}
-                              style={{ display: "none" }}
-                            />
-                            {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                            <input
-                              list="symptom-list"
-                              placeholder="Symptom..."
-                              value={editForm.symptomInput}
-                              onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-                              onFocus={handleFocus}
-                              style={styles.smallInput}
-                            />
-                            <select
-                              value={editForm.symptomTime}
-                              onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
-                              onFocus={handleFocus}
-                              style={styles.smallInput}
-                            >
-                              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
-                            <button
-                              onClick={addEditSymptom}
-                              style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}
-                            >+</button>
-                          </div>
-                          <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-                            {editForm.symptoms.map((s, j) => (
-                              <SymTag
-                                key={j}
-                                txt={s.txt}
-                                time={s.time}
-                                dark={dark}
-                                onDel={() => removeEditSymptom(j)}
-                                onClick={() => changeEditSymptomTime(j)}
-                              />
-                            ))}
-                          </div>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
-                            <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          {/* Anzeige-Modus */}
+              {isCollapsed ? (
+                // Stack-Preview
+                <div style={{ position: "relative", height: stackHeight, marginBottom: 16 }}>
+                  {group.map(({ entry, idx }, i) => {
+                    // sort symptoms
+                    const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
+                    const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
+                    const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
+
+                    const topBlur = i === 0 ? "blur(2px)" : "none";
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          position: "absolute",
+                          top: i * stackOffset,
+                          left: i * stackOffset,
+                          width: "100%",
+                          filter: topBlur,
+                          zIndex: group.length - i
+                        }}
+                      >
+                        <div style={styles.entryCard(dark)}>
                           <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
                           <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
                           {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
@@ -674,48 +608,134 @@ export default function App() {
                               <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                             ))}
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
-                            <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
-                            <span style={{ marginLeft: "auto" }}>
-                              <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
-                            </span>
-                          </div>
-                          {noteOpenIdx === idx && (
-                            <div>
-                              <textarea
-                                value={noteDraft}
-                                onChange={e => setNoteDraft(e.target.value)}
-                                placeholder="Notiz..."
-                                style={styles.textarea}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                // Vollständige Liste
+                <div style={{ transition: "max-height 0.3s ease" }}>
+                  {group.map(({ entry, idx }) => {
+                    // sort symptoms
+                    const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
+                    const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
+                    const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
+
+                    const i = grouped[day].findIndex(x => x.idx === idx);
+                    return (
+                      <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
+                        {editingIdx === idx ? (
+                          <>
+                            <input
+                              value={editForm.food}
+                              onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                              onFocus={handleFocus}
+                              style={styles.input}
+                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}>
+                              <CameraButton onClick={() => fileRefEdit.current?.click()} />
+                              <input
+                                ref={fileRefEdit}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                capture={isMobile ? "environment" : undefined}
+                                onChange={handleEditFile}
+                                style={{ display: "none" }}
                               />
-                              <button
-                                onClick={() => saveNote(idx)}
-                                style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
+                              {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                              <input
+                                list="symptom-list"
+                                placeholder="Symptom..."
+                                value={editForm.symptomInput}
+                                onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                                onFocus={handleFocus}
+                                style={styles.smallInput}
+                              />
+                              <select
+                                value={editForm.symptomTime}
+                                onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+                                onFocus={handleFocus}
+                                style={styles.smallInput}
                               >
-                                Speichern
-                              </button>
+                                {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </select>
+                              <button onClick={addEditSymptom}
+                                      style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
                             </div>
-                          )}
-                          {entry.comment && noteOpenIdx !== idx && (
-                            <div style={{
-                              marginTop: 8,
-                              background: "#FFF9C4",
-                              padding: "6px 8px",
-                              borderRadius: 4,
-                              color: dark ? "#111" : "#000",
-                              overflowWrap: "break-word",
-                              whiteSpace: "pre-wrap"
-                            }}>
-                              {entry.comment}
+                            <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
+                              {editForm.symptoms.map((s, j) => (
+                                <SymTag
+                                  key={j}
+                                  txt={s.txt}
+                                  time={s.time}
+                                  dark={dark}
+                                  onDel={() => removeEditSymptom(j)}
+                                  onClick={() => changeEditSymptomTime(j)}
+                                />
+                              ))}
                             </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
+                              <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
+                            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
+                            {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
+                            <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
+                              {sortedAll.map((s, j) => (
+                                <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
+                              ))}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
+                              <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
+                              <span style={{ marginLeft: "auto" }}>
+                                <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
+                              </span>
+                            </div>
+                            {noteOpenIdx === idx && (
+                              <div>
+                                <textarea
+                                  value={noteDraft}
+                                  onChange={e => setNoteDraft(e.target.value)}
+                                  placeholder="Notiz..."
+                                  style={styles.textarea}
+                                />
+                                <button
+                                  onClick={() => saveNote(idx)}
+                                  style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
+                                >
+                                  Speichern
+                                </button>
+                              </div>
+                            )}
+                            {entry.comment && noteOpenIdx !== idx && (
+                              <div style={{
+                                marginTop: 8,
+                                background: "#FFF9C4",
+                                padding: "6px 8px",
+                                borderRadius: 4,
+                                color: dark ? "#111" : "#000",
+                                overflowWrap: "break-word",
+                                whiteSpace: "pre-wrap"
+                              }}>
+                                {entry.comment}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
