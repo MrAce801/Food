@@ -167,20 +167,31 @@ const BackButton = ({ onClick }) => (
 );
 const CameraButton = ({ onClick }) => (
   <button onClick={onClick} title="Foto" style={{
-    width: 36, height: 36, borderRadius: 6, border: 0,
-    background: "#247be5", display: "flex", alignItems: "center",
-    justifyContent: "center", cursor: "pointer"
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    border: 0,
+    background: "#247be5",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer"
   }}>📷</button>
 );
 const ImgStack = ({ imgs, onDelete }) => (
   <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
     {imgs.map((src, i) => (
       <div key={i} style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
-        <img src={src} alt="" style={{
-          width: 40, height: 40, objectFit: "cover",
-          borderRadius: 6, border: "2px solid #fff",
-          boxShadow: "0 1px 4px #0003"
-        }} onError={e => { e.currentTarget.style.display = "none"; }}/>
+        <img
+          src={src}
+          alt=""
+          style={{
+            width: 40, height: 40, objectFit: "cover",
+            borderRadius: 6, border: "2px solid #fff",
+            boxShadow: "0 1px 4px #0003"
+          }}
+          onError={e => { e.currentTarget.style.display = "none"; }}
+        />
         {onDelete && (
           <span onClick={() => onDelete(i)} style={{
             position: "absolute", top: -6, right: -6,
@@ -201,9 +212,8 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => {
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
       background: bg, color: "#1a1f3d",
-      borderRadius: 6, padding: "5px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14,
-      cursor: onClick ? "pointer" : "default",
+      borderRadius: 6, padding: "5px 10px", margin: "3px 4px 3px 0",
+      fontSize: 14, cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
       {txt}
@@ -295,7 +305,9 @@ export default function App() {
   const [displayCount, setDisplayCount] = useState(20);
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem("fd-form-new");
-    return saved ? JSON.parse(saved) : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
+    return saved ?
+      JSON.parse(saved) :
+      { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
   const fileRefNew = useRef();
@@ -356,7 +368,7 @@ export default function App() {
   };
 
   const handleNewFile = async e => {
-    for (let file of Array.from(e.target.files || [])) {
+    for (let file of Array.from(e.target.files)) {
       try {
         if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß");
         const smallB64 = await resizeToJpeg(file, 800);
@@ -374,7 +386,7 @@ export default function App() {
   };
 
   const handleEditFile = async e => {
-    for (let file of Array.from(e.target.files || [])) {
+    for (let file of Array.from(e.target.files)) {
       try {
         if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß");
         const smallB64 = await resizeToJpeg(file, 800);
@@ -425,9 +437,8 @@ export default function App() {
     if (!isNaN(t)) setEditForm(fm => { const arr = [...fm.symptoms]; arr[idx] = { ...arr[idx], time: t }; return { ...fm, symptoms: arr }; });
   };
   const saveEdit = () => {
-    setEntries(e => e.map((ent, i) => i === editingIdx
-      ? { food: editForm.food, imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date }
-      : ent
+    setEntries(e => e.map((ent, i) =>
+      i === editingIdx ? { food: editForm.food, imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date } : ent
     ));
     cancelEdit(); addToast("Eintrag aktualisiert");
   };
@@ -509,11 +520,11 @@ export default function App() {
             list="symptom-list"
             placeholder="Symptom..."
             value={newForm.symptomInput}
-            onChange={e => setNewForm(fm => ({ ...fm,ysymptomInput: e.target.value }))}
+            onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
             onFocus={handleFocus}
             style={styles.smallInput}
           />
-          <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s}/> )}</datalist>
+          <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
           <select
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
@@ -634,8 +645,8 @@ export default function App() {
                       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                         <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
-                        <span style={{ marginLeft:"auto" }}>
-                          <button onClick={()=>toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
+                        <span style={{ marginLeft: "auto" }}>
+                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                         </span>
                       </div>
                       {noteOpenIdx === idx && (
@@ -647,7 +658,7 @@ export default function App() {
                             style={styles.textarea}
                           />
                           <button
-                            onClick={()=>saveNote(idx)}
+                            onClick={() => saveNote(idx)}
                             style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
                           >
                             Speichern
@@ -657,13 +668,12 @@ export default function App() {
                       {entry.comment && noteOpenIdx !== idx && (
                         <div style={{
                           marginTop: 8,
-                          background: dark ? "#ccc" : "transparent",
+                          /* kein gelber Hintergrund mehr */
                           padding: "6px 8px",
                           borderRadius: 4,
-                          color: dark ? "#000" : "#000",
+                          color: dark ? "#111" : "#000",
                           overflowWrap: "break-word",
-                          whiteSpace: "pre-wrap",
-                          boxSizing: "border-box"
+                          whiteSpace: "pre-wrap"
                         }}>
                           {entry.comment}
                         </div>
