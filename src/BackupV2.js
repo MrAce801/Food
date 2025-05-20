@@ -581,8 +581,7 @@ export default function App() {
             style={styles.smallInput}
           />
           <datalist id="symptom-list">
-            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
-          </datalist>
+            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}        </datalist>
           <select
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
@@ -695,7 +694,7 @@ export default function App() {
                           />
                         ))}
                       </div>
-                      <div style={{ display: "flex", gap: 5 }}>
+                      <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
                         <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
                       </div>
@@ -705,12 +704,12 @@ export default function App() {
                       <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
                       <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
                       {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
-                      <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0 20px" }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
                         {sortedAll.map((s, j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                         ))}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>  
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                         <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
                         <span style={{ marginLeft: "auto" }}>
