@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-// Pfad zur neuen Notiz-Icon-Grafik
-const NOTE_ICON = "/mnt/data/2f8c6cc7-031b-49ab-baf3-300d5ee515de.png";
-
 // --- Styles ausgelagert ---
 const styles = {
   container: isMobile => ({
@@ -104,31 +101,28 @@ const styles = {
     cursor: "pointer"
   },
   noteButton: isActive => ({
-    background: "#F9A825",
+    background: "#F9A825",       // dunkleres Gelb
     border: "1px solid #F0E68C",
     borderRadius: 6,
     padding: "4px",
     cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 32,
-    height: 32
+    fontSize: 16,
+    lineHeight: 1
   })
 };
 
 // --- Symptom-Farb-Mapping mit aktualisierten Pastelltönen ---
 const SYMPTOM_COLOR_MAP = {
-  Bauchschmerzen: "#D0E1F9",
-  Durchfall: "#D6EAE0",
-  Blähungen: "#E4D9F0",
-  Hautausschlag: "#F0D9D9",
-  Juckreiz: "#E1BEE7",
-  "Schwellung am Gaumen": "#FFCCBC",
-  "Schleim im Hals": "#D9F2F9",
-  Niesen: "#C8E6C9",
-  Kopfschmerzen: "#D9EAF9",
-  "Rötung Haut": "#F2D9DB"
+  Bauchschmerzen: "#D0E1F9",           // hellblau
+  Durchfall: "#D6EAE0",               // hellgrün
+  Blähungen: "#E4D9F0",               // flieder
+  Hautausschlag: "#F0D9D9",           // rosa
+  Juckreiz: "#E1BEE7",                // lavendel statt gelb
+  "Schwellung am Gaumen": "#FFCCBC",  // pfirsich statt gelb
+  "Schleim im Hals": "#D9F2F9",       // hellcyan
+  Niesen: "#C8E6C9",                  // mint statt gelb
+  Kopfschmerzen: "#D9EAF9",           // hellblau
+  "Rötung Haut": "#F2D9DB"            // zartrosa
 };
 
 // --- Image-Helper: resize + convert to JPEG ---
@@ -281,10 +275,9 @@ export default function App() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
-    setDark(
-      saved
-        ? saved === "dark"
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
+    setDark(saved ?
+      saved === "dark" :
+      window.matchMedia("(prefers-color-scheme: dark)").matches
     );
   }, []);
 
@@ -443,11 +436,7 @@ export default function App() {
     setNoteOpenIdx(noteOpenIdx === idx ? null : idx);
     if (noteOpenIdx !== idx) setNoteDraft(entries[idx].comment);
   };
-  const saveNote = idx => {
-    setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
-    addToast("Notiz gespeichert");
-  };
+  const saveNote = idx => { setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent)); setNoteOpenIdx(null); addToast("Notiz gespeichert"); };
 
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
@@ -478,11 +467,9 @@ export default function App() {
       {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
 
       <div style={styles.topBar}>
-        <button
-          onClick={() => setDark(d => !d)}
-          style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
-          title="Theme wechseln"
-        >
+        <button onClick={() => setDark(d => !d)}
+                style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
+                title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
@@ -656,9 +643,7 @@ export default function App() {
                           Löschen
                         </button>
                         <span style={{ marginLeft:"auto" }}>
-                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>
-                            <img src={NOTE_ICON} alt="Notiz" style={{ width: 20, height: 20 }} />
-                          </button>
+                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                         </span>
                       </div>
                       {noteOpenIdx === idx && (
