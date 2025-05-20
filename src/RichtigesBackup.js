@@ -366,7 +366,6 @@ export default function App() {
 
   // Accordion: alle Tage standardmäßig geschlossen
   const [collapsedDays, setCollapsedDays] = useState({});
-  const today = new Date().toLocaleDateString();
   const toggleDay = day =>
     setCollapsedDays(cd => ({ ...cd, [day]: !cd[day] }));
 
@@ -409,7 +408,6 @@ export default function App() {
   // PDF export (alle Tage vorübergehend aufgeklappt)
   const handleExportPDF = async () => {
     const prev = { ...collapsedDays };
-    // öffnen aller Tage
     Object.keys(grouped).forEach(day => (collapsedDays[day] = false));
     await new Promise(r => setTimeout(r, 100));
 
@@ -434,7 +432,6 @@ export default function App() {
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
 
-    // zurücksetzen
     imgs.forEach((img, i) => {
       img.style.width = originals[i].w;
       img.style.height = originals[i].h;
@@ -723,7 +720,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Gruppierte Einträge mit gestapelter Vorschau */}
+      {/* Gruppierte Einträge mit gestappelter Vorschau */}
       <div id="fd-table">
         {dates.map(day => {
           const group = grouped[day];
@@ -759,15 +756,14 @@ export default function App() {
                       ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
                       ...custom
                     ];
-                    const isTop = i === 0;
                     const wrapperStyle = {
                       position: "absolute",
                       top: i * stackOffset,
                       left: i * stackOffset,
                       width: "100%",
                       zIndex: preview.length - i,
-                      filter: isTop ? "blur(4px)" : "none",
-                      opacity: isTop ? 0.4 : 1
+                      filter: "none",    // kein Blur
+                      opacity: 1         // volle Deckkraft
                     };
                     return (
                       <div key={idx} style={wrapperStyle}>
@@ -860,7 +856,7 @@ export default function App() {
                             <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
                               {sortedAll.map((s, j) => <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />)}
                             </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                               <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                               <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
                               <span style={{ marginLeft: "auto" }}>
@@ -869,12 +865,25 @@ export default function App() {
                             </div>
                             {noteOpenIdx === idx && (
                               <div>
-                                <textarea value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={styles.textarea} />
+                                <textarea
+                                  value={noteDraft}
+                                  onChange={e => setNoteDraft(e.target.value)}
+                                  placeholder="Notiz..."
+                                  style={styles.textarea}
+                                />
                                 <button onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}>Speichern</button>
                               </div>
                             )}
                             {entry.comment && noteOpenIdx !== idx && (
-                              <div style={{ marginTop: 8, background: "#FFF9C4", padding: "6px 8px", borderRadius: 4, color: dark ? "#111" : "#000", overflowWrap: "break-word", whiteSpace: "pre-wrap" }}>
+                              <div style={{
+                                marginTop: 8,
+                                background: "#FFF9C4",
+                                padding: "6px 8px",
+                                borderRadius: 4,
+                                color: dark ? "#111" : "#000",
+                                overflowWrap: "break-word",
+                                whiteSpace: "pre-wrap"
+                              }}>
                                 {entry.comment}
                               </div>
                             )}
