@@ -40,8 +40,7 @@ const styles = {
   textarea: {
     width: "100%",
     padding: "8px",
-    fontSize: 16,                  // erhöht auf 16px gegen automatisches Zoomen
-    WebkitTextSizeAdjust: "100%",  // verhindert Textanpassung
+    fontSize: 14,
     borderRadius: 6,
     border: "1px solid #ccc",
     marginTop: 8,
@@ -637,12 +636,14 @@ export default function App() {
                 <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                   {editingIdx === idx ? (
                     <>
+                      {/* Datum & Zeit editierbar */}
                       <input
                         value={editForm.date}
                         onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
                         placeholder="Datum & Uhrzeit"
                         style={styles.input}
                       />
+                      {/* Inline-Bearbeitung */}
                       <input
                         value={editForm.food}
                         onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
