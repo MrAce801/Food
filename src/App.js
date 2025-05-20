@@ -37,6 +37,15 @@ const styles = {
     borderRadius: 6,
     border: "1px solid #ccc"
   },
+  textarea: {
+    width: "100%",
+    padding: "8px",
+    fontSize: 14,
+    borderRadius: 6,
+    border: "1px solid #ccc",
+    marginTop: 8,
+    resize: "vertical"
+  },
   buttonPrimary: {
     padding: "12px 0",
     fontSize: 16,
@@ -86,21 +95,30 @@ const styles = {
     background: "#1976d2",
     color: "#fff",
     cursor: "pointer"
-  }
+  },
+  noteButton: isActive => ({
+    background: isActive ? "#FFF59D" : "#FFFDE7",
+    border: "1px solid #F0E68C",
+    borderRadius: 6,
+    padding: "4px",
+    cursor: "pointer",
+    fontSize: 16,
+    lineHeight: 1
+  })
 };
 
 // --- Symptom-Farb-Mapping Variante 2 ---
 const SYMPTOM_COLOR_MAP = {
-  "Bauchschmerzen": "#D0E1F9",    // Grau-Blau
-  "Durchfall": "#D6EAE0",         // Grau-Grün
-  "Blähungen": "#E4D9F0",         // Grau-Lila
-  "Hautausschlag": "#F0D9D9",     // Grau-Rosa
-  "Juckreiz": "#F5F3D1",          // Grau-Gelb
-  "Schwellung am Gaumen": "#F6E0B5", // Grau-Orange
-  "Schleim im Hals": "#D9F2F9",    // Grau-Türkis
-  "Niesen": "#FBF7D6",            // Grau-Zitronen
-  "Kopfschmerzen": "#D9EAF9",     // Grau-Himmel
-  "Rötung Haut": "#F2D9DB"        // Grau-Rubin
+  "Bauchschmerzen": "#D0E1F9",
+  "Durchfall": "#D6EAE0",
+  "Blähungen": "#E4D9F0",
+  "Hautausschlag": "#F0D9D9",
+  "Juckreiz": "#F5F3D1",
+  "Schwellung am Gaumen": "#F6E0B5",
+  "Schleim im Hals": "#D9F2F9",
+  "Niesen": "#FBF7D6",
+  "Kopfschmerzen": "#D9EAF9",
+  "Rötung Haut": "#F2D9DB"
 };
 
 // --- UI-Komponenten ---
@@ -208,8 +226,7 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => {
         fontSize: 14,
         cursor: onClick ? "pointer" : "default",
         overflowWrap: "break-word",
-        whiteSpace: "normal",
-        maxWidth: 120
+        whiteSpace: "normal"
       }}
     >
       {txt}
@@ -220,11 +237,8 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => {
         <span
           onClick={e => { e.stopPropagation(); onDel(); }}
           style={{
-            marginLeft: 6,
-            cursor: "pointer",
-            fontSize: 16,
-            color: "#c00",
-            fontWeight: 700
+            marginLeft: 6, cursor: "pointer",
+            fontSize: 16, color: "#c00", fontWeight: 700
           }}
         >
           ×
@@ -297,8 +311,12 @@ export default function App() {
 
   const [view, setView] = useState("diary"); 
   const [entries, setEntries] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("fd-entries") || "[]"); }
-    catch { return []; }
+    try { 
+      return JSON.parse(localStorage.getItem("fd-entries") || "[]")
+        .map(e => ({ ...e, comment: e.comment || "" }));
+    } catch { 
+      return [];
+    }
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(20);
@@ -310,13 +328,19 @@ export default function App() {
   const fileRefNew = useRef();
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState(null);
+  const [noteOpenIdx, setNoteOpenIdx] = useState(null);
+  const [noteDraft, setNoteDraft] = useState("");
   const fileRefEdit = useRef();
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
   // Persist
-  useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
-  useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
+  useEffect(() => {
+    localStorage.setItem("fd-entries", JSON.stringify(entries));
+  }, [entries]);
+  useEffect(() => {
+    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
+  }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
@@ -409,7 +433,13 @@ export default function App() {
   // Add entry
   const addEntry = () => {
     if (!newForm.food.trim()) return;
-    const entry = { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, date: now() };
+    const entry = {
+      food: newForm.food,
+      imgs: newForm.imgs,
+      symptoms: newSymptoms,
+      comment: "",
+      date: now()
+    };
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
@@ -421,7 +451,13 @@ export default function App() {
   const startEdit = i => {
     setEditingIdx(i);
     const e = entries[i];
-    setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0 });
+    setEditForm({
+      food: e.food,
+      imgs: [...e.imgs],
+      symptoms: [...e.symptoms],
+      symptomInput: "",
+      symptomTime: 0
+    });
   };
   const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
   const addEditSymptom = () => {
@@ -447,7 +483,7 @@ export default function App() {
     }
   };
   const saveEdit = () => {
-    setEntries(e => e.map((ent, i) => i === editingIdx ? { ...editForm, date: ent.date } : ent));
+    setEntries(e => e.map((ent, i) => i === editingIdx ? { ...editForm, comment: ent.comment, date: ent.date } : ent));
     cancelEdit();
     navigator.vibrate?.(50);
     addToast("Eintrag aktualisiert");
@@ -459,11 +495,28 @@ export default function App() {
     addToast("Eintrag gelöscht");
   };
 
+  // Notes
+  const toggleNote = idx => {
+    if (noteOpenIdx === idx) {
+      setNoteOpenIdx(null);
+    } else {
+      setNoteDraft(entries[idx].comment || "");
+      setNoteOpenIdx(idx);
+    }
+  };
+  const saveNote = idx => {
+    setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
+    setNoteOpenIdx(null);
+    navigator.vibrate?.(50);
+    addToast("Notiz gespeichert");
+  };
+
   // Filter + grouping + pagination
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       entry.food.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase()))
+      entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      entry.comment.toLowerCase().includes(searchTerm.toLowerCase())
     );
   const toDisplay = filteredWithIdx.slice(0, displayCount);
   const grouped = toDisplay.reduce((acc, { entry, idx }) => {
@@ -488,7 +541,9 @@ export default function App() {
       {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
 
       <div style={styles.topBar}>
-        <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }} title="Theme wechseln">
+        <button onClick={() => setDark(d => !d)}
+                style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
+                title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
@@ -582,6 +637,7 @@ export default function App() {
               <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                 {editingIdx === idx ? (
                   <>
+                    {/* Inline-Bearbeitung */}
                     <input
                       value={editForm.food}
                       onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
@@ -639,6 +695,7 @@ export default function App() {
                   </>
                 ) : (
                   <>
+                    {/* Anzeige-Modus */}
                     <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
                     <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
                     {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
@@ -647,10 +704,38 @@ export default function App() {
                         <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                       ))}
                     </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
-                      <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button onClick={() => toggleNote(idx)} style={styles.noteButton(entry.comment)}>
+                        🗒️
+                      </button>
+                      <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>
+                        Bearbeiten
+                      </button>
+                      <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>
+                        Löschen
+                      </button>
                     </div>
+                    {noteOpenIdx === idx && (
+                      <div>
+                        <textarea
+                          value={noteDraft}
+                          onChange={e => setNoteDraft(e.target.value)}
+                          placeholder="Notiz..."
+                          style={styles.textarea}
+                        />
+                        <button
+                          onClick={() => saveNote(idx)}
+                          style={{ ...styles.buttonSecondary("#FFEB3B"), marginTop: 8 }}
+                        >
+                          Speichern
+                        </button>
+                      </div>
+                    )}
+                    {entry.comment && noteOpenIdx !== idx && (
+                      <div style={{ marginTop: 8, background: "#FFF9C4", padding: "6px 8px", borderRadius: 4 }}>
+                        {entry.comment}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
