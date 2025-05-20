@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-// Pfad zum neuen Notiz-Icon
-const NOTE_ICON = "/mnt/data/2f8c6cc7-031b-49ab-baf3-300d5ee515de.png";
-
 // --- Styles ausgelagert ---
 const styles = {
   container: isMobile => ({
@@ -103,30 +100,29 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   },
-  // Hintergrund entfernt, nur das Icon bleibt
   noteButton: isActive => ({
-    background: "transparent",
-    border: "none",
+    background: "#F9A825",       // dunkleres Gelb
+    border: "1px solid #F0E68C",
+    borderRadius: 6,
     padding: "4px",
     cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
+    fontSize: 16,
+    lineHeight: 1
   })
 };
 
 // --- Symptom-Farb-Mapping mit aktualisierten Pastelltönen ---
 const SYMPTOM_COLOR_MAP = {
-  Bauchschmerzen: "#D0E1F9",
-  Durchfall: "#D6EAE0",
-  Blähungen: "#E4D9F0",
-  Hautausschlag: "#F0D9D9",
-  Juckreiz: "#E1BEE7",
-  "Schwellung am Gaumen": "#FFCCBC",
-  "Schleim im Hals": "#D9F2F9",
-  Niesen: "#C8E6C9",
-  Kopfschmerzen: "#D9EAF9",
-  "Rötung Haut": "#F2D9DB"
+  Bauchschmerzen: "#D0E1F9",           // hellblau
+  Durchfall: "#D6EAE0",               // hellgrün
+  Blähungen: "#E4D9F0",               // flieder
+  Hautausschlag: "#F0D9D9",           // rosa
+  Juckreiz: "#E1BEE7",                // lavendel statt gelb
+  "Schwellung am Gaumen": "#FFCCBC",  // pfirsich statt gelb
+  "Schleim im Hals": "#D9F2F9",       // hellcyan
+  Niesen: "#C8E6C9",                  // mint statt gelb
+  Kopfschmerzen: "#D9EAF9",           // hellblau
+  "Rötung Haut": "#F2D9DB"            // zartrosa
 };
 
 // --- Image-Helper: resize + convert to JPEG ---
@@ -279,10 +275,9 @@ export default function App() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
-    setDark(
-      saved
-        ? saved === "dark"
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
+    setDark(saved ?
+      saved === "dark" :
+      window.matchMedia("(prefers-color-scheme: dark)").matches
     );
   }, []);
 
@@ -299,9 +294,7 @@ export default function App() {
   const [displayCount, setDisplayCount] = useState(20);
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem("fd-form-new");
-    return saved
-      ? JSON.parse(saved)
-      : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
+    return saved ? JSON.parse(saved) : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
   const fileRefNew = useRef();
@@ -474,11 +467,9 @@ export default function App() {
       {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
 
       <div style={styles.topBar}>
-        <button
-          onClick={() => setDark(d => !d)}
-          style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
-          title="Theme wechseln"
-        >
+        <button onClick={() => setDark(d => !d)}
+                style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
+                title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
@@ -573,7 +564,6 @@ export default function App() {
                 <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                   {editingIdx === idx ? (
                     <>
-                      {/* Inline-Bearbeitung */}
                       <input
                         value={editForm.date}
                         onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
@@ -630,14 +620,13 @@ export default function App() {
                         <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
                       </div>
                     </>
-                  ) : (  
+                  ) : (
                     <>
-                      {/* Anzeige-Modus */}
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4 }}>{entry.date}</div>
                       <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>{entry.food}</div>
                       {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
                       <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
-                        {sortedAll.map((s,j)=>(
+                        {sortedAll.map((s,j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} dark={dark}/>
                         ))}
                       </div>
@@ -654,46 +643,35 @@ export default function App() {
                           Löschen
                         </button>
                         <span style={{ marginLeft:"auto" }}>
-                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>
-                            <img
-                              src={NOTE_ICON}
-                              alt="Notiz"
-                              style={{
-                                width: 20,
-                                height: 20,
-                                backgroundColor: "#F9A825",
-                                borderRadius: 4
-                              }}
-                            />
-                          </button>
+                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                         </span>
                       </div>
-                      {noteOpenIdx===idx && (
+                      {noteOpenIdx === idx && (
                         <div>
                           <textarea
                             value={noteDraft}
-                            onChange={e=>setNoteDraft(e.target.value)}
+                            onChange={e => setNoteDraft(e.target.value)}
                             placeholder="Notiz..."
                             style={styles.textarea}
                           />
                           <button
-                            onClick={()=>saveNote(idx)}
-                            style={{ ...styles.buttonSecondary("#FBC02D"), marginTop:8 }}
+                            onClick={() => saveNote(idx)}
+                            style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
                           >
                             Speichern
                           </button>
                         </div>
                       )}
-                      {entry.comment && noteOpenIdx!==idx && (
+                      {entry.comment && noteOpenIdx !== idx && (
                         <div style={{
-                          marginTop:8,
+                          marginTop: 8,
                           background: dark ? "#ccc" : "transparent",
                           padding: "6px 8px",
-                          borderRadius:4,
+                          borderRadius: 4,
                           color: "#000",
-                          overflowWrap:"break-word",
-                          whiteSpace:"pre-wrap",
-                          boxSizing:"border-box"
+                          overflowWrap: "break-word",
+                          whiteSpace: "pre-wrap",
+                          boxSizing: "border-box"
                         }}>
                           {entry.comment}
                         </div>
