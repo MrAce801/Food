@@ -44,7 +44,9 @@ const styles = {
     borderRadius: 6,
     border: "1px solid #ccc",
     marginTop: 8,
-    resize: "vertical"
+    resize: "vertical",
+    overflowWrap: "break-word",
+    whiteSpace: "pre-wrap"
   },
   buttonPrimary: {
     padding: "12px 0",
@@ -109,145 +111,85 @@ const styles = {
 
 // --- Symptom-Farb-Mapping Variante 2 ---
 const SYMPTOM_COLOR_MAP = {
-  "Bauchschmerzen": "#D0E1F9",
-  "Durchfall": "#D6EAE0",
-  "Blähungen": "#E4D9F0",
-  "Hautausschlag": "#F0D9D9",
-  "Juckreiz": "#F5F3D1",
+  Bauchschmerzen: "#D0E1F9",
+  Durchfall: "#D6EAE0",
+  Blähungen: "#E4D9F0",
+  Hautausschlag: "#F0D9D9",
+  Juckreiz: "#F5F3D1",
   "Schwellung am Gaumen": "#F6E0B5",
   "Schleim im Hals": "#D9F2F9",
-  "Niesen": "#FBF7D6",
-  "Kopfschmerzen": "#D9EAF9",
+  Niesen: "#FBF7D6",
+  Kopfschmerzen: "#D9EAF9",
   "Rötung Haut": "#F2D9DB"
 };
 
 // --- UI-Komponenten ---
 const PdfButton = ({ onClick }) => (
-  <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
-    PDF
-  </button>
+  <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>PDF</button>
 );
-
 const InsightsButton = ({ onClick }) => (
-  <button onClick={onClick} title="Insights" style={styles.buttonSecondary("#1976d2")}>
-    Insights
-  </button>
+  <button onClick={onClick} title="Insights" style={styles.buttonSecondary("#1976d2")}>Insights</button>
 );
-
 const BackButton = ({ onClick }) => (
-  <button onClick={onClick} title="Zurück" style={styles.backButton}>
-    ← Zurück
-  </button>
+  <button onClick={onClick} title="Zurück" style={styles.backButton}>← Zurück</button>
 );
-
 const CameraButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    title="Foto"
-    style={{
-      width: 36,
-      height: 36,
-      borderRadius: "50%",
-      border: 0,
-      background: "#247be5",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer"
-    }}
-  >
-    📷
-  </button>
+  <button onClick={onClick} title="Foto" style={{
+    width: 36, height: 36, borderRadius: "50%", border: 0,
+    background: "#247be5", display: "flex", alignItems: "center",
+    justifyContent: "center", cursor: "pointer"
+  }}>📷</button>
 );
-
 const ImgStack = ({ imgs, onDelete }) => (
   <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
     {imgs.map((src, i) => (
-      <div
-        key={i}
-        style={{
-          position: "relative",
-          marginLeft: i === 0 ? 0 : -12,
-          zIndex: imgs.length - i
-        }}
-      >
-        <img
-          src={src}
-          alt=""
-          style={{
-            width: 40,
-            height: 40,
-            objectFit: "cover",
-            borderRadius: 6,
-            border: "2px solid #fff",
-            boxShadow: "0 1px 4px #0003"
-          }}
-        />
+      <div key={i} style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
+        <img src={src} alt="" style={{
+          width: 40, height: 40, objectFit: "cover",
+          borderRadius: 6, border: "2px solid #fff",
+          boxShadow: "0 1px 4px #0003"
+        }}/>
         {onDelete && (
-          <span
-            onClick={() => onDelete(i)}
-            style={{
-              position: "absolute",
-              top: -6,
-              right: -6,
-              background: "#c00",
-              color: "#fff",
-              borderRadius: "50%",
-              width: 18,
-              height: 18,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 12,
-              cursor: "pointer"
-            }}
-          >
-            ×
-          </span>
+          <span onClick={() => onDelete(i)} style={{
+            position: "absolute", top: -6, right: -6,
+            background: "#c00", color: "#fff",
+            borderRadius: "50%", width: 18, height: 18,
+            display: "flex", alignItems: "center",
+            justifyContent: "center", fontSize: 12,
+            cursor: "pointer"
+          }}>×</span>
         )}
       </div>
     ))}
   </div>
 );
-
 const SymTag = ({ txt, time, dark, onDel, onClick }) => {
-  const bg = SYMPTOM_COLOR_MAP[txt] || (dark ? "#343445" : "#e8f0ff");
+  const bg = SYMPTOM_COLOR_MAP.hasOwnProperty(txt)
+    ? SYMPTOM_COLOR_MAP[txt]
+    : (dark ? "#444444" : "#eeeeee");
   return (
-    <div
-      onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        background: bg,
-        color: "#1a1f3d",
-        borderRadius: 6,
-        padding: "5px 10px",
-        margin: "3px 4px 3px 0",
-        fontSize: 14,
-        cursor: onClick ? "pointer" : "default",
-        overflowWrap: "break-word",
-        whiteSpace: "normal"
-      }}
-    >
+    <div onClick={onClick} style={{
+      display: "inline-flex", alignItems: "center",
+      background: bg, color: "#1a1f3d",
+      borderRadius: 6, padding: "5px 10px", margin: "3px 4px 3px 0",
+      fontSize: 14, cursor: onClick ? "pointer" : "default",
+      overflowWrap: "break-word", whiteSpace: "normal"
+    }}>
       {txt}
       <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
         {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
       {onDel && (
-        <span
-          onClick={e => { e.stopPropagation(); onDel(); }}
-          style={{
-            marginLeft: 6, cursor: "pointer",
-            fontSize: 16, color: "#c00", fontWeight: 700
-          }}
-        >
-          ×
-        </span>
+        <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
+          marginLeft: 6, cursor: "pointer",
+          fontSize: 16, color: "#c00", fontWeight: 700
+        }}>×</span>
       )}
     </div>
   );
 };
 
+// --- Konstanten ---
 const SYMPTOM_CHOICES = [
   "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
   "Juckreiz","Schwellung am Gaumen","Schleim im Hals",
@@ -264,10 +206,10 @@ const TIME_CHOICES = [
   { label: "nach 1,5 h", value: 90 },
   { label: "nach 3 h", value: 180 }
 ];
-
 const now = () => {
   const d = new Date();
-  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString() + " " +
+    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
 // --- Insights-Komponente ---
@@ -281,7 +223,6 @@ function Insights({ entries }) {
     });
   });
   const sorted = Object.entries(map).sort((a, b) => b[1].count - a[1].count);
-
   return (
     <div>
       <h2 style={{ textAlign: "center", margin: "16px 0" }}>Insights</h2>
@@ -305,16 +246,15 @@ export default function App() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
-    if (saved) setDark(saved === "dark");
-    else setDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
-  const [view, setView] = useState("diary"); 
+  const [view, setView] = useState("diary");
   const [entries, setEntries] = useState(() => {
-    try { 
+    try {
       return JSON.parse(localStorage.getItem("fd-entries") || "[]")
         .map(e => ({ ...e, comment: e.comment || "" }));
-    } catch { 
+    } catch {
       return [];
     }
   });
@@ -335,12 +275,8 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
   // Persist
-  useEffect(() => {
-    localStorage.setItem("fd-entries", JSON.stringify(entries));
-  }, [entries]);
-  useEffect(() => {
-    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
-  }, [newForm]);
+  useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
+  useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
@@ -352,7 +288,7 @@ export default function App() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Scroll focus / edit
+  // Focus scroll
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
   useEffect(() => {
     if (editingIdx !== null) {
@@ -390,8 +326,7 @@ export default function App() {
 
   // File -> Base64
   const handleNewFile = e => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
+    Array.from(e.target.files || []).forEach(file => {
       const reader = new FileReader();
       reader.onload = () => setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
       reader.readAsDataURL(file);
@@ -406,8 +341,7 @@ export default function App() {
     addToast("Foto gelöscht");
   };
   const handleEditFile = e => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
+    Array.from(e.target.files || []).forEach(file => {
       const reader = new FileReader();
       reader.onload = () => setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
       reader.readAsDataURL(file);
@@ -422,7 +356,7 @@ export default function App() {
     addToast("Foto gelöscht");
   };
 
-  // Symptoms new
+  // Symptoms
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
     setNewSymptoms(s => [...s, { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }]);
@@ -447,17 +381,11 @@ export default function App() {
     addToast("Eintrag gespeichert");
   };
 
-  // Edit
+  // Edit handlers
   const startEdit = i => {
     setEditingIdx(i);
     const e = entries[i];
-    setEditForm({
-      food: e.food,
-      imgs: [...e.imgs],
-      symptoms: [...e.symptoms],
-      symptomInput: "",
-      symptomTime: 0
-    });
+    setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0 });
   };
   const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
   const addEditSymptom = () => {
@@ -465,8 +393,7 @@ export default function App() {
     setEditForm(fm => ({
       ...fm,
       symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
-      symptomInput: "",
-      symptomTime: 0
+      symptomInput: "", symptomTime: 0
     }));
   };
   const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
@@ -483,7 +410,9 @@ export default function App() {
     }
   };
   const saveEdit = () => {
-    setEntries(e => e.map((ent, i) => i === editingIdx ? { ...editForm, comment: ent.comment, date: ent.date } : ent));
+    setEntries(e => e.map((ent, i) =>
+      i === editingIdx ? { ...editForm, comment: ent.comment, date: ent.date } : ent
+    ));
     cancelEdit();
     navigator.vibrate?.(50);
     addToast("Eintrag aktualisiert");
@@ -500,7 +429,7 @@ export default function App() {
     if (noteOpenIdx === idx) {
       setNoteOpenIdx(null);
     } else {
-      setNoteDraft(entries[idx].comment || "");
+      setNoteDraft(entries[idx].comment);
       setNoteOpenIdx(idx);
     }
   };
@@ -575,7 +504,6 @@ export default function App() {
             style={{ display: "none" }}
           />
         </div>
-
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -598,7 +526,8 @@ export default function App() {
           >
             {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
+          <button onClick={addNewSymptom}
+                  style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
@@ -622,7 +551,10 @@ export default function App() {
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.smallInput}
           />
-          <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
+          <button
+            onClick={() => setDisplayCount(dc => dc + 20)}
+            style={styles.buttonSecondary("#1976d2")}
+          >
             Mehr laden
           </button>
         </div>
@@ -674,7 +606,10 @@ export default function App() {
                       >
                         {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                       </select>
-                      <button onClick={addEditSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
+                      <button
+                        onClick={addEditSymptom}
+                        style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}
+                      >+</button>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
                       {editForm.symptoms.map((s, j) => (
@@ -705,15 +640,9 @@ export default function App() {
                       ))}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button onClick={() => toggleNote(idx)} style={styles.noteButton(entry.comment)}>
-                        🗒️
-                      </button>
-                      <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>
-                        Bearbeiten
-                      </button>
-                      <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>
-                        Löschen
-                      </button>
+                      <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
+                      <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
+                      <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                     </div>
                     {noteOpenIdx === idx && (
                       <div>
@@ -732,7 +661,15 @@ export default function App() {
                       </div>
                     )}
                     {entry.comment && noteOpenIdx !== idx && (
-                      <div style={{ marginTop: 8, background: "#FFF9C4", padding: "6px 8px", borderRadius: 4 }}>
+                      <div style={{
+                        marginTop: 8,
+                        background: "#FFF9C4",
+                        padding: "6px 8px",
+                        borderRadius: 4,
+                        color: dark ? "#111" : "#000",
+                        overflowWrap: "break-word",
+                        whiteSpace: "pre-wrap"
+                      }}>
                         {entry.comment}
                       </div>
                     )}
