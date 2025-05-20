@@ -40,15 +40,14 @@ const styles = {
   textarea: {
     width: "100%",
     padding: "8px",
-    fontSize: 16,
-    WebkitTextSizeAdjust: "100%",
+    fontSize: 16,                  // erhöht auf 16px gegen automatisches Zoomen
+    WebkitTextSizeAdjust: "100%",  // verhindert Textanpassung
     borderRadius: 6,
     border: "1px solid #ccc",
     marginTop: 8,
     resize: "vertical",
     overflowWrap: "break-word",
-    whiteSpace: "pre-wrap",
-    boxSizing: "border-box"
+    whiteSpace: "pre-wrap"
   },
   buttonPrimary: {
     padding: "12px 0",
@@ -111,7 +110,7 @@ const styles = {
   })
 };
 
-// --- Symptom-Farb-Mapping ---
+// --- Symptom-Farb-Mapping Variante 2 ---
 const SYMPTOM_COLOR_MAP = {
   Bauchschmerzen: "#D0E1F9",
   Durchfall: "#D6EAE0",
@@ -152,46 +151,31 @@ function resizeToJpeg(file, maxWidth = 800) {
 
 // --- UI-Komponenten ---
 const PdfButton = ({ onClick }) => (
-  <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
-    PDF
-  </button>
+  <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>PDF</button>
 );
 const InsightsButton = ({ onClick }) => (
-  <button onClick={onClick} title="Insights" style={styles.buttonSecondary("#1976d2")}>
-    Insights
-  </button>
+  <button onClick={onClick} title="Insights" style={styles.buttonSecondary("#1976d2")}>Insights</button>
 );
 const BackButton = ({ onClick }) => (
-  <button onClick={onClick} title="Zurück" style={styles.backButton}>
-    ← Zurück
-  </button>
+  <button onClick={onClick} title="Zurück" style={styles.backButton}>← Zurück</button>
 );
 const CameraButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    title="Foto"
-    style={{
-      width: 36,
-      height: 36,
-      borderRadius: 6,
-      border: 0,
-      background: "#247be5",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer"
-    }}
-  >
-    📷
-  </button>
+  <button onClick={onClick} title="Foto" style={{
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    border: 0,
+    background: "#247be5",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer"
+  }}>📷</button>
 );
 const ImgStack = ({ imgs, onDelete }) => (
   <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
     {imgs.map((src, i) => (
-      <div
-        key={i}
-        style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}
-      >
+      <div key={i} style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
         <img
           src={src}
           alt=""
@@ -203,31 +187,24 @@ const ImgStack = ({ imgs, onDelete }) => (
             border: "2px solid #fff",
             boxShadow: "0 1px 4px #0003"
           }}
-          onError={e => {
-            e.currentTarget.style.display = "none";
-          }}
+          onError={e => { e.currentTarget.style.display = "none"; }}
         />
         {onDelete && (
-          <span
-            onClick={() => onDelete(i)}
-            style={{
-              position: "absolute",
-              top: -6,
-              right: -6,
-              background: "#c00",
-              color: "#fff",
-              borderRadius: "50%",
-              width: 18,
-              height: 18,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 12,
-              cursor: "pointer"
-            }}
-          >
-            ×
-          </span>
+          <span onClick={() => onDelete(i)} style={{
+            position: "absolute",
+            top: -6,
+            right: -6,
+            background: "#c00",
+            color: "#fff",
+            borderRadius: "50%",
+            width: 18,
+            height: 18,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 12,
+            cursor: "pointer"
+          }}>×</span>
         )}
       </div>
     ))}
@@ -236,42 +213,31 @@ const ImgStack = ({ imgs, onDelete }) => (
 const SymTag = ({ txt, time, dark, onDel, onClick }) => {
   const bg = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
   return (
-    <div
-      onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        background: bg,
-        color: "#1a1f3d",
-        borderRadius: 6,
-        padding: "5px 10px",
-        margin: "3px 4px 3px 0",
-        fontSize: 14,
-        cursor: onClick ? "pointer" : "default",
-        overflowWrap: "break-word",
-        whiteSpace: "normal"
-      }}
-    >
+    <div onClick={onClick} style={{
+      display: "inline-flex",
+      alignItems: "center",
+      background: bg,
+      color: "#1a1f3d",
+      borderRadius: 6,
+      padding: "5px 10px",
+      margin: "3px 4px 3px 0",
+      fontSize: 14,
+      cursor: onClick ? "pointer" : "default",
+      overflowWrap: "break-word",
+      whiteSpace: "normal"
+    }}>
       {txt}
       <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
         {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
       {onDel && (
-        <span
-          onClick={e => {
-            e.stopPropagation();
-            onDel();
-          }}
-          style={{
-            marginLeft: 6,
-            cursor: "pointer",
-            fontSize: 16,
-            color: "#c00",
-            fontWeight: 700
-          }}
-        >
-          ×
-        </span>
+        <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
+          marginLeft: 6,
+          cursor: "pointer",
+          fontSize: 16,
+          color: "#c00",
+          fontWeight: 700
+        }}>×</span>
       )}
     </div>
   );
@@ -279,16 +245,9 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => {
 
 // --- Konstanten ---
 const SYMPTOM_CHOICES = [
-  "Bauchschmerzen",
-  "Durchfall",
-  "Blähungen",
-  "Hautausschlag",  
-  "Juckreiz",
-  "Schwellung am Gaumen",
-  "Schleim im Hals",
-  "Niesen",
-  "Kopfschmerzen",
-  "Rötung Haut"
+  "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
+  "Juckreiz","Schwellung am Gaumen","Schleim im Hals",
+  "Niesen","Kopfschmerzen","Rötung Haut"
 ];
 const TIME_CHOICES = [
   { label: "sofort", value: 0 },
@@ -303,11 +262,8 @@ const TIME_CHOICES = [
 ];
 const now = () => {
   const d = new Date();
-  return (
-    d.toLocaleDateString() +
-    " " +
-    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
+  return d.toLocaleDateString() + " " +
+    d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
 // --- Insights-Komponente ---
@@ -327,17 +283,11 @@ function Insights({ entries }) {
       {sorted.length === 0 && <p>Keine Symptome erfasst.</p>}
       {sorted.map(([symptom, data]) => (
         <div key={symptom} style={{ marginBottom: 24 }}>
-          <h3>
-            {symptom} ({data.count})
-          </h3>
+          <h3>{symptom} ({data.count})</h3>
           <ul>
-            {Object.entries(data.foods)
-              .sort((a, b) => b[1] - a[1])
-              .map(([food, cnt]) => (
-                <li key={food}>
-                  {food}: {cnt}
-                </li>
-              ))}
+            {Object.entries(data.foods).sort((a, b) => b[1] - a[1]).map(([food, cnt]) => (
+              <li key={food}>{food}: {cnt}</li>
+            ))}
           </ul>
         </div>
       ))}
@@ -350,20 +300,14 @@ export default function App() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
-    setDark(
-      saved
-        ? saved === "dark"
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
+    setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
   const [view, setView] = useState("diary");
   const [entries, setEntries] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("fd-entries") || "[]").map(e => ({
-        ...e,
-        comment: e.comment || ""
-      }));
+      return JSON.parse(localStorage.getItem("fd-entries") || "[]")
+        .map(e => ({ ...e, comment: e.comment || "" }));
     } catch {
       return [];
     }
@@ -372,9 +316,7 @@ export default function App() {
   const [displayCount, setDisplayCount] = useState(20);
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem("fd-form-new");
-    return saved
-      ? JSON.parse(saved)
-      : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
+    return saved ? JSON.parse(saved) : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
   const fileRefNew = useRef();
@@ -405,8 +347,7 @@ export default function App() {
   }, []);
 
   // Focus scroll
-  const handleFocus = e =>
-    e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+  const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
   useEffect(() => {
     if (editingIdx !== null) {
       const el = document.getElementById(`entry-${editingIdx}`);
@@ -427,10 +368,7 @@ export default function App() {
     if (!el) return;
     const imgs = Array.from(el.querySelectorAll("img"));
     const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
-    imgs.forEach(img => {
-      img.style.width = "80px";
-      img.style.height = "80px";
-    });
+    imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; });
     const canvas = await html2canvas(el, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
@@ -458,10 +396,7 @@ export default function App() {
     e.target.value = "";
   };
   const removeNewImg = idx => {
-    setNewForm(fm => ({
-      ...fm,
-      imgs: fm.imgs.filter((_, i) => i !== idx)
-    }));
+    setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     addToast("Foto gelöscht");
   };
 
@@ -481,24 +416,17 @@ export default function App() {
     e.target.value = "";
   };
   const removeEditImg = idx => {
-    setEditForm(fm => ({
-      ...fm,
-      imgs: fm.imgs.filter((_, i) => i !== idx)
-    }));
+    setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     addToast("Foto gelöscht");
   };
 
   // Symptome neu
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
-    setNewSymptoms(s => [
-      ...s,
-      { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }
-    ]);
+    setNewSymptoms(s => [...s, { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }]);
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0 }));
   };
-  const removeNewSymptom = idx =>
-    setNewSymptoms(s => s.filter((_, i) => i !== idx));
+  const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
   // Eintrag hinzufügen
   const addEntry = () => {
@@ -529,27 +457,17 @@ export default function App() {
       date: e.date
     });
   };
-  const cancelEdit = () => {
-    setEditingIdx(null);
-    setEditForm(null);
-  };
+  const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
       ...fm,
-      symptoms: [
-        ...fm.symptoms,
-        { txt: fm.symptomInput.trim(), time: fm.symptomTime }
-      ],
+      symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
       symptomInput: "",
       symptomTime: 0
     }));
   };
-  const removeEditSymptom = idx =>
-    setEditForm(fm => ({
-      ...fm,
-      symptoms: fm.symptoms.filter((_, i) => i !== idx)
-    }));
+  const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
     const val = prompt(`Neue Zeit für "${curr.txt}" (Minuten):`, String(curr.time));
@@ -563,19 +481,11 @@ export default function App() {
     }
   };
   const saveEdit = () => {
-    setEntries(e =>
-      e.map((ent, i) =>
-        i === editingIdx
-          ? {
-              food: editForm.food,
-              imgs: editForm.imgs,
-              symptoms: editForm.symptoms,
-              comment: ent.comment,
-              date: editForm.date
-            }
-          : ent
-      )
-    );
+    setEntries(e => e.map((ent, i) =>
+      i === editingIdx
+        ? { food: editForm.food, imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date }
+        : ent
+    ));
     cancelEdit();
     addToast("Eintrag aktualisiert");
   };
@@ -591,21 +501,16 @@ export default function App() {
     if (noteOpenIdx !== idx) setNoteDraft(entries[idx].comment);
   };
   const saveNote = idx => {
-    setEntries(e =>
-      e.map((ent, j) => (j === idx ? { ...ent, comment: noteDraft } : ent))
-    );
+    setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
     setNoteOpenIdx(null);
     addToast("Notiz gespeichert");
   };
 
   // Filter + Gruppierung + Pagination
-  const filteredWithIdx = entries
-    .map((e, idx) => ({ entry: e, idx }))
+  const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       entry.food.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.symptoms.some(s =>
-        s.txt.toLowerCase().includes(searchTerm.toLowerCase())
-      ) ||
+      entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
       entry.comment.toLowerCase().includes(searchTerm.toLowerCase())
     );
   const toDisplay = filteredWithIdx.slice(0, displayCount);
@@ -619,14 +524,8 @@ export default function App() {
   if (view === "insights") {
     return (
       <div style={styles.container(isMobile)}>
-        {toasts.map(t => (
-          <div key={t.id} style={styles.toast}>
-            {t.msg}
-          </div>
-        ))}
-        <div style={styles.topBar}>
-          <BackButton onClick={() => setView("diary")} />
-        </div>
+        {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
+        <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
         <Insights entries={entries} />
       </div>
     );
@@ -634,18 +533,12 @@ export default function App() {
 
   return (
     <div style={styles.container(isMobile)}>
-      {toasts.map(t => (
-        <div key={t.id} style={styles.toast}>
-          {t.msg}
-        </div>
-      ))}
+      {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
 
       <div style={styles.topBar}>
-        <button
-          onClick={() => setDark(d => !d)}
-          style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
-          title="Theme wechseln"
-        >
+        <button onClick={() => setDark(d => !d)}
+                style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
+                title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
@@ -658,20 +551,11 @@ export default function App() {
 
       {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 48
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 48 }}>
           <input
             placeholder="Essen..."
             value={newForm.food}
-            onChange={e =>
-              setNewForm(fm => ({ ...fm, food: e.target.value }))
-            }
+            onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
             onFocus={handleFocus}
             style={styles.input}
           />
@@ -686,46 +570,30 @@ export default function App() {
             style={{ display: "none" }}
           />
         </div>
-        {newForm.imgs.length > 0 && (
-          <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />
-        )}
+        {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <input
             list="symptom-list"
             placeholder="Symptom..."
             value={newForm.symptomInput}
-            onChange={e =>
-              setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))
-            }
+            onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
             onFocus={handleFocus}
             style={styles.smallInput}
           />
           <datalist id="symptom-list">
-            {SYMPTOM_CHOICES.map(s => (
-              <option key={s} value={s} />
-            ))}
+            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
           </datalist>
           <select
             value={newForm.symptomTime}
-            onChange={e =>
-              setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))
-            }
+            onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
             onFocus={handleFocus}
             style={styles.smallInput}
           >
-            {TIME_CHOICES.map(t => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
+            {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <button
-            onClick={addNewSymptom}
-            style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}
-          >
-            +
-          </button>
+          <button onClick={addNewSymptom}
+                  style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
@@ -749,10 +617,8 @@ export default function App() {
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.smallInput}
           />
-          <button
-            onClick={() => setDisplayCount(dc => dc + 20)}
-            style={styles.buttonSecondary("#1976d2")}
-          >
+          <button onClick={() => setDisplayCount(dc => dc + 20)}
+                  style={styles.buttonSecondary("#1976d2")}>
             Mehr laden
           </button>
         </div>
@@ -766,7 +632,7 @@ export default function App() {
             {grouped[day].map(({ entry, idx }) => {
               const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
               const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-              const sortedAll = [...known.sort((a,b)=>a.txt.localeCompare(b.txt)), ...custom];
+              const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
               return (
                 <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                   {editingIdx === idx ? (
@@ -794,7 +660,7 @@ export default function App() {
                           onChange={handleEditFile}
                           style={{ display: "none" }}
                         />
-                        {editForm.imgs.length>0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg}/>}
+                        {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                         <input
@@ -811,15 +677,21 @@ export default function App() {
                           onFocus={handleFocus}
                           style={styles.smallInput}
                         >
-                          {TIME_CHOICES.map(t=> <option key={t.value} value={t.value}>{t.label}</option>)}
+                          {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </select>
-                        <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0}}>+</button>
+                        <button onClick={addEditSymptom}
+                                style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-                        {editForm.symptoms.map((s,j)=>(
-                          <SymTag key={j} txt={s.txt} time={s.time} dark={dark}
-                                  onDel={()=>removeEditSymptom(j)}
-                                  onClick={()=>changeEditSymptomTime(j)} />
+                        {editForm.symptoms.map((s, j) => (
+                          <SymTag
+                            key={j}
+                            txt={s.txt}
+                            time={s.time}
+                            dark={dark}
+                            onDel={() => removeEditSymptom(j)}
+                            onClick={() => changeEditSymptomTime(j)}
+                          />
                         ))}
                       </div>
                       <div style={{ display: "flex", gap: 5 }}>
@@ -829,46 +701,46 @@ export default function App() {
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4 }}>{entry.date}</div>
-                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>{entry.food}</div>
-                      {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
-                      <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
-                        {sortedAll.map((s,j)=>(
-                          <SymTag key={j} txt={s.txt} time={s.time} dark={dark}/>
+                      <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
+                      <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
+                      {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
+                      <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0 20px" }}>
+                        {sortedAll.map((s, j) => (
+                          <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                         ))}
                       </div>
-                      <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                         <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
-                        <span style={{ marginLeft:"auto" }}>
-                          <button onClick={()=>toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
+                        <span style={{ marginLeft: "auto" }}>
+                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                         </span>
                       </div>
-                      {noteOpenIdx===idx && (
+                      {noteOpenIdx === idx && (
                         <div>
                           <textarea
                             value={noteDraft}
-                            onChange={e=>setNoteDraft(e.target.value)}
+                            onChange={e => setNoteDraft(e.target.value)}
                             placeholder="Notiz..."
                             style={styles.textarea}
                           />
                           <button
-                            onClick={()=>saveNote(idx)}
-                            style={{...styles.buttonSecondary("#FBC02D"),marginTop:8}}
+                            onClick={() => saveNote(idx)}
+                            style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
                           >
                             Speichern
                           </button>
                         </div>
                       )}
-                      {entry.comment && noteOpenIdx!==idx && (
+                      {entry.comment && noteOpenIdx !== idx && (
                         <div style={{
-                          marginTop:8,
-                          background:"#FFF9C4",
-                          padding:"6px 8px",
-                          borderRadius:4,
-                          color:dark?"#111":"#000",
-                          overflowWrap:"break-word",
-                          whiteSpace:"pre-wrap"
+                          marginTop: 8,
+                          background: "#FFF9C4",
+                          padding: "6px 8px",
+                          borderRadius: 4,
+                          color: dark ? "#111" : "#000",
+                          overflowWrap: "break-word",
+                          whiteSpace: "pre-wrap"
                         }}>
                           {entry.comment}
                         </div>
