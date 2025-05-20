@@ -239,7 +239,7 @@ function Insights({ entries }) {
   const sorted = Object.entries(map).sort((a,b)=>b[1].count-a[1].count);
   return (
     <div>
-      <h2 style={{ textAlign:"center", margin:"16px 0" }}>Insights</h2>
+      <h2 style={{textAlign:"center",margin:"16px 0"}}>Insights</h2>
       {!sorted.length && <p>Keine Symptome erfasst.</p>}
       {sorted.map(([symptom,data])=>(
         <div key={symptom} style={{marginBottom:24}}>
@@ -434,13 +434,13 @@ export default function App(){
   };
 
   // Filter + Gruppierung + Pag.
-  const filteredWithIdx=entries.map((e,idx)=>({entry:e,idx}))
+  const filtered=entries.map((e,idx)=>({entry:e,idx}))
     .filter(({entry})=>
       entry.food.toLowerCase().includes(searchTerm.toLowerCase())||
       entry.symptoms.some(s=>s.txt.toLowerCase().includes(searchTerm.toLowerCase()))||
       entry.comment.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  const toDisplay=filteredWithIdx.slice(0,displayCount);
+  const toDisplay=filtered.slice(0,displayCount);
   const grouped=toDisplay.reduce((acc,{entry,idx})=>{
     const day=entry.date.split(" ")[0];
     (acc[day]=acc[day]||[]).push({entry,idx});
@@ -554,7 +554,10 @@ export default function App(){
                   position:"relative",
                   height:stackHeight,
                   marginBottom:16,
-                  overflow:"hidden"
+                  overflow:"hidden",
+                  border:"1px solid #ccc",
+                  borderRadius:8,
+                  boxShadow:"0 4px 8px rgba(0,0,0,0.1)"
                 }}>
                   {preview.map(({entry,idx},i)=>{
                     const known=entry.symptoms.filter(s=>SYMPTOM_CHOICES.includes(s.txt));
