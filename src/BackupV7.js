@@ -100,8 +100,9 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   },
+  // Note-Icon jetzt in der gleichen Gelb-Farbe wie der Save-Note-Button
   noteButton: isActive => ({
-    background: "#F9A825",       // dunkleres Gelb
+    background: "#FBC02D",
     border: "1px solid #F0E68C",
     borderRadius: 6,
     padding: "4px",
@@ -111,18 +112,18 @@ const styles = {
   })
 };
 
-// --- Symptom-Farb-Mapping mit aktualisierten Pastelltönen ---
+// --- Symptom-Farb-Mapping Variante 2 ---
 const SYMPTOM_COLOR_MAP = {
-  Bauchschmerzen: "#D0E1F9",           // hellblau
-  Durchfall: "#D6EAE0",               // hellgrün
-  Blähungen: "#E4D9F0",               // flieder
-  Hautausschlag: "#F0D9D9",           // rosa
-  Juckreiz: "#E1BEE7",                // lavendel statt gelb
-  "Schwellung am Gaumen": "#FFCCBC",  // pfirsich statt gelb
-  "Schleim im Hals": "#D9F2F9",       // hellcyan
-  Niesen: "#C8E6C9",                  // mint statt gelb
-  Kopfschmerzen: "#D9EAF9",           // hellblau
-  "Rötung Haut": "#F2D9DB"            // zartrosa
+  Bauchschmerzen: "#D0E1F9",
+  Durchfall: "#D6EAE0",
+  Blähungen: "#E4D9F0",
+  Hautausschlag: "#F0D9D9",
+  Juckreiz: "#F5F3D1",
+  "Schwellung am Gaumen": "#F6E0B5",
+  "Schleim im Hals": "#D9F2F9",
+  Niesen: "#FBF7D6",
+  Kopfschmerzen: "#D9EAF9",
+  "Rötung Haut": "#F2D9DB"
 };
 
 // --- Image-Helper: resize + convert to JPEG ---
@@ -307,8 +308,12 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
   // Persist
-  useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
-  useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
+  useEffect(() => {
+    localStorage.setItem("fd-entries", JSON.stringify(entries));
+  }, [entries]);
+  useEffect(() => {
+    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
+  }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
@@ -420,7 +425,7 @@ export default function App() {
     if (!isNaN(t)) setEditForm(fm => { const arr = [...fm.symptoms]; arr[idx] = { ...arr[idx], time: t }; return { ...fm, symptoms: arr }; });
   };
   const saveEdit = () => {
-    setEntries(e => e.map((ent, j) => j === editingIdx
+    setEntries(e => e.map((ent, i) => i === editingIdx
       ? { food: editForm.food, imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date }
       : ent
     ));
@@ -504,11 +509,11 @@ export default function App() {
             list="symptom-list"
             placeholder="Symptom..."
             value={newForm.symptomInput}
-            onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+            onChange={e => setNewForm(fm => ({ ...fm,ysymptomInput: e.target.value }))}
             onFocus={handleFocus}
             style={styles.smallInput}
           />
-          <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
+          <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s}/> )}</datalist>
           <select
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
@@ -555,7 +560,7 @@ export default function App() {
             {grouped[day].map(({ entry, idx }) => {
               const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
               const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-              const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
+              const sortedAll = [...known.sort((a,b)=>a.txt.localeCompare(b.txt)), ...custom];
               return (
                 <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                   {editingIdx === idx ? (
@@ -605,7 +610,7 @@ export default function App() {
                         <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0}}>+</button>
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-                        {editForm.symptoms.map((s,j) => (
+                        {editForm.symptoms.map((s, j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} dark={dark}
                                   onDel={() => removeEditSymptom(j)}
                                   onClick={() => changeEditSymptomTime(j)} />
@@ -618,19 +623,19 @@ export default function App() {
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4 }}>{entry.date}</div>
-                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>{entry.food}</div>
-                      {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
-                      <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
-                        {sortedAll.map((s,j) => (
-                          <SymTag key={j} txt={s.txt} time={s.time} dark={dark}/>
+                      <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
+                      <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
+                      {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
+                      <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0 20px" }}>
+                        {sortedAll.map((s, j) => (
+                          <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                         ))}
                       </div>
-                      <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                         <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
                         <span style={{ marginLeft:"auto" }}>
-                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
+                          <button onClick={()=>toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                         </span>
                       </div>
                       {noteOpenIdx === idx && (
@@ -642,7 +647,7 @@ export default function App() {
                             style={styles.textarea}
                           />
                           <button
-                            onClick={() => saveNote(idx)}
+                            onClick={()=>saveNote(idx)}
                             style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
                           >
                             Speichern
@@ -655,7 +660,7 @@ export default function App() {
                           background: dark ? "#ccc" : "transparent",
                           padding: "6px 8px",
                           borderRadius: 4,
-                          color: "#000",
+                          color: dark ? "#000" : "#000",
                           overflowWrap: "break-word",
                           whiteSpace: "pre-wrap",
                           boxSizing: "border-box"
