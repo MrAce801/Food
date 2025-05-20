@@ -166,7 +166,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 const SymTag = ({ txt, time, dark, onDel, onClick }) => {
   const bg = SYMPTOM_COLOR_MAP.hasOwnProperty(txt)
     ? SYMPTOM_COLOR_MAP[txt]
-    : (dark ? "#444444" : "#eeeeee");
+    : "#fafafa"; // sehr helles Grau für freie Eingabe
   return (
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
@@ -304,7 +304,7 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // PDF export with larger images
+  // PDF export
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
@@ -551,10 +551,8 @@ export default function App() {
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.smallInput}
           />
-          <button
-            onClick={() => setDisplayCount(dc => dc + 20)}
-            style={styles.buttonSecondary("#1976d2")}
-          >
+          <button onClick={() => setDisplayCount(dc => dc + 20)}
+                  style={styles.buttonSecondary("#1976d2")}>
             Mehr laden
           </button>
         </div>
@@ -606,10 +604,8 @@ export default function App() {
                       >
                         {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                       </select>
-                      <button
-                        onClick={addEditSymptom}
-                        style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}
-                      >+</button>
+                      <button onClick={addEditSymptom}
+                              style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
                       {editForm.symptoms.map((s, j) => (
@@ -639,10 +635,12 @@ export default function App() {
                         <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                       ))}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                       <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
-                      <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
+                      <span style={{ marginLeft: "auto" }}>
+                        <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
+                      </span>
                     </div>
                     {noteOpenIdx === idx && (
                       <div>
@@ -654,7 +652,7 @@ export default function App() {
                         />
                         <button
                           onClick={() => saveNote(idx)}
-                          style={{ ...styles.buttonSecondary("#FFEB3B"), marginTop: 8 }}
+                          style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
                         >
                           Speichern
                         </button>
