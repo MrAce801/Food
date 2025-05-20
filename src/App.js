@@ -149,7 +149,7 @@ const CameraButton = ({ onClick }) => (
     style={{
       width: 36,
       height: 36,
-      borderRadius: "50%",
+      borderRadius: 8,
       border: 0,
       background: "#247be5",
       display: "flex",
@@ -408,13 +408,12 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // PDF export (erweitert, um alle Tage aufzuklappen)
+  // PDF export (alle Tage aufgeklappt)
   const handleExportPDF = async () => {
-    // Temporär alle Gruppen aufklappen
     const prev = { ...collapsedDays };
     setCollapsedDays({});
     await new Promise(r => setTimeout(r, 100));
-    // Bilder für PDF etwas vergrößern
+
     const el = document.getElementById("fd-table");
     if (!el) return;
     const imgs = Array.from(el.querySelectorAll("img"));
@@ -427,7 +426,6 @@ export default function App() {
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
 
-    // Zustand wiederherstellen
     imgs.forEach((img, i) => {
       img.style.width = originals[i].w;
       img.style.height = originals[i].h;
@@ -508,11 +506,8 @@ export default function App() {
     setEditingIdx(i);
     const e = entries[i];
     setEditForm({
-      food: e.food,
-      imgs: [...e.imgs],
-      symptoms: [...e.symptoms],
-      symptomInput: "",
-      symptomTime: 0
+      food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms],
+      symptomInput: "", symptomTime: 0
     });
   };
   const cancelEdit = () => {
@@ -523,19 +518,12 @@ export default function App() {
     if (!editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
       ...fm,
-      symptoms: [
-        ...fm.symptoms,
-        { txt: fm.symptomInput.trim(), time: fm.symptomTime }
-      ],
-      symptomInput: "",
-      symptomTime: 0
+      symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
+      symptomInput: "", symptomTime: 0
     }));
   };
   const removeEditSymptom = idx =>
-    setEditForm(fm => ({
-      ...fm,
-      symptoms: fm.symptoms.filter((_, i) => i !== idx)
-    }));
+    setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
     const val = prompt(`Neue Zeit für "${curr.txt}" (Minuten):`, String(curr.time));
@@ -640,7 +628,7 @@ export default function App() {
             onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
             onFocus={handleFocus}
             style={styles.input}
-          /> 
+          />
           <CameraButton onClick={() => fileRefNew.current?.click()} />
           <input
             ref={fileRefNew}
@@ -710,7 +698,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Gruppierte Einträge mit Accordion und max. 3-Stack-Preview */}
+      {/* Gruppierte Einträge mit Accordion und gestapelter Vorschau */}
       <div id="fd-table">
         {dates.map(day => {
           const group = grouped[day];
@@ -743,20 +731,21 @@ export default function App() {
                       ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
                       ...custom
                     ];
-                    const topBlur = i === 0 ? "blur(4px)" : "none";
+                    const isTop = i === 0;
+                    const wrapperStyle = {
+                      position: "absolute",
+                      top: i * stackOffset,
+                      left: i * stackOffset,
+                      width: "100%",
+                      zIndex: preview.length - i,
+                      filter: isTop ? "blur(4px)" : "none",
+                      overflow: isTop ? "hidden" : "visible",
+                      borderRadius: isTop ? 8 : 0,
+                      opacity: isTop ? 0.6 : 1
+                    };
 
                     return (
-                      <div
-                        key={idx}
-                        style={{
-                          position: "absolute",
-                          top: i * stackOffset,
-                          left: i * stackOffset,
-                          width: "100%",
-                          filter: topBlur,
-                          zIndex: preview.length - i
-                        }}
-                      >
+                      <div key={idx} style={wrapperStyle}>
                         <div style={styles.entryCard(dark)}>
                           <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
                             {entry.date}
@@ -788,7 +777,6 @@ export default function App() {
                       <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                         {editingIdx === idx ? (
                           <>
-                            {/* Inline-Edit */}
                             <input
                               value={editForm.food}
                               onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
