@@ -166,7 +166,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 const SymTag = ({ txt, time, dark, onDel, onClick }) => {
   const bg = SYMPTOM_COLOR_MAP.hasOwnProperty(txt)
     ? SYMPTOM_COLOR_MAP[txt]
-    : (dark ? "#555555" : "#dddddd");
+    : "#fafafa"; // sehr helles Grau für freie Eingabe
   return (
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
@@ -635,7 +635,7 @@ export default function App() {
                         <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                       ))}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                       <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
                       <span style={{ marginLeft: "auto" }}>
