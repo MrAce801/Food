@@ -191,13 +191,12 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
       margin: "3px 4px 3px 0",
       fontSize: 14,
       cursor: onClick ? "pointer" : "default",
-      wordBreak: "break-word",
-      whiteSpace: "normal",
-      maxWidth: 120
+      overflowWrap: "break-word",
+      whiteSpace: "normal"
     }}
   >
     {txt}
-    <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>
+    <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
       {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
     </span>
     {onDel && (
