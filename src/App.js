@@ -120,6 +120,11 @@ const InsightsButton = ({ onClick }) => (
     Insights
   </button>
 );
+const BackButton = ({ onClick }) => (
+  <button onClick={onClick} title="Zurück" style={styles.backButton}>
+    ← Zurück
+  </button>
+);
 const CameraButton = ({ onClick }) => (
   <button
     onClick={onClick}
@@ -294,7 +299,6 @@ export default function App() {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(20);
-
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem("fd-form-new");
     return saved
@@ -339,7 +343,7 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // File upload
+  // File upload for new entries
   const handleNewFile = e => {
     Array.from(e.target.files || []).forEach(f => {
       const reader = new FileReader();
@@ -382,9 +386,7 @@ export default function App() {
       comment: "",
       date: entryDate
     };
-    // Prepend
     setEntries(e => [entry, ...e]);
-    // Reset form
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
     addToast("Eintrag gespeichert");
@@ -482,9 +484,7 @@ export default function App() {
             style={{ display: "none" }}
           />
         </div>
-        {newForm.imgs.length > 0 && (
-          <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />
-        )}
+        {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <input
@@ -495,41 +495,26 @@ export default function App() {
             style={styles.smallInput}
           />
           <datalist id="symptom-list">
-            {SYMPTOM_CHOICES.map(s => (
-              <option key={s} value={s} />
-            ))}
+            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
           </datalist>
           <select
             value={newForm.symptomTime}
-            onChange={e =>
-              setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))
-            }
+            onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
             style={styles.smallInput}
           >
-            {TIME_CHOICES.map(t => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
+            {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <button onClick={addNewSymptom} style={styles.buttonSecondary("#247be5")}>
-            +
-          </button>
+          <button onClick={addNewSymptom} style={styles.buttonSecondary("#247be5")}>+</button>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-          {newSymptoms.map((s, i) => (
-            <SymTag key={i} txt={s.txt} time={s.time} />
-          ))}
+          {newSymptoms.map((s, i) => <SymTag key={i} txt={s.txt} time={s.time} />)}
         </div>
 
         <button
           onClick={addEntry}
           disabled={!newForm.food.trim()}
-          style={{
-            ...styles.buttonPrimary,
-            opacity: newForm.food.trim() ? 1 : 0.5
-          }}
+          style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() ? 1 : 0.5 }}
         >
           Eintrag hinzufügen
         </button>
@@ -541,10 +526,7 @@ export default function App() {
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.smallInput}
           />
-          <button
-            onClick={() => setDisplayCount(dc => dc + 20)}
-            style={styles.buttonSecondary("#1976d2")}
-          >
+          <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
             Mehr laden
           </button>
         </div>
@@ -557,17 +539,11 @@ export default function App() {
             <h3 style={{ marginTop: 24 }}>{day}</h3>
             {grouped[day].map(({ entry, idx }) => (
               <div key={idx} style={styles.entryCard(dark)}>
-                <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
-                  {entry.date}
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
-                  {entry.food}
-                </div>
+                <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
                 {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
                 <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
-                  {entry.symptoms.map((s, j) => (
-                    <SymTag key={j} txt={s.txt} time={s.time} />
-                  ))}
+                  {entry.symptoms.map((s, j) => <SymTag key={j} txt={s.txt} time={s.time} />)}
                 </div>
               </div>
             ))}
