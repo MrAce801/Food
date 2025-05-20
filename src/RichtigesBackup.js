@@ -635,7 +635,7 @@ export default function App() {
                         <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                       ))}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                       <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                       <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
                       <span style={{ marginLeft: "auto" }}>
