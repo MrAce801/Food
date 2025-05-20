@@ -160,9 +160,15 @@ const BackButton = ({ onClick }) => (
 );
 const CameraButton = ({ onClick }) => (
   <button onClick={onClick} title="Foto" style={{
-    width: 36, height: 36, borderRadius: "50%", border: 0,
-    background: "#247be5", display: "flex", alignItems: "center",
-    justifyContent: "center", cursor: "pointer"
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    border: 0,
+    background: "#247be5",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer"
   }}>📷</button>
 );
 const ImgStack = ({ imgs, onDelete }) => (
@@ -173,19 +179,29 @@ const ImgStack = ({ imgs, onDelete }) => (
           src={src}
           alt=""
           style={{
-            width: 40, height: 40, objectFit: "cover",
-            borderRadius: 6, border: "2px solid #fff",
+            width: 40,
+            height: 40,
+            objectFit: "cover",
+            borderRadius: 6,
+            border: "2px solid #fff",
             boxShadow: "0 1px 4px #0003"
           }}
           onError={e => { e.currentTarget.style.display = "none"; }}
         />
         {onDelete && (
           <span onClick={() => onDelete(i)} style={{
-            position: "absolute", top: -6, right: -6,
-            background: "#c00", color: "#fff",
-            borderRadius: "50%", width: 18, height: 18,
-            display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: 12,
+            position: "absolute",
+            top: -6,
+            right: -6,
+            background: "#c00",
+            color: "#fff",
+            borderRadius: "50%",
+            width: 18,
+            height: 18,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 12,
             cursor: "pointer"
           }}>×</span>
         )}
@@ -197,11 +213,17 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => {
   const bg = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
   return (
     <div onClick={onClick} style={{
-      display: "inline-flex", alignItems: "center",
-      background: bg, color: "#1a1f3d",
-      borderRadius: 6, padding: "5px 10px", margin: "3px 4px 3px 0",
-      fontSize: 14, cursor: onClick ? "pointer" : "default",
-      overflowWrap: "break-word", whiteSpace: "normal"
+      display: "inline-flex",
+      alignItems: "center",
+      background: bg,
+      color: "#1a1f3d",
+      borderRadius: 6,
+      padding: "5px 10px",
+      margin: "3px 4px 3px 0",
+      fontSize: 14,
+      cursor: onClick ? "pointer" : "default",
+      overflowWrap: "break-word",
+      whiteSpace: "normal"
     }}>
       {txt}
       <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
@@ -209,8 +231,11 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => {
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
-          marginLeft: 6, cursor: "pointer",
-          fontSize: 16, color: "#c00", fontWeight: 700
+          marginLeft: 6,
+          cursor: "pointer",
+          fontSize: 16,
+          color: "#c00",
+          fontWeight: 700
         }}>×</span>
       )}
     </div>
@@ -420,9 +445,16 @@ export default function App() {
 
   // Editieren
   const startEdit = i => {
-    setEditingIdx(i);
     const e = entries[i];
-    setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0 });
+    setEditingIdx(i);
+    setEditForm({
+      food: e.food,
+      imgs: [...e.imgs],
+      symptoms: [...e.symptoms],
+      symptomInput: "",
+      symptomTime: 0,
+      date: e.date
+    });
   };
   const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
   const addEditSymptom = () => {
@@ -430,7 +462,8 @@ export default function App() {
     setEditForm(fm => ({
       ...fm,
       symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
-      symptomInput: "", symptomTime: 0
+      symptomInput: "",
+      symptomTime: 0
     }));
   };
   const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
@@ -448,7 +481,9 @@ export default function App() {
   };
   const saveEdit = () => {
     setEntries(e => e.map((ent, i) =>
-      i === editingIdx ? { ...editForm, comment: ent.comment, date: ent.date } : ent
+      i === editingIdx
+        ? { food: editForm.food, imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date }
+        : ent
     ));
     cancelEdit();
     addToast("Eintrag aktualisiert");
@@ -546,8 +581,7 @@ export default function App() {
             style={styles.smallInput}
           />
           <datalist id="symptom-list">
-            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}
-          </datalist>
+            {SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}        </datalist>
           <select
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
@@ -596,14 +630,19 @@ export default function App() {
             {grouped[day].map(({ entry, idx }) => {
               const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
               const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-              const sortedAll = [
-                ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
-                ...custom
-              ];
+              const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
               return (
                 <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                   {editingIdx === idx ? (
                     <>
+                      {/* Datum & Zeit editierbar */}
+                      <input
+                        value={editForm.date}
+                        onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
+                        placeholder="Datum & Uhrzeit"
+                        style={styles.input}
+                      />
+                      {/* Inline-Bearbeitung */}
                       <input
                         value={editForm.food}
                         onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
@@ -640,10 +679,8 @@ export default function App() {
                         >
                           {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </select>
-                        <button
-                          onClick={addEditSymptom}
-                          style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}
-                        >+</button>
+                        <button onClick={addEditSymptom}
+                                style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
                         {editForm.symptoms.map((s, j) => (
@@ -672,7 +709,7 @@ export default function App() {
                           <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
                         ))}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>  
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                         <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
                         <span style={{ marginLeft: "auto" }}>

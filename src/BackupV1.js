@@ -123,6 +123,31 @@ const SYMPTOM_COLOR_MAP = {
   "Rötung Haut": "#F2D9DB"
 };
 
+// --- Image-Helper: resize + convert to JPEG ---
+function resizeToJpeg(file, maxWidth = 800) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Bild lädt nicht"));
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        const c = document.createElement("canvas");
+        c.width = w;
+        c.height = h;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL("image/jpeg", 0.8));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // --- UI-Komponenten ---
 const PdfButton = ({ onClick }) => (
   <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>PDF</button>
@@ -144,11 +169,16 @@ const ImgStack = ({ imgs, onDelete }) => (
   <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
     {imgs.map((src, i) => (
       <div key={i} style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
-        <img src={src} alt="" style={{
-          width: 40, height: 40, objectFit: "cover",
-          borderRadius: 6, border: "2px solid #fff",
-          boxShadow: "0 1px 4px #0003"
-        }}/>
+        <img
+          src={src}
+          alt=""
+          style={{
+            width: 40, height: 40, objectFit: "cover",
+            borderRadius: 6, border: "2px solid #fff",
+            boxShadow: "0 1px 4px #0003"
+          }}
+          onError={e => { e.currentTarget.style.display = "none"; }}
+        />
         {onDelete && (
           <span onClick={() => onDelete(i)} style={{
             position: "absolute", top: -6, right: -6,
@@ -164,9 +194,7 @@ const ImgStack = ({ imgs, onDelete }) => (
   </div>
 );
 const SymTag = ({ txt, time, dark, onDel, onClick }) => {
-  const bg = SYMPTOM_COLOR_MAP.hasOwnProperty(txt)
-    ? SYMPTOM_COLOR_MAP[txt]
-    : "#fafafa"; // sehr helles Grau für freie Eingabe
+  const bg = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
   return (
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
@@ -275,8 +303,12 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
   // Persist
-  useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
-  useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
+  useEffect(() => {
+    localStorage.setItem("fd-entries", JSON.stringify(entries));
+  }, [entries]);
+  useEffect(() => {
+    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
+  }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
@@ -311,48 +343,54 @@ export default function App() {
     const imgs = Array.from(el.querySelectorAll("img"));
     const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
     imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; });
-
     const canvas = await html2canvas(el, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
-
     imgs.forEach((img, i) => {
       img.style.width = originals[i].w;
       img.style.height = originals[i].h;
     });
   };
 
-  // File → Base64
-  const handleNewFile = e => {
-    Array.from(e.target.files || []).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
-      reader.readAsDataURL(file);
-    });
+  // File → Base64 mit Resize
+  const handleNewFile = async e => {
+    for (let file of Array.from(e.target.files || [])) {
+      try {
+        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß");
+        const smallB64 = await resizeToJpeg(file, 800);
+        setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
+        addToast("Foto hinzugefügt (verkleinert)");
+      } catch (err) {
+        console.warn("Bild-Problem:", err);
+        addToast("Ungültiges oder zu großes Bild");
+      }
+    }
     e.target.value = "";
-    navigator.vibrate?.(50);
-    addToast("Foto hinzugefügt");
   };
   const removeNewImg = idx => {
     setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
-    navigator.vibrate?.(50);
     addToast("Foto gelöscht");
   };
-  const handleEditFile = e => {
-    Array.from(e.target.files || []).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
-      reader.readAsDataURL(file);
-    });
+
+  // Edit File → Base64 mit Resize
+  const handleEditFile = async e => {
+    for (let file of Array.from(e.target.files || [])) {
+      try {
+        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß");
+        const smallB64 = await resizeToJpeg(file, 800);
+        setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
+        addToast("Foto hinzugefügt (verkleinert)");
+      } catch (err) {
+        console.warn("Bild-Problem:", err);
+        addToast("Ungültiges oder zu großes Bild");
+      }
+    }
     e.target.value = "";
-    navigator.vibrate?.(50);
-    addToast("Foto hinzugefügt");
   };
   const removeEditImg = idx => {
     setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
-    navigator.vibrate?.(50);
     addToast("Foto gelöscht");
   };
 
@@ -377,7 +415,6 @@ export default function App() {
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
-    navigator.vibrate?.(50);
     addToast("Eintrag gespeichert");
   };
 
@@ -414,13 +451,11 @@ export default function App() {
       i === editingIdx ? { ...editForm, comment: ent.comment, date: ent.date } : ent
     ));
     cancelEdit();
-    navigator.vibrate?.(50);
     addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
-    navigator.vibrate?.(50);
     addToast("Eintrag gelöscht");
   };
 
@@ -432,7 +467,6 @@ export default function App() {
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
     setNoteOpenIdx(null);
-    navigator.vibrate?.(50);
     addToast("Notiz gespeichert");
   };
 
@@ -560,19 +594,16 @@ export default function App() {
           <div key={day}>
             <div style={styles.groupHeader}>{day}</div>
             {grouped[day].map(({ entry, idx }) => {
-              // sortiere bekannt alphabetisch, custom am Ende
               const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
               const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
               const sortedAll = [
                 ...known.sort((a, b) => a.txt.localeCompare(b.txt)),
                 ...custom
               ];
-
               return (
                 <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                   {editingIdx === idx ? (
                     <>
-                      {/* Inline-Bearbeitung */}
                       <input
                         value={editForm.food}
                         onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
@@ -633,7 +664,6 @@ export default function App() {
                     </>
                   ) : (
                     <>
-                      {/* Anzeige-Modus */}
                       <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
                       <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
                       {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
