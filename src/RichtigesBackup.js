@@ -80,7 +80,8 @@ const styles = {
     margin: "24px 0 8px",
     cursor: "pointer",
     display: "flex",
-    alignItems: "center"
+    alignItems: "center",
+    justifyContent: "space-between"
   },
   toast: {
     position: "fixed",
@@ -710,9 +711,11 @@ export default function App() {
           return (
             <div key={day}>
               <div style={styles.groupHeader} onClick={() => toggleDay(day)}>
-                {day}
-                {(isCollapsed && group.length > 3) && (
-                  <span style={{ marginLeft: 8, opacity: 0.7 }}>
+                <span>
+                  {isCollapsed ? "▶" : "▼"} {day}
+                </span>
+                {isCollapsed && group.length > 3 && (
+                  <span style={{ opacity: 0.7 }}>
                     +{group.length - preview.length} weitere
                   </span>
                 )}
@@ -738,10 +741,9 @@ export default function App() {
                       left: i * stackOffset,
                       width: "100%",
                       zIndex: preview.length - i,
-                      filter: isTop ? "blur(4px)" : "none",
-                      overflow: isTop ? "hidden" : "visible",
+                      filter: isTop ? "blur(8px)" : "none",
                       borderRadius: isTop ? 8 : 0,
-                      opacity: isTop ? 0.6 : 1
+                      opacity: isTop ? 0.4 : 1
                     };
 
                     return (
