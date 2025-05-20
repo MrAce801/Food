@@ -283,7 +283,7 @@ export default function App() {
     else setDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
-  const [view, setView] = useState("diary"); // "diary" | "insights"
+  const [view, setView] = useState("diary"); 
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem("fd-entries") || "[]"); }
     catch { return []; }
@@ -292,9 +292,7 @@ export default function App() {
   const [displayCount, setDisplayCount] = useState(20);
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem("fd-form-new");
-    return saved
-      ? JSON.parse(saved)
-      : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
+    return saved ? JSON.parse(saved) : { food: "", imgs: [], symptomInput: "", symptomTime: 0 };
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
   const fileRefNew = useRef();
@@ -304,7 +302,7 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
-  // Persist entries & form
+  // Persist
   useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
   useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
   useEffect(() => {
@@ -318,7 +316,7 @@ export default function App() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Scroll into view when focusing or editing
+  // Scroll focus / edit
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
   useEffect(() => {
     if (editingIdx !== null) {
@@ -327,25 +325,40 @@ export default function App() {
     }
   }, [editingIdx]);
 
-  // Toast helper
+  // Toast
   const addToast = msg => {
     const id = Date.now();
     setToasts(t => [...t, { id, msg }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // PDF export
+  // PDF export with larger images
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
+
+    // enlarge thumbnails temporarily
+    const imgs = Array.from(el.querySelectorAll("img"));
+    const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
+    imgs.forEach(img => {
+      img.style.width = "80px";
+      img.style.height = "80px";
+    });
+
     const canvas = await html2canvas(el, { scale: 2 });
-    const img = canvas.toDataURL("image/png");
+    const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
-    pdf.addImage(img, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
+
+    // revert sizes
+    imgs.forEach((img, i) => {
+      img.style.width = originals[i].w;
+      img.style.height = originals[i].h;
+    });
   };
 
-  // File -> Base64 Data URL
+  // File -> Base64
   const handleNewFile = e => {
     const files = Array.from(e.target.files || []);
     files.forEach(file => {
@@ -360,10 +373,7 @@ export default function App() {
     addToast("Foto hinzugefügt");
   };
   const removeNewImg = idx => {
-    setNewForm(fm => ({
-      ...fm,
-      imgs: fm.imgs.filter((_, i) => i !== idx)
-    }));
+    setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     navigator.vibrate?.(50);
     addToast("Foto gelöscht");
   };
@@ -381,10 +391,7 @@ export default function App() {
     addToast("Foto hinzugefügt");
   };
   const removeEditImg = idx => {
-    setEditForm(fm => ({
-      ...fm,
-      imgs: fm.imgs.filter((_, i) => i !== idx)
-    }));
+    setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     navigator.vibrate?.(50);
     addToast("Foto gelöscht");
   };
@@ -392,25 +399,15 @@ export default function App() {
   // Symptoms new
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
-    setNewSymptoms(s => [...s, {
-      txt: newForm.symptomInput.trim(),
-      time: newForm.symptomTime
-    }]);
+    setNewSymptoms(s => [...s, { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }]);
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0 }));
   };
-  const removeNewSymptom = idx => {
-    setNewSymptoms(s => s.filter((_, i) => i !== idx));
-  };
+  const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
   // Add entry
   const addEntry = () => {
     if (!newForm.food.trim()) return;
-    const entry = {
-      food: newForm.food,
-      imgs: newForm.imgs,
-      symptoms: newSymptoms,
-      date: now()
-    };
+    const entry = { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, date: now() };
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
@@ -418,40 +415,22 @@ export default function App() {
     addToast("Eintrag gespeichert");
   };
 
-  // Edit handlers
+  // Edit
   const startEdit = i => {
     setEditingIdx(i);
     const e = entries[i];
-    setEditForm({
-      food: e.food,
-      imgs: [...e.imgs],
-      symptoms: [...e.symptoms],
-      symptomInput: "",
-      symptomTime: 0
-    });
+    setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0 });
   };
-  const cancelEdit = () => {
-    setEditingIdx(null);
-    setEditForm(null);
-  };
+  const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
       ...fm,
-      symptoms: [...fm.symptoms, {
-        txt: fm.symptomInput.trim(),
-        time: fm.symptomTime
-      }],
-      symptomInput: "",
-      symptomTime: 0
+      symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
+      symptomInput: "", symptomTime: 0
     }));
   };
-  const removeEditSymptom = idx => {
-    setEditForm(fm => ({
-      ...fm,
-      symptoms: fm.symptoms.filter((_, i) => i !== idx)
-    }));
-  };
+  const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
   const changeEditSymptomTime = idx => {
     const curr = editForm.symptoms[idx];
     const val = prompt(`Neue Zeit für "${curr.txt}" (Minuten):`, String(curr.time));
@@ -465,11 +444,7 @@ export default function App() {
     }
   };
   const saveEdit = () => {
-    setEntries(e => e.map((ent, i) =>
-      i === editingIdx
-        ? { ...editForm, date: ent.date }
-        : ent
-    ));
+    setEntries(e => e.map((ent, i) => i === editingIdx ? { ...editForm, date: ent.date } : ent));
     cancelEdit();
     navigator.vibrate?.(50);
     addToast("Eintrag aktualisiert");
@@ -481,9 +456,8 @@ export default function App() {
     addToast("Eintrag gelöscht");
   };
 
-  // Filter, grouping, pagination
-  const filteredWithIdx = entries
-    .map((e, idx) => ({ entry: e, idx }))
+  // Filter + grouping + pagination
+  const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       entry.food.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -526,7 +500,6 @@ export default function App() {
 
       {/* Neuer Eintrag */}
       <div style={{ marginBottom: 24 }}>
-        {/* Food + Camera */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 48 }}>
           <input
             placeholder="Essen..."
@@ -547,10 +520,8 @@ export default function App() {
           />
         </div>
 
-        {/* Vorschaubilder */}
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
-        {/* Symptome */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <input
             list="symptom-list"
@@ -612,7 +583,6 @@ export default function App() {
               <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                 {editingIdx === idx ? (
                   <>
-                    {/* Inline-Bearbeitung */}
                     <input
                       value={editForm.food}
                       onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
@@ -671,10 +641,9 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    {/* Anzeige-Modus */}
                     <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
                     <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
-                    {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
+                    {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} onDelete={removeNewImg} />}
                     <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
                       {entry.symptoms.map((s, j) => (
                         <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />
