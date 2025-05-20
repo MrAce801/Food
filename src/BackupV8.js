@@ -426,11 +426,7 @@ export default function App() {
     ));
     cancelEdit(); addToast("Eintrag aktualisiert");
   };
-  const deleteEntry = i => {
-    setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit();
-    addToast("Eintrag gelöscht");
-  };
+  const deleteEntry = i => { setEntries(e => e.filter((_, j) => j !== i)); if (editingIdx === i) cancelEdit(); addToast("Eintrag gelöscht"); };
 
   const toggleNote = idx => {
     setNoteOpenIdx(noteOpenIdx === idx ? null : idx);
@@ -609,7 +605,7 @@ export default function App() {
                         <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0}}>+</button>
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-                        {editForm.symptoms.map((s, j) => (
+                        {editForm.symptoms.map((s,j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} dark={dark}
                                   onDel={() => removeEditSymptom(j)}
                                   onClick={() => changeEditSymptomTime(j)} />
@@ -632,16 +628,7 @@ export default function App() {
                       </div>
                       <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) {
-                              deleteEntry(idx);
-                            }
-                          }}
-                          style={styles.buttonSecondary("#d32f2f")}
-                        >
-                          Löschen
-                        </button>
+                        <button onClick={() => deleteEntry(idx)} style={styles.buttonSecondary("#d32f2f")}>Löschen</button>
                         <span style={{ marginLeft:"auto" }}>
                           <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                         </span>
