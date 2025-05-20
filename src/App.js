@@ -766,7 +766,8 @@ export default function App() {
                       left: i * stackOffset,
                       width: "100%",
                       zIndex: preview.length - i,
-                      filter: isTop ? "blur(4px)" : "none",
+                      // BLUR entfernt, nur noch Opacity:
+                      filter: "none",
                       opacity: isTop ? 0.4 : 1
                     };
                     return (
