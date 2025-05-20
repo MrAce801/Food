@@ -151,26 +151,28 @@ const ImgStack = ({ imgs, onDelete }) => (
             boxShadow: "0 1px 4px #0003"
           }}
         />
-        <span
-          onClick={() => onDelete(i)}
-          style={{
-            position: "absolute",
-            top: -6,
-            right: -6,
-            background: "#c00",
-            color: "#fff",
-            borderRadius: "50%",
-            width: 18,
-            height: 18,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12,
-            cursor: "pointer"
-          }}
-        >
-          ×
-        </span>
+        {onDelete && (
+          <span
+            onClick={() => onDelete(i)}
+            style={{
+              position: "absolute",
+              top: -6,
+              right: -6,
+              background: "#c00",
+              color: "#fff",
+              borderRadius: "50%",
+              width: 18,
+              height: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 12,
+              cursor: "pointer"
+            }}
+          >
+            ×
+          </span>
+        )}
       </div>
     ))}
   </div>
@@ -188,11 +190,13 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => (
       padding: "5px 10px",
       margin: "3px 4px 3px 0",
       fontSize: 14,
-      cursor: onClick ? "pointer" : "default"
+      cursor: onClick ? "pointer" : "default",
+      overflowWrap: "break-word",
+      whiteSpace: "normal"
     }}
   >
     {txt}
-    <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>
+    <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
       {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
     </span>
     {onDel && (
@@ -336,14 +340,9 @@ export default function App() {
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
-
-    // enlarge thumbnails temporarily
     const imgs = Array.from(el.querySelectorAll("img"));
     const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
-    imgs.forEach(img => {
-      img.style.width = "80px";
-      img.style.height = "80px";
-    });
+    imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; });
 
     const canvas = await html2canvas(el, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
@@ -351,7 +350,6 @@ export default function App() {
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
 
-    // revert sizes
     imgs.forEach((img, i) => {
       img.style.width = originals[i].w;
       img.style.height = originals[i].h;
@@ -363,9 +361,7 @@ export default function App() {
     const files = Array.from(e.target.files || []);
     files.forEach(file => {
       const reader = new FileReader();
-      reader.onload = () => {
-        setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
-      };
+      reader.onload = () => setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
       reader.readAsDataURL(file);
     });
     e.target.value = "";
@@ -381,9 +377,7 @@ export default function App() {
     const files = Array.from(e.target.files || []);
     files.forEach(file => {
       const reader = new FileReader();
-      reader.onload = () => {
-        setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
-      };
+      reader.onload = () => setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, reader.result] }));
       reader.readAsDataURL(file);
     });
     e.target.value = "";
@@ -427,7 +421,8 @@ export default function App() {
     setEditForm(fm => ({
       ...fm,
       symptoms: [...fm.symptoms, { txt: fm.symptomInput.trim(), time: fm.symptomTime }],
-      symptomInput: "", symptomTime: 0
+      symptomInput: "",
+      symptomTime: 0
     }));
   };
   const removeEditSymptom = idx => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.filter((_, i) => i !== idx) }));
@@ -485,9 +480,7 @@ export default function App() {
       {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
 
       <div style={styles.topBar}>
-        <button onClick={() => setDark(d => !d)}
-                style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }}
-                title="Theme wechseln">
+        <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
@@ -542,8 +535,7 @@ export default function App() {
           >
             {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <button onClick={addNewSymptom}
-                  style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
+          <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
@@ -567,8 +559,7 @@ export default function App() {
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.smallInput}
           />
-          <button onClick={() => setDisplayCount(dc => dc + 20)}
-                  style={styles.buttonSecondary("#1976d2")}>
+          <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
             Mehr laden
           </button>
         </div>
@@ -619,8 +610,7 @@ export default function App() {
                       >
                         {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                       </select>
-                      <button onClick={addEditSymptom}
-                              style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
+                      <button onClick={addEditSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0 }}>+</button>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
                       {editForm.symptoms.map((s, j) => (
@@ -643,7 +633,7 @@ export default function App() {
                   <>
                     <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{entry.date}</div>
                     <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{entry.food}</div>
-                    {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} onDelete={removeNewImg} />}
+                    {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
                     <div style={{ display: "flex", flexWrap: "wrap", margin: "8px 0" }}>
                       {entry.symptoms.map((s, j) => (
                         <SymTag key={j} txt={s.txt} time={s.time} dark={dark} />

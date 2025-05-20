@@ -89,6 +89,20 @@ const styles = {
   }
 };
 
+// --- Symptom-Farb-Mapping Variante 2 ---
+const SYMPTOM_COLOR_MAP = {
+  "Bauchschmerzen": "#D0E1F9",    // Grau-Blau
+  "Durchfall": "#D6EAE0",         // Grau-Grün
+  "Blähungen": "#E4D9F0",         // Grau-Lila
+  "Hautausschlag": "#F0D9D9",     // Grau-Rosa
+  "Juckreiz": "#F5F3D1",          // Grau-Gelb
+  "Schwellung am Gaumen": "#F6E0B5", // Grau-Orange
+  "Schleim im Hals": "#D9F2F9",    // Grau-Türkis
+  "Niesen": "#FBF7D6",            // Grau-Zitronen
+  "Kopfschmerzen": "#D9EAF9",     // Grau-Himmel
+  "Rötung Haut": "#F2D9DB"        // Grau-Rubin
+};
+
 // --- UI-Komponenten ---
 const PdfButton = ({ onClick }) => (
   <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
@@ -178,58 +192,52 @@ const ImgStack = ({ imgs, onDelete }) => (
   </div>
 );
 
-const SymTag = ({ txt, time, dark, onDel, onClick }) => (
-  <div
-    onClick={onClick}
-    style={{
-      display: "inline-flex",
-      alignItems: "center",
-      background: dark ? "#343445" : "#e8f0ff",
-      color: dark ? "#f1f1f6" : "#1a1f3d",
-      borderRadius: 6,
-      padding: "5px 10px",
-      margin: "3px 4px 3px 0",
-      fontSize: 14,
-      cursor: onClick ? "pointer" : "default",
-      overflowWrap: "break-word",
-      whiteSpace: "normal"
-    }}
-  >
-    {txt}
-    <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
-      {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
-    </span>
-    {onDel && (
-      <span
-        onClick={e => {
-          e.stopPropagation();
-          onDel();
-        }}
-        style={{
-          marginLeft: 6,
-          cursor: "pointer",
-          fontSize: 16,
-          color: "#c00",
-          fontWeight: 700
-        }}
-      >
-        ×
+const SymTag = ({ txt, time, dark, onDel, onClick }) => {
+  const bg = SYMPTOM_COLOR_MAP[txt] || (dark ? "#343445" : "#e8f0ff");
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        background: bg,
+        color: "#1a1f3d",
+        borderRadius: 6,
+        padding: "5px 10px",
+        margin: "3px 4px 3px 0",
+        fontSize: 14,
+        cursor: onClick ? "pointer" : "default",
+        overflowWrap: "break-word",
+        whiteSpace: "normal",
+        maxWidth: 120
+      }}
+    >
+      {txt}
+      <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
+        {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
-    )}
-  </div>
-);
+      {onDel && (
+        <span
+          onClick={e => { e.stopPropagation(); onDel(); }}
+          style={{
+            marginLeft: 6,
+            cursor: "pointer",
+            fontSize: 16,
+            color: "#c00",
+            fontWeight: 700
+          }}
+        >
+          ×
+        </span>
+      )}
+    </div>
+  );
+};
 
 const SYMPTOM_CHOICES = [
-  "Bauchschmerzen",
-  "Durchfall",
-  "Blähungen",
-  "Hautausschlag",
-  "Juckreiz",
-  "Schwellung am Gaumen",
-  "Schleim im Hals",
-  "Niesen",
-  "Kopfschmerzen",
-  "Rötung Haut"
+  "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
+  "Juckreiz","Schwellung am Gaumen","Schleim im Hals",
+  "Niesen","Kopfschmerzen","Rötung Haut"
 ];
 const TIME_CHOICES = [
   { label: "sofort", value: 0 },
@@ -268,9 +276,9 @@ function Insights({ entries }) {
         <div key={symptom} style={{ marginBottom: 24 }}>
           <h3>{symptom} ({data.count})</h3>
           <ul>
-            {Object.entries(data.foods)
-              .sort((a, b) => b[1] - a[1])
-              .map(([food, cnt]) => <li key={food}>{food}: {cnt}</li>)}
+            {Object.entries(data.foods).sort((a, b) => b[1] - a[1]).map(([food, cnt]) => (
+              <li key={food}>{food}: {cnt}</li>
+            ))}
           </ul>
         </div>
       ))}
