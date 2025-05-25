@@ -32,7 +32,7 @@ const styles = {
   },
   smallInput: {
     padding: "8px 10px",
-    fontSize: 16, // War 15px, jetzt 16px um Zoom zu verhindern
+    fontSize: 16, 
     WebkitTextSizeAdjust: "100%",
     borderRadius: 6,
     border: "1px solid #ccc",
@@ -64,7 +64,7 @@ const styles = {
   },
   buttonSecondary: bg => ({
     padding: "8px 16px",
-    fontSize: 14, // Beachte: Buttons sind oft kleiner, hier könnte Zoom auftreten, falls sie Fokus erhalten könnten (unwahrscheinlich für reine Buttons)
+    fontSize: 14,
     borderRadius: 6,
     border: 0,
     background: bg,
@@ -97,7 +97,7 @@ const styles = {
   },
   backButton: {
     padding: "6px 12px",
-    fontSize: 14, // Siehe buttonSecondary
+    fontSize: 14,
     borderRadius: 6,
     border: 0,
     background: "#1976d2",
@@ -110,7 +110,7 @@ const styles = {
     borderRadius: 6,
     padding: "4px",
     cursor: "pointer",
-    fontSize: 16, // Ist 16px
+    fontSize: 16,
     lineHeight: 1
   })
 };
@@ -154,11 +154,17 @@ function resizeToJpeg(file, maxWidth = 800) {
   });
 }
 
-// --- Hilfsfunktion für Stärkefarbe ---
+// --- Hilfsfunktion für Stärkefarbe (MODIFIED für 1-3 Skala) ---
 const getStrengthColor = (strengthVal) => {
-    const s = parseInt(strengthVal) || 1;
-    const hue = Math.max(0, 120 - ((s - 1) * 30));
-    return `hsl(${hue}, 70%, 55%)`;
+    const s = parseInt(strengthVal);
+    switch (s) {
+        case 1: return 'hsl(120, 65%, 50%)'; // Grün
+        case 2: return 'hsl(35, 90%, 55%)';  // Orange
+        case 3: return 'hsl(0, 75%, 55%)';   // Rot
+        default: // Fallback für ungültige Werte oder alte Daten (z.B. 4, 5 werden wie 3 behandelt)
+            if (s && s >= 3) return 'hsl(0, 75%, 55%)'; // Rot
+            return 'hsl(120, 65%, 50%)'; // Grün als Standard
+    }
 };
 
 // --- UI-Komponenten ---
@@ -209,6 +215,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; 
   const tagTextColor = "#1a1f3d"; 
+  const displayStrength = Math.min(parseInt(strength) || 1, 3); // Stärke für Anzeige auf 1-3 begrenzen
 
   return (
     <div onClick={onClick} style={{
@@ -216,11 +223,11 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       background: tagBackgroundColor,
       color: tagTextColor,
       borderRadius: 6, padding: "6px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14, // Schriftgröße des Tag-Textes selbst
+      margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
-      {strength && (
+      {strength && ( // strength existiert und ist nicht 0
         <span style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -234,10 +241,10 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             fontWeight: 'bold',
             marginRight: '5px',
             flexShrink: 0,
-            border: `2px solid ${getStrengthColor(strength)}`, 
+            border: `2px solid ${getStrengthColor(displayStrength)}`, // Verwende displayStrength für Farbe
             boxSizing: 'border-box',
         }}>
-            {strength}
+            {displayStrength} {/* Zeige die ggf. angepasste Stärke an */}
         </span>
       )}
       {txt}
@@ -365,7 +372,8 @@ export default function App() {
             ...e, 
             comment: e.comment || "", 
             food: e.food || "",
-            symptoms: (e.symptoms || []).map(s => ({ ...s, strength: s.strength || 1 }))
+            // MODIFIED: Stärke beim Laden auf 1-3 begrenzen
+            symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }))
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
     } catch { return []; }
@@ -378,7 +386,9 @@ export default function App() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
-            return { ...initialForm, ...parsed, symptomStrength: parsed.symptomStrength || 1 };
+            // Stelle sicher, dass symptomStrength beim Laden auf 1-3 begrenzt ist, falls alter Wert gespeichert wurde
+            const strength = Math.min(parseInt(parsed.symptomStrength) || 1, 3);
+            return { ...initialForm, ...parsed, symptomStrength: strength };
         } catch { return initialForm; }
     }
     return initialForm;
@@ -470,7 +480,7 @@ export default function App() {
     setNewSymptoms(s => [...s, { 
         txt: newForm.symptomInput.trim(), 
         time: newForm.symptomTime, 
-        strength: newForm.symptomStrength 
+        strength: newForm.symptomStrength // Wird jetzt 1-3 sein
     }]);
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 }));
   };
@@ -494,15 +504,15 @@ export default function App() {
   };
 
   const startEdit = i => {
-    const e = entries[i];
+    const e = entries[i]; // entries hier haben bereits auf 1-3 gecappte Stärken
     setEditingIdx(i);
     setEditForm({ 
         food: e.food, 
         imgs: [...e.imgs], 
-        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: s.strength || 1 })), 
+        symptoms: e.symptoms, // Stärken sind schon 1-3
         symptomInput: "", 
         symptomTime: 0, 
-        newSymptomStrength: 1,
+        newSymptomStrength: 1, // Für neue Symptome im Edit-Modus
         date: toDateTimePickerFormat(e.date) 
     });
   };
@@ -515,7 +525,7 @@ export default function App() {
         symptoms: [...fm.symptoms, { 
             txt: fm.symptomInput.trim(), 
             time: fm.symptomTime, 
-            strength: fm.newSymptomStrength 
+            strength: fm.newSymptomStrength // Wird 1-3 sein
         }], 
         symptomInput: "", 
         symptomTime: 0,
@@ -537,7 +547,8 @@ export default function App() {
         ? { 
             food: editForm.food.trim(), 
             imgs: editForm.imgs, 
-            symptoms: editForm.symptoms, 
+            // Symptome im editForm haben bereits Stärken von 1-3
+            symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})), 
             comment: ent.comment, 
             date: displayDateToSave 
           }
@@ -631,13 +642,13 @@ export default function App() {
             >
               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <select
+            <select // MODIFIED: Stärke Select jetzt 1-3
               value={newForm.symptomStrength}
               onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
               onFocus={handleFocus} 
               style={{...styles.smallInput, width: '100px', flexShrink: 0 }}
             >
-              {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
+              {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
             </select>
             <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0, padding: '8px 12px' }}>+</button>
           </div>
@@ -662,7 +673,7 @@ export default function App() {
             <div style={styles.groupHeader}>{day}</div>
             {grouped[day].map(({ entry, idx }) => {
               const isSymptomOnlyEntry = !entry.food && entry.symptoms && entry.symptoms.length > 0;
-              const symptomsForDisplay = (entry.symptoms || []).map(s => ({...s, strength: s.strength || 1}));
+              const symptomsForDisplay = (entry.symptoms || []).map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})); // Stärke für Anzeige begrenzen
               const knownDisplay = symptomsForDisplay.filter(s => SYMPTOM_CHOICES.includes(s.txt)).sort((a,b) => a.txt.localeCompare(b.txt));
               const customDisplay = symptomsForDisplay.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
               const sortedAllDisplay = [...knownDisplay, ...customDisplay];
@@ -707,13 +718,13 @@ export default function App() {
                             >
                                 {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
-                            <select
+                            <select // MODIFIED: Stärke Select jetzt 1-3
                                 value={editForm.newSymptomStrength}
                                 onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
                                 onFocus={handleFocus} 
                                 style={{...styles.smallInput, width: '100px', flexShrink:0 }}
                             >
-                                {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
+                                {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
                             </select>
                             <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button>
                         </div>
@@ -733,19 +744,20 @@ export default function App() {
                             >
                               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
-                            <select
+                            <select // MODIFIED: Stärke Select jetzt 1-3
                                 value={s.strength || 1}
                                 onChange={e_strength => {
                                     const newStrength = Number(e_strength.target.value);
                                     setEditForm(fm => {
                                         const updatedSymptoms = [...fm.symptoms];
-                                        updatedSymptoms[j] = { ...updatedSymptoms[j], strength: newStrength };
+                                        // Stelle sicher, dass die neue Stärke auch im Bereich 1-3 ist
+                                        updatedSymptoms[j] = { ...updatedSymptoms[j], strength: Math.min(Math.max(newStrength,1),3) };
                                         return { ...fm, symptoms: updatedSymptoms };
                                     });
                                 }}
                                 style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}
                             >
-                                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                                {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
                             </select>
                             <button onClick={() => removeEditSymptom(j)} title="Symptom löschen" style={{...styles.buttonSecondary("#d32f2f"), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }} >×</button>
                           </div>
