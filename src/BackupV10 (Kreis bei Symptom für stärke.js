@@ -104,14 +104,18 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   },
-  noteButton: isActive => ({
-    background: "#F9A825",
-    border: "1px solid #F0E68C",
+  // MODIFIED: noteButton Style für "glassy" Look
+  noteButton: (dark, isActive) => ({ 
+    background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)', 
+    border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
     borderRadius: 6,
-    padding: "4px",
+    padding: "4px 6px", // Etwas mehr horizontales Padding für das Emoji
     cursor: "pointer",
     fontSize: 16,
-    lineHeight: 1
+    lineHeight: 1,
+    color: dark ? '#f0f0f8' : '#333', // Farbe für das Emoji-Symbol selbst (kann variieren)
+    // Um einen echten Glassmorphism-Effekt mit Hintergrundunschärfe zu erzielen:
+    // backdropFilter: 'blur(4px)', // Vorsicht: Browser-Support und Performance beachten
   })
 };
 
@@ -154,16 +158,16 @@ function resizeToJpeg(file, maxWidth = 800) {
   });
 }
 
-// --- Hilfsfunktion für Stärkefarbe (MODIFIED für 1-3 Skala) ---
+// --- Hilfsfunktion für Stärkefarbe ---
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal);
     switch (s) {
         case 1: return 'hsl(120, 65%, 50%)'; // Grün
         case 2: return 'hsl(35, 90%, 55%)';  // Orange
         case 3: return 'hsl(0, 75%, 55%)';   // Rot
-        default: // Fallback für ungültige Werte oder alte Daten (z.B. 4, 5 werden wie 3 behandelt)
-            if (s && s >= 3) return 'hsl(0, 75%, 55%)'; // Rot
-            return 'hsl(120, 65%, 50%)'; // Grün als Standard
+        default: 
+            if (s && s >= 3) return 'hsl(0, 75%, 55%)';
+            return 'hsl(120, 65%, 50%)';
     }
 };
 
@@ -215,7 +219,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; 
   const tagTextColor = "#1a1f3d"; 
-  const displayStrength = Math.min(parseInt(strength) || 1, 3); // Stärke für Anzeige auf 1-3 begrenzen
+  const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
     <div onClick={onClick} style={{
@@ -227,7 +231,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
-      {strength && ( // strength existiert und ist nicht 0
+      {strength && (
         <span style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -241,10 +245,10 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             fontWeight: 'bold',
             marginRight: '5px',
             flexShrink: 0,
-            border: `2px solid ${getStrengthColor(displayStrength)}`, // Verwende displayStrength für Farbe
+            border: `2px solid ${getStrengthColor(displayStrength)}`, 
             boxSizing: 'border-box',
         }}>
-            {displayStrength} {/* Zeige die ggf. angepasste Stärke an */}
+            {displayStrength}
         </span>
       )}
       {txt}
@@ -372,7 +376,6 @@ export default function App() {
             ...e, 
             comment: e.comment || "", 
             food: e.food || "",
-            // MODIFIED: Stärke beim Laden auf 1-3 begrenzen
             symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }))
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
@@ -386,7 +389,6 @@ export default function App() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
-            // Stelle sicher, dass symptomStrength beim Laden auf 1-3 begrenzt ist, falls alter Wert gespeichert wurde
             const strength = Math.min(parseInt(parsed.symptomStrength) || 1, 3);
             return { ...initialForm, ...parsed, symptomStrength: strength };
         } catch { return initialForm; }
@@ -480,7 +482,7 @@ export default function App() {
     setNewSymptoms(s => [...s, { 
         txt: newForm.symptomInput.trim(), 
         time: newForm.symptomTime, 
-        strength: newForm.symptomStrength // Wird jetzt 1-3 sein
+        strength: newForm.symptomStrength 
     }]);
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 }));
   };
@@ -504,15 +506,15 @@ export default function App() {
   };
 
   const startEdit = i => {
-    const e = entries[i]; // entries hier haben bereits auf 1-3 gecappte Stärken
+    const e = entries[i];
     setEditingIdx(i);
     setEditForm({ 
         food: e.food, 
         imgs: [...e.imgs], 
-        symptoms: e.symptoms, // Stärken sind schon 1-3
+        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })), 
         symptomInput: "", 
         symptomTime: 0, 
-        newSymptomStrength: 1, // Für neue Symptome im Edit-Modus
+        newSymptomStrength: 1,
         date: toDateTimePickerFormat(e.date) 
     });
   };
@@ -525,7 +527,7 @@ export default function App() {
         symptoms: [...fm.symptoms, { 
             txt: fm.symptomInput.trim(), 
             time: fm.symptomTime, 
-            strength: fm.newSymptomStrength // Wird 1-3 sein
+            strength: fm.newSymptomStrength
         }], 
         symptomInput: "", 
         symptomTime: 0,
@@ -547,7 +549,6 @@ export default function App() {
         ? { 
             food: editForm.food.trim(), 
             imgs: editForm.imgs, 
-            // Symptome im editForm haben bereits Stärken von 1-3
             symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})), 
             comment: ent.comment, 
             date: displayDateToSave 
@@ -642,7 +643,7 @@ export default function App() {
             >
               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <select // MODIFIED: Stärke Select jetzt 1-3
+            <select
               value={newForm.symptomStrength}
               onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
               onFocus={handleFocus} 
@@ -673,7 +674,7 @@ export default function App() {
             <div style={styles.groupHeader}>{day}</div>
             {grouped[day].map(({ entry, idx }) => {
               const isSymptomOnlyEntry = !entry.food && entry.symptoms && entry.symptoms.length > 0;
-              const symptomsForDisplay = (entry.symptoms || []).map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})); // Stärke für Anzeige begrenzen
+              const symptomsForDisplay = (entry.symptoms || []).map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)}));
               const knownDisplay = symptomsForDisplay.filter(s => SYMPTOM_CHOICES.includes(s.txt)).sort((a,b) => a.txt.localeCompare(b.txt));
               const customDisplay = symptomsForDisplay.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
               const sortedAllDisplay = [...knownDisplay, ...customDisplay];
@@ -718,7 +719,7 @@ export default function App() {
                             >
                                 {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
-                            <select // MODIFIED: Stärke Select jetzt 1-3
+                            <select
                                 value={editForm.newSymptomStrength}
                                 onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
                                 onFocus={handleFocus} 
@@ -744,13 +745,12 @@ export default function App() {
                             >
                               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
-                            <select // MODIFIED: Stärke Select jetzt 1-3
+                            <select
                                 value={s.strength || 1}
                                 onChange={e_strength => {
                                     const newStrength = Number(e_strength.target.value);
                                     setEditForm(fm => {
                                         const updatedSymptoms = [...fm.symptoms];
-                                        // Stelle sicher, dass die neue Stärke auch im Bereich 1-3 ist
                                         updatedSymptoms[j] = { ...updatedSymptoms[j], strength: Math.min(Math.max(newStrength,1),3) };
                                         return { ...fm, symptoms: updatedSymptoms };
                                     });
@@ -783,7 +783,7 @@ export default function App() {
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                         <button onClick={() => { if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) { deleteEntry(idx); } }} style={styles.buttonSecondary("#d32f2f")} >Löschen</button>
                         <span style={{ marginLeft:"auto" }}>
-                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
+                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(dark, !!entry.comment)}>🗒️</button> {/* dark prop hier übergeben */}
                         </span>
                       </div>
                       {noteOpenIdx === idx && (
