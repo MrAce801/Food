@@ -69,13 +69,11 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   }),
-  entryCard: (dark, isSymptomOnly = false) => ({
+  entryCard: dark => ({
     marginBottom: 16,
     padding: 12,
     borderRadius: 8,
-    background: isSymptomOnly
-      ? (dark ? "#3c3c46" : "#f0f0f5") 
-      : (dark ? "#2a2a32" : "#fff"),
+    background: dark ? "#2a2a32" : "#fff",
     boxShadow: "0 1px 4px #0002"
   }),
   groupHeader: {
@@ -103,7 +101,7 @@ const styles = {
     cursor: "pointer"
   },
   noteButton: isActive => ({
-    background: "#F9A825",
+    background: "#F9A825",       // dunkleres Gelb
     border: "1px solid #F0E68C",
     borderRadius: 6,
     padding: "4px",
@@ -115,16 +113,16 @@ const styles = {
 
 // --- Symptom-Farb-Mapping mit aktualisierten Pastelltönen ---
 const SYMPTOM_COLOR_MAP = {
-  Bauchschmerzen: "#D0E1F9",
-  Durchfall: "#D6EAE0",
-  Blähungen: "#E4D9F0",
-  Hautausschlag: "#F0D9D9",
-  Juckreiz: "#E1BEE7",
-  "Schwellung am Gaumen": "#FFCCBC",
-  "Schleim im Hals": "#D9F2F9",
-  Niesen: "#C8E6C9",
-  Kopfschmerzen: "#D9EAF9",
-  "Rötung Haut": "#F2D9DB"
+  Bauchschmerzen: "#D0E1F9",           // hellblau
+  Durchfall: "#D6EAE0",               // hellgrün
+  Blähungen: "#E4D9F0",               // flieder
+  Hautausschlag: "#F0D9D9",           // rosa
+  Juckreiz: "#E1BEE7",                // lavendel statt gelb
+  "Schwellung am Gaumen": "#FFCCBC",  // pfirsich statt gelb
+  "Schleim im Hals": "#D9F2F9",       // hellcyan
+  Niesen: "#C8E6C9",                  // mint statt gelb
+  Kopfschmerzen: "#D9EAF9",           // hellblau
+  "Rötung Haut": "#F2D9DB"            // zartrosa
 };
 
 // --- Image-Helper: resize + convert to JPEG ---
@@ -250,8 +248,7 @@ function Insights({ entries }) {
     e.symptoms.forEach(s => {
       if (!map[s.txt]) map[s.txt] = { count: 0, foods: {} };
       map[s.txt].count++;
-      const foodKey = e.food; // MODIFIED: Will be an empty string if no food was entered
-      map[s.txt].foods[foodKey] = (map[s.txt].foods[foodKey] || 0) + 1;
+      map[s.txt].foods[e.food] = (map[s.txt].foods[e.food] || 0) + 1;
     });
   });
   const sorted = Object.entries(map).sort((a, b) => b[1].count - a[1].count);
@@ -264,8 +261,7 @@ function Insights({ entries }) {
           <h3>{symptom} ({data.count})</h3>
           <ul>
             {Object.entries(data.foods).sort((a, b) => b[1] - a[1]).map(([food, cnt]) => (
-              // MODIFIED: Display "(Kein Essen)" if food key is empty string for better readability in Insights
-              <li key={food}>{food || "(Kein Essen)"}: {cnt}</li>
+              <li key={food}>{food}: {cnt}</li>
             ))}
           </ul>
         </div>
@@ -289,7 +285,7 @@ export default function App() {
   const [entries, setEntries] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("fd-entries") || "[]")
-        .map(e => ({ ...e, comment: e.comment || "", food: e.food || "" })); 
+        .map(e => ({ ...e, comment: e.comment || "" }));
     } catch {
       return [];
     }
@@ -397,17 +393,9 @@ export default function App() {
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
-  const addEntry = () => { 
-    if (!newForm.food.trim() && newSymptoms.length === 0) {
-      return; 
-    }
-    const entry = { 
-      food: newForm.food.trim(), 
-      imgs: newForm.imgs, 
-      symptoms: newSymptoms, 
-      comment: "", 
-      date: now() 
-    };
+  const addEntry = () => {
+    if (!newForm.food.trim()) return;
+    const entry = { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, comment: "", date: now() };
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
@@ -433,7 +421,7 @@ export default function App() {
   };
   const saveEdit = () => {
     setEntries(e => e.map((ent, j) => j === editingIdx
-      ? { food: editForm.food.trim(), imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date } // Ensure food is trimmed on save
+      ? { food: editForm.food, imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date }
       : ent
     ));
     cancelEdit(); addToast("Eintrag aktualisiert");
@@ -452,7 +440,7 @@ export default function App() {
 
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
-      (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) || // Check if entry.food exists
+      entry.food.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
       entry.comment.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -542,10 +530,10 @@ export default function App() {
           ))}
         </div>
 
-        <button 
+        <button
           onClick={addEntry}
-          disabled={!newForm.food.trim() && newSymptoms.length === 0}
-          style={{ ...styles.buttonPrimary, opacity: (newForm.food.trim() || newSymptoms.length > 0) ? 1 : 0.5 }}
+          disabled={!newForm.food.trim()}
+          style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() ? 1 : 0.5 }}
         >
           Eintrag hinzufügen
         </button>
@@ -572,15 +560,8 @@ export default function App() {
               const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
               const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
               const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
-              
-              const isSymptomOnlyEntry = !entry.food && entry.symptoms && entry.symptoms.length > 0;
-
               return (
-                <div 
-                  key={idx} 
-                  id={`entry-${idx}`} 
-                  style={styles.entryCard(dark, isSymptomOnlyEntry)} 
-                >
+                <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
                   {editingIdx === idx ? (
                     <>
                       <input
@@ -642,10 +623,7 @@ export default function App() {
                   ) : (
                     <>
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4 }}>{entry.date}</div>
-                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>
-                        {/* MODIFIED: Display entry.food directly. If it's empty, it shows nothing. */}
-                        {entry.food}
-                      </div>
+                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>{entry.food}</div>
                       {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
                       <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
                         {sortedAll.map((s,j) => (
@@ -680,17 +658,17 @@ export default function App() {
                             onClick={() => saveNote(idx)}
                             style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
                           >
-                            Notiz speichern
+                            Speichern
                           </button>
                         </div>
                       )}
                       {entry.comment && noteOpenIdx !== idx && (
                         <div style={{
                           marginTop: 8,
-                          background: dark ? "#3a3a42" : "#f0f0f5", 
+                          background: dark ? "#ccc" : "transparent",
                           padding: "6px 8px",
                           borderRadius: 4,
-                          color: dark ? "#e0e0e0" : "#333", 
+                          color: "#000",
                           overflowWrap: "break-word",
                           whiteSpace: "pre-wrap",
                           boxSizing: "border-box"
