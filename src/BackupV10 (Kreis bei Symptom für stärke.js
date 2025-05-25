@@ -115,7 +115,7 @@ const styles = {
   })
 };
 
-// --- Symptom-Farb-Mapping (wird wieder für den Tag-Hintergrund verwendet) ---
+// --- Symptom-Farb-Mapping ---
 const SYMPTOM_COLOR_MAP = {
   Bauchschmerzen: "#D0E1F9",
   Durchfall: "#D6EAE0",
@@ -154,7 +154,7 @@ function resizeToJpeg(file, maxWidth = 800) {
   });
 }
 
-// --- Hilfsfunktion für Stärkefarbe (für den Rand des Kreises) ---
+// --- Hilfsfunktion für Stärkefarbe ---
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal) || 1;
     const hue = Math.max(0, 120 - ((s - 1) * 30));
@@ -207,9 +207,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  // MODIFIED: Hintergrund des Tags ist wieder die Pastellfarbe
   const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; 
-  // Textfarbe des Tags (dunkel für helle Pastelle, wird ggf. von globalen Darkmode-Styles überschrieben)
   const tagTextColor = "#1a1f3d"; 
 
   return (
@@ -230,29 +228,27 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            // MODIFIED: Neutraler Hintergrund für den Kreis
             backgroundColor: dark ? 'rgba(80,80,90,0.6)' : 'rgba(220,220,220,0.7)', 
-            color: dark ? '#f0f0f8' : '#1a1f3d', // Textfarbe der Zahl im Kreis
+            color: dark ? '#f0f0f8' : '#1a1f3d',
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
             flexShrink: 0,
-            // MODIFIED: Rand des Kreises zeigt Stärkefarbe
             border: `2px solid ${getStrengthColor(strength)}`, 
-            boxSizing: 'border-box', // Wichtig, damit Rand die Größe nicht sprengt
+            boxSizing: 'border-box',
         }}>
             {strength}
         </span>
       )}
       {txt}
-      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}> {/* Textfarbe hier ererbt (tagTextColor) */}
+      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
         {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
           marginLeft: 8, cursor: "pointer",
           fontSize: 16, 
-          color: "#c00", // Standard Löschen-Farbe (rot)
+          color: "#c00",
           fontWeight: 700
         }}>×</span>
       )}
@@ -401,7 +397,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
-    document.body.style.color = dark ? "#f0f0f8" : "#111"; // Globale Textfarbe
+    document.body.style.color = dark ? "#f0f0f8" : "#111";
     localStorage.setItem("fd-theme", dark ? "dark" : "light");
   }, [dark]);
   useEffect(() => {
@@ -616,29 +612,34 @@ export default function App() {
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
         
-        <div style={{ display: "flex", alignItems: "center", gap: '6px', marginBottom: 8, flexWrap: 'wrap' }}>
+        {/* MODIFIED: Symptom Input for New Entry - Two Rows */}
+        <div style={{ marginBottom: 8 }}> {/* Container für Symptom-Eingabegruppe */}
           <input
             list="symptom-list" placeholder="Symptom..."
             value={newForm.symptomInput}
             onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-            onFocus={handleFocus} style={{...styles.smallInput, flexGrow: 1, minWidth: '120px'}}
+            onFocus={handleFocus} 
+            style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} // Volle Breite für Symptomtext
           />
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
-          <select
-            value={newForm.symptomTime}
-            onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
-            onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '110px', flexShrink: 0}}
-          >
-            {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          <select
-            value={newForm.symptomStrength}
-            onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
-            onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '100px', flexShrink: 0}}
-          >
-            {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
-          </select>
-          <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0, padding: '8px 12px' }}>+</button>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'wrap' }}> {/* Zweite Zeile für Zeit, Stärke, Button */}
+            <select // Zeit
+              value={newForm.symptomTime}
+              onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
+              onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '130px', flexGrow: 1}}
+            >
+              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <select // Stärke
+              value={newForm.symptomStrength}
+              onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
+              onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '120px', flexGrow: 1}}
+            >
+              {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
+            </select>
+            <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0, padding: '8px 12px' }}>+</button>
+          </div>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
@@ -687,22 +688,36 @@ export default function App() {
                         {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
                       </div>
                       
-                      <div style={{ display: "flex", alignItems: "center", gap: '6px', marginBottom: 12, flexWrap: 'wrap' }}>
-                        <input list="symptom-list-edit" placeholder="Symptom..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, flexGrow: 1, minWidth: '100px'}} />
+                      {/* MODIFIED: Symptom Input for Adding to Edit Form - Two Rows */}
+                      <div style={{ marginBottom: 12 }}> {/* Container für Symptom-Eingabegruppe im Edit-Modus */}
+                        <input 
+                            list="symptom-list-edit" placeholder="Symptom hinzufügen..." 
+                            value={editForm.symptomInput} 
+                            onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} 
+                            onFocus={handleFocus} 
+                            style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} 
+                        />
                         <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
-                        <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '110px', flexShrink: 0 }}>
-                          {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                        </select>
-                        <select
-                          value={editForm.newSymptomStrength}
-                          onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
-                          onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '100px', flexShrink: 0}}
-                        >
-                          {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
-                        </select>
-                        <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button>
+                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'wrap' }}> {/* Zweite Zeile */}
+                            <select 
+                                value={editForm.symptomTime} 
+                                onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} 
+                                onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '130px', flexGrow: 1 }}
+                            >
+                                {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                            <select
+                                value={editForm.newSymptomStrength}
+                                onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
+                                onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '120px', flexGrow: 1}}
+                            >
+                                {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
+                            </select>
+                            <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button>
+                        </div>
                       </div>
 
+                      {/* List of existing symptoms in Edit Form */}
                       <div style={{ marginBottom: 8 }}>
                         {editForm.symptoms.map((s, j) => (
                           <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}>
