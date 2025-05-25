@@ -69,11 +69,13 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   }),
-  entryCard: dark => ({
+  entryCard: (dark, isSymptomOnly = false) => ({ // MODIFIED: Added isSymptomOnly parameter
     marginBottom: 16,
     padding: 12,
     borderRadius: 8,
-    background: dark ? "#2a2a32" : "#fff",
+    background: isSymptomOnly
+      ? (dark ? "#3c3c46" : "#f0f0f5") // Symptom-only colors
+      : (dark ? "#2a2a32" : "#fff"),  // Original colors
     boxShadow: "0 1px 4px #0002"
   }),
   groupHeader: {
@@ -101,7 +103,7 @@ const styles = {
     cursor: "pointer"
   },
   noteButton: isActive => ({
-    background: "#F9A825",       // dunkleres Gelb
+    background: "#F9A825",      // dunkleres Gelb
     border: "1px solid #F0E68C",
     borderRadius: 6,
     padding: "4px",
@@ -113,16 +115,16 @@ const styles = {
 
 // --- Symptom-Farb-Mapping mit aktualisierten Pastelltönen ---
 const SYMPTOM_COLOR_MAP = {
-  Bauchschmerzen: "#D0E1F9",           // hellblau
-  Durchfall: "#D6EAE0",               // hellgrün
-  Blähungen: "#E4D9F0",               // flieder
-  Hautausschlag: "#F0D9D9",           // rosa
-  Juckreiz: "#E1BEE7",                // lavendel statt gelb
+  Bauchschmerzen: "#D0E1F9",         // hellblau
+  Durchfall: "#D6EAE0",              // hellgrün
+  Blähungen: "#E4D9F0",              // flieder
+  Hautausschlag: "#F0D9D9",          // rosa
+  Juckreiz: "#E1BEE7",               // lavendel statt gelb
   "Schwellung am Gaumen": "#FFCCBC",  // pfirsich statt gelb
-  "Schleim im Hals": "#D9F2F9",       // hellcyan
-  Niesen: "#C8E6C9",                  // mint statt gelb
-  Kopfschmerzen: "#D9EAF9",           // hellblau
-  "Rötung Haut": "#F2D9DB"            // zartrosa
+  "Schleim im Hals": "#D9F2F9",      // hellcyan
+  Niesen: "#C8E6C9",                 // mint statt gelb
+  Kopfschmerzen: "#D9EAF9",          // hellblau
+  "Rötung Haut": "#F2D9DB"           // zartrosa
 };
 
 // --- Image-Helper: resize + convert to JPEG ---
@@ -248,7 +250,8 @@ function Insights({ entries }) {
     e.symptoms.forEach(s => {
       if (!map[s.txt]) map[s.txt] = { count: 0, foods: {} };
       map[s.txt].count++;
-      map[s.txt].foods[e.food] = (map[s.txt].foods[e.food] || 0) + 1;
+      const foodKey = e.food || "(Nur Symptome)"; // Handle empty food string for insights
+      map[s.txt].foods[foodKey] = (map[s.txt].foods[foodKey] || 0) + 1;
     });
   });
   const sorted = Object.entries(map).sort((a, b) => b[1].count - a[1].count);
@@ -285,7 +288,7 @@ export default function App() {
   const [entries, setEntries] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("fd-entries") || "[]")
-        .map(e => ({ ...e, comment: e.comment || "" }));
+        .map(e => ({ ...e, comment: e.comment || "", food: e.food || "" })); // Ensure food is also a string
     } catch {
       return [];
     }
@@ -393,9 +396,18 @@ export default function App() {
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
-  const addEntry = () => {
-    if (!newForm.food.trim()) return;
-    const entry = { food: newForm.food, imgs: newForm.imgs, symptoms: newSymptoms, comment: "", date: now() };
+  const addEntry = () => { // MODIFIED for symptom-only entries
+    if (!newForm.food.trim() && newSymptoms.length === 0) {
+      // Button being disabled is primary feedback, this is an extra safeguard
+      return; 
+    }
+    const entry = { 
+      food: newForm.food.trim(), 
+      imgs: newForm.imgs, 
+      symptoms: newSymptoms, 
+      comment: "", 
+      date: now() 
+    };
     setEntries(e => [entry, ...e]);
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0 });
     setNewSymptoms([]);
@@ -530,10 +542,10 @@ export default function App() {
           ))}
         </div>
 
-        <button
+        <button // MODIFIED for symptom-only entries
           onClick={addEntry}
-          disabled={!newForm.food.trim()}
-          style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() ? 1 : 0.5 }}
+          disabled={!newForm.food.trim() && newSymptoms.length === 0}
+          style={{ ...styles.buttonPrimary, opacity: (newForm.food.trim() || newSymptoms.length > 0) ? 1 : 0.5 }}
         >
           Eintrag hinzufügen
         </button>
@@ -560,8 +572,16 @@ export default function App() {
               const known = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt));
               const custom = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
               const sortedAll = [...known.sort((a, b) => a.txt.localeCompare(b.txt)), ...custom];
+              
+              // MODIFIED: Determine if it's a symptom-only entry
+              const isSymptomOnlyEntry = !entry.food && entry.symptoms && entry.symptoms.length > 0;
+
               return (
-                <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark)}>
+                <div 
+                  key={idx} 
+                  id={`entry-${idx}`} 
+                  style={styles.entryCard(dark, isSymptomOnlyEntry)} // MODIFIED: Pass isSymptomOnlyEntry
+                >
                   {editingIdx === idx ? (
                     <>
                       <input
@@ -623,7 +643,10 @@ export default function App() {
                   ) : (
                     <>
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4 }}>{entry.date}</div>
-                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>{entry.food}</div>
+                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>
+                        {/* MODIFIED: Display placeholder for symptom-only entries */}
+                        {entry.food || (isSymptomOnlyEntry ? <em>(Nur Symptome)</em> : "")}
+                      </div>
                       {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
                       <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
                         {sortedAll.map((s,j) => (
@@ -658,17 +681,17 @@ export default function App() {
                             onClick={() => saveNote(idx)}
                             style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
                           >
-                            Speichern
+                            Notiz speichern {/* Text geändert von "Speichern" zu "Notiz speichern" für mehr Klarheit */}
                           </button>
                         </div>
                       )}
                       {entry.comment && noteOpenIdx !== idx && (
                         <div style={{
                           marginTop: 8,
-                          background: dark ? "#ccc" : "transparent",
+                          background: dark ? "#3a3a42" : "#f0f0f5", // Angepasste Notiz-Hintergründe für bessere Lesbarkeit
                           padding: "6px 8px",
                           borderRadius: 4,
-                          color: "#000",
+                          color: dark ? "#e0e0e0" : "#333", // Angepasste Notiz-Textfarben
                           overflowWrap: "break-word",
                           whiteSpace: "pre-wrap",
                           boxSizing: "border-box"
