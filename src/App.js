@@ -25,24 +25,24 @@ const styles = {
   input: {
     flex: 1,
     padding: "10px 12px",
-    fontSize: 16,
+    fontSize: 16, 
     borderRadius: 6,
     border: "1px solid #ccc",
     boxSizing: "border-box",
   },
   smallInput: {
     padding: "8px 10px",
-    fontSize: 15,
+    fontSize: 16, // War 15px, jetzt 16px um Zoom zu verhindern
     WebkitTextSizeAdjust: "100%",
     borderRadius: 6,
     border: "1px solid #ccc",
-    minWidth: '70px', // Mindestbreite bleibt als Fallback
+    minWidth: '70px',
     boxSizing: "border-box",
   },
   textarea: {
     width: "100%",
     padding: "8px",
-    fontSize: 16,
+    fontSize: 16, 
     WebkitTextSizeAdjust: "100%",
     borderRadius: 6,
     border: "1px solid #ccc",
@@ -64,7 +64,7 @@ const styles = {
   },
   buttonSecondary: bg => ({
     padding: "8px 16px",
-    fontSize: 14,
+    fontSize: 14, // Beachte: Buttons sind oft kleiner, hier könnte Zoom auftreten, falls sie Fokus erhalten könnten (unwahrscheinlich für reine Buttons)
     borderRadius: 6,
     border: 0,
     background: bg,
@@ -97,7 +97,7 @@ const styles = {
   },
   backButton: {
     padding: "6px 12px",
-    fontSize: 14,
+    fontSize: 14, // Siehe buttonSecondary
     borderRadius: 6,
     border: 0,
     background: "#1976d2",
@@ -110,7 +110,7 @@ const styles = {
     borderRadius: 6,
     padding: "4px",
     cursor: "pointer",
-    fontSize: 16,
+    fontSize: 16, // Ist 16px
     lineHeight: 1
   })
 };
@@ -216,7 +216,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       background: tagBackgroundColor,
       color: tagTextColor,
       borderRadius: 6, padding: "6px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14,
+      margin: "3px 4px 3px 0", fontSize: 14, // Schriftgröße des Tag-Textes selbst
       cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
@@ -612,7 +612,6 @@ export default function App() {
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
         
-        {/* MODIFIED: Layout for Symptom Input for New Entry */}
         <div style={{ marginBottom: 8 }}>
           <input
             list="symptom-list" placeholder="Symptom..."
@@ -623,20 +622,20 @@ export default function App() {
           />
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
           
-          <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}> {/* flexWrap: 'nowrap' hinzugefügt, falls gewünscht */}
-            <select // Zeit
+          <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}>
+            <select
               value={newForm.symptomTime}
               onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
               onFocus={handleFocus} 
-              style={{...styles.smallInput, width: '110px', flexShrink: 0 }} // Feste Breite, kein flexGrow
+              style={{...styles.smallInput, width: '110px', flexShrink: 0 }}
             >
               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <select // Stärke
+            <select
               value={newForm.symptomStrength}
               onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
               onFocus={handleFocus} 
-              style={{...styles.smallInput, width: '100px', flexShrink: 0 }} // Feste Breite, kein flexGrow
+              style={{...styles.smallInput, width: '100px', flexShrink: 0 }}
             >
               {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
             </select>
@@ -690,7 +689,6 @@ export default function App() {
                         {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
                       </div>
                       
-                      {/* MODIFIED: Layout for Add Symptom in Edit Form */}
                       <div style={{ marginBottom: 12 }}>
                         <input 
                             list="symptom-list-edit" placeholder="Symptom hinzufügen..." 
@@ -700,20 +698,20 @@ export default function App() {
                             style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} 
                         />
                         <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
-                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}> {/* flexWrap: 'nowrap' hinzugefügt */}
-                            <select // Zeit
+                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}>
+                            <select 
                                 value={editForm.symptomTime} 
                                 onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} 
                                 onFocus={handleFocus} 
-                                style={{...styles.smallInput, width: '110px', flexShrink:0 }} // Feste Breite
+                                style={{...styles.smallInput, width: '110px', flexShrink:0 }}
                             >
                                 {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
-                            <select // Stärke
+                            <select
                                 value={editForm.newSymptomStrength}
                                 onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
                                 onFocus={handleFocus} 
-                                style={{...styles.smallInput, width: '100px', flexShrink:0 }} // Feste Breite
+                                style={{...styles.smallInput, width: '100px', flexShrink:0 }}
                             >
                                 {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
                             </select>
@@ -721,7 +719,6 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* List of existing symptoms in Edit Form */}
                       <div style={{ marginBottom: 8 }}>
                         {editForm.symptoms.map((s, j) => (
                           <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}>
@@ -732,7 +729,7 @@ export default function App() {
                                 const newTime = Number(e_select.target.value);
                                 setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], time: newTime }; return { ...fm, symptoms: updatedSymptoms }; });
                               }}
-                              style={{...styles.smallInput, width: '120px', flexShrink: 0, padding: '6px 10px', fontSize: '14px' }} // Feste Breite
+                              style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}
                             >
                               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
@@ -746,7 +743,7 @@ export default function App() {
                                         return { ...fm, symptoms: updatedSymptoms };
                                     });
                                 }}
-                                style={{...styles.smallInput, width: '90px', flexShrink: 0, padding: '6px 10px', fontSize: '14px' }} // Feste Breite
+                                style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}
                             >
                                 {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
                             </select>
@@ -779,7 +776,7 @@ export default function App() {
                       </div>
                       {noteOpenIdx === idx && (
                         <div>
-                          <textarea value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={styles.textarea} />
+                          <textarea value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
                           <button onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }} >Notiz speichern</button>
                         </div>
                       )}
