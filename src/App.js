@@ -27,15 +27,17 @@ const styles = {
     padding: "10px 12px",
     fontSize: 16,
     borderRadius: 6,
-    border: "1px solid #ccc"
+    border: "1px solid #ccc",
+    boxSizing: "border-box",
   },
-  smallInput: { // Wird auch für das neue Zeit-Select im Edit-Modus verwendet
+  smallInput: {
     padding: "8px 12px",
     fontSize: 16,
     WebkitTextSizeAdjust: "100%",
     borderRadius: 6,
     border: "1px solid #ccc",
-    minWidth: '120px', // Mindestbreite für Selects
+    minWidth: '120px',
+    boxSizing: "border-box",
   },
   textarea: {
     width: "100%",
@@ -196,7 +198,7 @@ const ImgStack = ({ imgs, onDelete }) => (
     ))}
   </div>
 );
-const SymTag = ({ txt, time, dark, onDel, onClick }) => { // onClick ist hier nur noch für Nicht-Edit-Modus relevant (falls es mal genutzt würde)
+const SymTag = ({ txt, time, dark, onDel, onClick }) => {
   const bg = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
   return (
     <div onClick={onClick} style={{
@@ -211,7 +213,7 @@ const SymTag = ({ txt, time, dark, onDel, onClick }) => { // onClick ist hier nu
       <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
         {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
-      {onDel && ( // onDel wird im Edit-Modus nicht mehr über SymTag gehandhabt
+      {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
           marginLeft: 6, cursor: "pointer",
           fontSize: 16, color: "#c00", fontWeight: 700
@@ -238,36 +240,63 @@ const TIME_CHOICES = [
   { label: "nach 1,5 h", value: 90 },
   { label: "nach 3 h", value: 180 }
 ];
+
+// --- Datums- und Zeitfunktionen ---
 const now = () => {
   const d = new Date();
-  // Sicherstellen, dass Tag und Monat zweistellig sind für konsistente String-Länge, falls relevant,
-  // aber parseDateString sollte damit umgehen können.
   const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0'); // Monat ist 0-basiert
+  const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
-  return `${day}.${month}.${year} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return `${day}.${month}.${year} ${time}`;
 };
 
-// --- Hilfsfunktion zum Parsen des Datumsstrings ---
 const parseDateString = (dateStr) => {
-    if (!dateStr || typeof dateStr !== 'string') return new Date(0); // Für ungültige Daten, sortiert alt
-
+    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
     const [datePart, timePart] = dateStr.split(' ');
     if (!datePart || !timePart) return new Date(0);
-
     const dateComponents = datePart.split('.').map(Number);
     const timeComponents = timePart.split(':').map(Number);
-
     if (dateComponents.length !== 3 || timeComponents.length !== 2) return new Date(0);
     if ([...dateComponents, ...timeComponents].some(isNaN)) return new Date(0);
-
     const [day, month, year] = dateComponents;
     const [hour, minute] = timeComponents;
-
-    // Monat ist 0-indiziert im Date Konstruktor
     return new Date(year, month - 1, day, hour, minute);
 };
 
+const toDateTimePickerFormat = (displayDateStr) => {
+    if (!displayDateStr || typeof displayDateStr !== 'string') return "";
+    const [datePart, timePart] = displayDateStr.split(' ');
+    if (!datePart || !timePart) return "";
+
+    const dateComponents = datePart.split('.');
+    if (dateComponents.length !== 3) return "";
+    
+    const [day, month, year] = dateComponents.map(s => String(s).padStart(2,'0'));
+    const timeParts = timePart.split(':').map(s => String(s).padStart(2,'0'));
+    if (timeParts.length !== 2) return "";
+
+    if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+
+    return `${year}-${month}-${day}T${timeParts[0]}:${timeParts[1]}`;
+};
+
+const fromDateTimePickerFormat = (pickerDateStr) => {
+    if (!pickerDateStr || typeof pickerDateStr !== 'string') return "";
+    const [datePart, timePart] = pickerDateStr.split('T');
+    if (!datePart || !timePart) return "";
+
+    const dateComponents = datePart.split('-');
+    if (dateComponents.length !== 3) return "";
+
+    const [year, month, day] = dateComponents;
+    const timeParts = timePart.split(':');
+    if (timeParts.length !== 2) return "";
+    
+    if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+
+    return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year} ${String(timeParts[0]).padStart(2, '0')}:${String(timeParts[1]).padStart(2, '0')}`;
+};
 
 // --- Insights-Komponente ---
 function Insights({ entries }) {
@@ -276,7 +305,7 @@ function Insights({ entries }) {
     e.symptoms.forEach(s => {
       if (!map[s.txt]) map[s.txt] = { count: 0, foods: {} };
       map[s.txt].count++;
-      const foodKey = e.food || "(Kein Essen)"; // Beibehaltung für Lesbarkeit in Insights
+      const foodKey = e.food || "(Kein Essen)";
       map[s.txt].foods[foodKey] = (map[s.txt].foods[foodKey] || 0) + 1;
     });
   });
@@ -304,21 +333,16 @@ export default function App() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
-    setDark(saved ?
-      saved === "dark" :
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
+    setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
   const [view, setView] = useState("diary");
-  const [entries, setEntries] = useState(() => { // MODIFIED: Sort on initial load
+  const [entries, setEntries] = useState(() => {
     try {
       const loadedEntries = JSON.parse(localStorage.getItem("fd-entries") || "[]")
         .map(e => ({ ...e, comment: e.comment || "", food: e.food || "" }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(20);
@@ -336,7 +360,6 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
-  // Persist
   useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
   useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
   useEffect(() => {
@@ -353,6 +376,8 @@ export default function App() {
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
   useEffect(() => {
     if (editingIdx !== null) {
+      // Optional: Verzögere scrollIntoView, um sicherzustellen, dass das Element gerendert wurde
+      // setTimeout(() => document.getElementById(`entry-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       document.getElementById(`entry-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [editingIdx]);
@@ -387,9 +412,7 @@ export default function App() {
         const smallB64 = await resizeToJpeg(file, 800);
         setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
         addToast("Foto hinzugefügt (verkleinert)");
-      } catch {
-        addToast("Ungültiges oder zu großes Bild");
-      }
+      } catch { addToast("Ungültiges oder zu großes Bild"); }
     }
     e.target.value = "";
   };
@@ -405,9 +428,7 @@ export default function App() {
         const smallB64 = await resizeToJpeg(file, 800);
         setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
         addToast("Foto hinzugefügt (verkleinert)");
-      } catch {
-        addToast("Ungültiges oder zu großes Bild");
-      }
+      } catch { addToast("Ungültiges oder zu großes Bild"); }
     }
     e.target.value = "";
   };
@@ -415,7 +436,7 @@ export default function App() {
     setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     addToast("Foto gelöscht");
   };
-
+  
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
     setNewSymptoms(s => [...s, { txt: newForm.symptomInput.trim(), time: newForm.symptomTime }]);
@@ -424,9 +445,7 @@ export default function App() {
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
   const addEntry = () => {
-    if (!newForm.food.trim() && newSymptoms.length === 0) {
-      return;
-    }
+    if (!newForm.food.trim() && newSymptoms.length === 0) return;
     const entry = {
       food: newForm.food.trim(),
       imgs: newForm.imgs,
@@ -434,7 +453,6 @@ export default function App() {
       comment: "",
       date: now()
     };
-    // MODIFIED: Sort after adding
     setEntries(prevEntries =>
       [...prevEntries, entry].sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
     );
@@ -446,7 +464,14 @@ export default function App() {
   const startEdit = i => {
     const e = entries[i];
     setEditingIdx(i);
-    setEditForm({ food: e.food, imgs: [...e.imgs], symptoms: [...e.symptoms], symptomInput: "", symptomTime: 0, date: e.date });
+    setEditForm({ 
+        food: e.food, 
+        imgs: [...e.imgs], 
+        symptoms: [...e.symptoms], 
+        symptomInput: "", 
+        symptomTime: 0, 
+        date: toDateTimePickerFormat(e.date) 
+    });
   };
   const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
   
@@ -463,21 +488,24 @@ export default function App() {
       ...fm, 
       symptoms: fm.symptoms.filter((_, i) => i !== idx) 
   }));
-  // changeEditSymptomTime function is no longer needed
 
   const saveEdit = () => {
-    // MODIFIED: Sort after saving edit
+    const displayDateToSave = fromDateTimePickerFormat(editForm.date);
+    if (!displayDateToSave) {
+        addToast("Ungültiges Datum/Zeit Format. Bitte prüfen.");
+        return;
+    }
+
     setEntries(prevEntries =>
       prevEntries.map((ent, j) =>
         j === editingIdx
-        ? { food: editForm.food.trim(), imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: editForm.date }
+        ? { food: editForm.food.trim(), imgs: editForm.imgs, symptoms: editForm.symptoms, comment: ent.comment, date: displayDateToSave }
         : ent
       ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
     );
     cancelEdit(); addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
-    // No need to re-sort after delete, as relative order is preserved
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
     addToast("Eintrag gelöscht");
@@ -487,9 +515,12 @@ export default function App() {
     setNoteOpenIdx(noteOpenIdx === idx ? null : idx);
     if (noteOpenIdx !== idx) setNoteDraft(entries[idx].comment);
   };
-  const saveNote = idx => { setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent)); setNoteOpenIdx(null); addToast("Notiz gespeichert"); };
+  const saveNote = idx => {
+    setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
+    setNoteOpenIdx(null);
+    addToast("Notiz gespeichert");
+  };
 
-  // Entries are now sorted in state, so filtering and grouping operate on sorted data
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -498,12 +529,12 @@ export default function App() {
     );
   const toDisplay = filteredWithIdx.slice(0, displayCount);
   const grouped = toDisplay.reduce((acc, { entry, idx }) => {
-    const day = entry.date.split(" ")[0]; // Grouping by day string still works
+    const day = entry.date.split(" ")[0];
     (acc[day] = acc[day] || []).push({ entry, idx });
     return acc;
   }, {});
   const dates = Object.keys(grouped)
-    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date)); // Sort dates for display
+    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
 
   if (view === "insights") {
     return (
@@ -533,9 +564,8 @@ export default function App() {
 
       <h2 style={styles.title}>Food Diary</h2>
 
-      {/* Neuer Eintrag */}
+      {/* Neuer Eintrag Form */}
       <div style={{ marginBottom: 24 }}>
-        {/* Food Input, Camera, etc. */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 48 }}>
           <input
             placeholder="Essen..."
@@ -546,63 +576,46 @@ export default function App() {
           />
           <CameraButton onClick={() => fileRefNew.current?.click()} />
           <input
-            ref={fileRefNew}
-            type="file"
-            accept="image/*"
-            multiple
+            ref={fileRefNew} type="file" accept="image/*" multiple
             capture={isMobile ? "environment" : undefined}
-            onChange={handleNewFile}
-            style={{ display: "none" }}
+            onChange={handleNewFile} style={{ display: "none" }}
           />
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
-
-        {/* Symptom Input for New Entry */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <input
-            list="symptom-list"
-            placeholder="Symptom..."
+            list="symptom-list" placeholder="Symptom..."
             value={newForm.symptomInput}
             onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-            onFocus={handleFocus}
-            style={{...styles.smallInput, flexGrow: 1}}
+            onFocus={handleFocus} style={{...styles.smallInput, flexGrow: 1}}
           />
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
           <select
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
-            onFocus={handleFocus}
-            style={{...styles.smallInput, flexBasis: '150px', flexShrink: 0}}
+            onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '150px', flexShrink: 0}}
           >
             {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0, padding: '8px 12px' }}>+</button>
         </div>
-
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
           {newSymptoms.map((s, i) => (
             <SymTag key={i} txt={s.txt} time={s.time} dark={dark} onDel={() => removeNewSymptom(i)} />
           ))}
         </div>
-
         <button
           onClick={addEntry}
           disabled={!newForm.food.trim() && newSymptoms.length === 0}
           style={{ ...styles.buttonPrimary, opacity: (newForm.food.trim() || newSymptoms.length > 0) ? 1 : 0.5 }}
-        >
-          Eintrag hinzufügen
-        </button>
-
+        >Eintrag hinzufügen</button>
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
           <input
-            placeholder="Suche..."
-            value={searchTerm}
+            placeholder="Suche..." value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             style={{...styles.smallInput, flexGrow: 1}}
           />
-          <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>
-            Mehr laden
-          </button>
+          <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>Mehr laden</button>
         </div>
       </div>
 
@@ -613,32 +626,26 @@ export default function App() {
             <div style={styles.groupHeader}>{day}</div>
             {grouped[day].map(({ entry, idx }) => {
               const isSymptomOnlyEntry = !entry.food && entry.symptoms && entry.symptoms.length > 0;
-              // Symptom-Sortierung für Anzeige im nicht-bearbeiten Modus (alphabetisch für bekannte)
               const knownDisplay = entry.symptoms.filter(s => SYMPTOM_CHOICES.includes(s.txt)).sort((a,b) => a.txt.localeCompare(b.txt));
               const customDisplay = entry.symptoms.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
               const sortedAllDisplay = [...knownDisplay, ...customDisplay];
 
               return (
-                <div
-                  key={idx}
-                  id={`entry-${idx}`}
-                  style={styles.entryCard(dark, isSymptomOnlyEntry)}
-                >
-                  {editingIdx === idx ? ( // EDটিং VIEW
+                <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
+                  {editingIdx === idx ? (
                     <>
-                      <input // Entry Date
+                      <input
+                        type="datetime-local"
                         value={editForm.date}
                         onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
-                        placeholder="Datum & Uhrzeit (TT.MM.JJJJ HH:MM)"
-                        style={{...styles.input, marginBottom: '8px'}}
+                        style={{...styles.input, marginBottom: '12px', width: '100%'}}
                       />
-                      <input // Entry Food
+                      <input
                         value={editForm.food}
                         onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
                         onFocus={handleFocus}
                         style={{...styles.input, marginBottom: '8px'}}
                       />
-                      {/* Image Upload for Edit */}
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}>
                         <CameraButton onClick={() => fileRefEdit.current?.click()} />
                         <input
@@ -648,8 +655,6 @@ export default function App() {
                         />
                         {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
                       </div>
-                      
-                      {/* Add Symptom to Edit Form */}
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                         <input
                           list="symptom-list" placeholder="Symptom..."
@@ -666,8 +671,6 @@ export default function App() {
                         </select>
                         <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button>
                       </div>
-
-                      {/* List of Symptoms in Edit Form - MODIFIED UI */}
                       <div style={{ marginBottom: 8 }}>
                         {editForm.symptoms.map((s, j) => (
                           <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'nowrap' }}>
@@ -694,13 +697,12 @@ export default function App() {
                           </div>
                         ))}
                       </div>
-                      
                       <div style={{ display: "flex", gap: 5, marginTop: '16px' }}>
                         <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
                         <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
                       </div>
                     </>
-                  ) : ( // DISPLAY VIEW (NOT EDITING)
+                  ) : (
                     <>
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4 }}>{entry.date}</div>
                       <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>
@@ -708,11 +710,10 @@ export default function App() {
                       </div>
                       {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
                       <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
-                        {sortedAllDisplay.map((s,j) => ( // Verwende die sortierte Liste für die Anzeige
+                        {sortedAllDisplay.map((s,j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} dark={dark}/>
                         ))}
                       </div>
-                      {/* Buttons for Edit, Delete, Note */}
                       <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                         <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
                         <button
@@ -722,14 +723,11 @@ export default function App() {
                             }
                           }}
                           style={styles.buttonSecondary("#d32f2f")}
-                        >
-                          Löschen
-                        </button>
+                        >Löschen</button>
                         <span style={{ marginLeft:"auto" }}>
                           <button onClick={() => toggleNote(idx)} style={styles.noteButton(!!entry.comment)}>🗒️</button>
                         </span>
                       </div>
-                      {/* Note Display / Edit */}
                       {noteOpenIdx === idx && (
                         <div>
                           <textarea
@@ -741,9 +739,7 @@ export default function App() {
                           <button
                             onClick={() => saveNote(idx)}
                             style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }}
-                          >
-                            Notiz speichern
-                          </button>
+                          >Notiz speichern</button>
                         </div>
                       )}
                       {entry.comment && noteOpenIdx !== idx && (
