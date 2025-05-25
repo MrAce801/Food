@@ -218,18 +218,18 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
       {strength && (
-        <span style={{ // MODIFIED: Kreisgröße und Schriftgröße angepasst
+        <span style={{ // MODIFIED: Kreisgröße, Schriftgröße und Margin erneut angepasst
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '18px', // War 22px
-            height: '18px', // War 22px
+            width: '16px',   // War 18px
+            height: '16px',  // War 18px
             borderRadius: '50%',
             backgroundColor: getStrengthColor(strength),
             color: '#fff', 
-            fontSize: '11px', // War 13px
+            fontSize: '10px',  // War 11px
             fontWeight: 'bold',
-            marginRight: '6px', // War 8px
+            marginRight: '5px', // War 6px
             flexShrink: 0,
             border: dark ? '1px solid #555' : '1px solid #ddd'
         }}>
