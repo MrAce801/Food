@@ -115,7 +115,7 @@ const styles = {
   })
 };
 
-// --- Symptom-Farb-Mapping ---
+// --- Symptom-Farb-Mapping (wird wieder für den Tag-Hintergrund verwendet) ---
 const SYMPTOM_COLOR_MAP = {
   Bauchschmerzen: "#D0E1F9",
   Durchfall: "#D6EAE0",
@@ -154,7 +154,7 @@ function resizeToJpeg(file, maxWidth = 800) {
   });
 }
 
-// --- Hilfsfunktion für Stärkefarbe ---
+// --- Hilfsfunktion für Stärkefarbe (für den Rand des Kreises) ---
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal) || 1;
     const hue = Math.max(0, 120 - ((s - 1) * 30));
@@ -207,43 +207,53 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const bg = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
+  // MODIFIED: Hintergrund des Tags ist wieder die Pastellfarbe
+  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; 
+  // Textfarbe des Tags (dunkel für helle Pastelle, wird ggf. von globalen Darkmode-Styles überschrieben)
+  const tagTextColor = "#1a1f3d"; 
+
   return (
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
-      background: bg, color: "#1a1f3d",
+      background: tagBackgroundColor,
+      color: tagTextColor,
       borderRadius: 6, padding: "6px 10px",
       margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
       {strength && (
-        <span style={{ // MODIFIED: Kreisgröße, Schriftgröße und Margin erneut angepasst
+        <span style={{
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '16px',   // War 18px
-            height: '16px',  // War 18px
+            width: '16px',
+            height: '16px',
             borderRadius: '50%',
-            backgroundColor: getStrengthColor(strength),
-            color: '#fff', 
-            fontSize: '10px',  // War 11px
+            // MODIFIED: Neutraler Hintergrund für den Kreis
+            backgroundColor: dark ? 'rgba(80,80,90,0.6)' : 'rgba(220,220,220,0.7)', 
+            color: dark ? '#f0f0f8' : '#1a1f3d', // Textfarbe der Zahl im Kreis
+            fontSize: '10px',
             fontWeight: 'bold',
-            marginRight: '5px', // War 6px
+            marginRight: '5px',
             flexShrink: 0,
-            border: dark ? '1px solid #555' : '1px solid #ddd'
+            // MODIFIED: Rand des Kreises zeigt Stärkefarbe
+            border: `2px solid ${getStrengthColor(strength)}`, 
+            boxSizing: 'border-box', // Wichtig, damit Rand die Größe nicht sprengt
         }}>
             {strength}
         </span>
       )}
       {txt}
-      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
+      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}> {/* Textfarbe hier ererbt (tagTextColor) */}
         {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
           marginLeft: 8, cursor: "pointer",
-          fontSize: 16, color: "#c00", fontWeight: 700
+          fontSize: 16, 
+          color: "#c00", // Standard Löschen-Farbe (rot)
+          fontWeight: 700
         }}>×</span>
       )}
     </div>
@@ -391,7 +401,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
-    document.body.style.color = dark ? "#f0f0f8" : "#111";
+    document.body.style.color = dark ? "#f0f0f8" : "#111"; // Globale Textfarbe
     localStorage.setItem("fd-theme", dark ? "dark" : "light");
   }, [dark]);
   useEffect(() => {
