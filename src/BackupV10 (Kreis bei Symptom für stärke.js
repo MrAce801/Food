@@ -214,7 +214,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
       background: tagBackgroundColor,
-      color: tagTextColor,
+      color: tagTextColor, // Gilt für txt und time, wenn nicht von Darkmode Body überschrieben
       borderRadius: 6, padding: "6px 10px",
       margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
@@ -228,8 +228,9 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            backgroundColor: dark ? 'rgba(80,80,90,0.6)' : 'rgba(220,220,220,0.7)', 
-            color: dark ? '#f0f0f8' : '#1a1f3d',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)', 
+            // MODIFIED: Textfarbe der Zahl im Kreis ist jetzt immer dunkel für Kontrast
+            color: '#333333', 
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
@@ -612,26 +613,25 @@ export default function App() {
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
         
-        {/* MODIFIED: Symptom Input for New Entry - Two Rows */}
-        <div style={{ marginBottom: 8 }}> {/* Container für Symptom-Eingabegruppe */}
+        <div style={{ marginBottom: 8 }}>
           <input
             list="symptom-list" placeholder="Symptom..."
             value={newForm.symptomInput}
             onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
             onFocus={handleFocus} 
-            style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} // Volle Breite für Symptomtext
+            style={{...styles.smallInput, width: '100%', marginBottom: '8px'}}
           />
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
           
-          <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'wrap' }}> {/* Zweite Zeile für Zeit, Stärke, Button */}
-            <select // Zeit
+          <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'wrap' }}>
+            <select
               value={newForm.symptomTime}
               onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
               onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '130px', flexGrow: 1}}
             >
               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <select // Stärke
+            <select
               value={newForm.symptomStrength}
               onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
               onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '120px', flexGrow: 1}}
@@ -688,8 +688,7 @@ export default function App() {
                         {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
                       </div>
                       
-                      {/* MODIFIED: Symptom Input for Adding to Edit Form - Two Rows */}
-                      <div style={{ marginBottom: 12 }}> {/* Container für Symptom-Eingabegruppe im Edit-Modus */}
+                      <div style={{ marginBottom: 12 }}>
                         <input 
                             list="symptom-list-edit" placeholder="Symptom hinzufügen..." 
                             value={editForm.symptomInput} 
@@ -698,7 +697,7 @@ export default function App() {
                             style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} 
                         />
                         <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
-                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'wrap' }}> {/* Zweite Zeile */}
+                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'wrap' }}>
                             <select 
                                 value={editForm.symptomTime} 
                                 onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} 
@@ -717,7 +716,6 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* List of existing symptoms in Edit Form */}
                       <div style={{ marginBottom: 8 }}>
                         {editForm.symptoms.map((s, j) => (
                           <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}>

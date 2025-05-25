@@ -214,7 +214,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
       background: tagBackgroundColor,
-      color: tagTextColor,
+      color: tagTextColor, // Gilt für txt und time, wenn nicht von Darkmode Body überschrieben
       borderRadius: 6, padding: "6px 10px",
       margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
@@ -228,9 +228,9 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            // MODIFIED: Hintergrund des Kreises für besseren "Durchschein"-Effekt
             backgroundColor: 'rgba(255, 255, 255, 0.2)', 
-            color: dark ? '#f0f0f8' : '#1a1f3d', 
+            // MODIFIED: Textfarbe der Zahl im Kreis ist jetzt immer dunkel für Kontrast
+            color: '#333333', 
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
