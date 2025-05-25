@@ -72,6 +72,7 @@ const styles = {
     cursor: "pointer"
   }),
   entryCard: (dark, isSymptomOnly = false) => ({
+    position: 'relative', // Für absolute Positionierung des Aktionsmenüs
     marginBottom: 16,
     padding: 12,
     borderRadius: 8,
@@ -104,18 +105,41 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   },
-  // MODIFIED: noteButton Style für "glassy" Look
-  noteButton: (dark, isActive) => ({ 
-    background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)', 
+  glassyIconButton: (dark) => ({ // Style für Bleistift und Notiz-Symbol
+    background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
     borderRadius: 6,
-    padding: "4px 6px", // Etwas mehr horizontales Padding für das Emoji
+    padding: "6px 8px", 
     cursor: "pointer",
-    fontSize: 16,
+    fontSize: 16, 
     lineHeight: 1,
-    color: dark ? '#f0f0f8' : '#333', // Farbe für das Emoji-Symbol selbst (kann variieren)
-    // Um einen echten Glassmorphism-Effekt mit Hintergrundunschärfe zu erzielen:
-    // backdropFilter: 'blur(4px)', // Vorsicht: Browser-Support und Performance beachten
+    color: dark ? '#f0f0f8' : '#333',
+    marginRight: '4px', 
+  }),
+  actionMenu: (dark) => ({
+    position: 'absolute',
+    right: '12px', 
+    bottom: '45px', 
+    background: dark ? '#383840' : '#ffffff', // Dunklerer Hintergrund für Darkmode-Menü
+    borderRadius: 8,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)', // Stärkerer Schatten
+    padding: '8px',
+    zIndex: 20,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    minWidth: '120px',
+  }),
+  actionMenuItem: (dark, isDestructive = false) => ({
+    background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'), // Angepasste Farben
+    color: '#fff', // Weiße Schrift für bessere Lesbarkeit auf farbigem Hintergrund
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: 4,
+    cursor: 'pointer',
+    textAlign: 'left',
+    width: '100%',
+    fontSize: '14px',
   })
 };
 
@@ -162,9 +186,9 @@ function resizeToJpeg(file, maxWidth = 800) {
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal);
     switch (s) {
-        case 1: return 'hsl(120, 65%, 50%)'; // Grün
-        case 2: return 'hsl(35, 90%, 55%)';  // Orange
-        case 3: return 'hsl(0, 75%, 55%)';   // Rot
+        case 1: return 'hsl(120, 65%, 50%)'; 
+        case 2: return 'hsl(35, 90%, 55%)';  
+        case 3: return 'hsl(0, 75%, 55%)';  
         default: 
             if (s && s >= 3) return 'hsl(0, 75%, 55%)';
             return 'hsl(120, 65%, 50%)';
@@ -404,6 +428,8 @@ export default function App() {
   const fileRefEdit = useRef();
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
+  const [actionMenuOpenForIdx, setActionMenuOpenForIdx] = useState(null);
+
 
   useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
   useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
@@ -517,8 +543,13 @@ export default function App() {
         newSymptomStrength: 1,
         date: toDateTimePickerFormat(e.date) 
     });
+    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü beim Starten des Edits
   };
-  const cancelEdit = () => { setEditingIdx(null); setEditForm(null); };
+  const cancelEdit = () => { 
+    setEditingIdx(null); 
+    setEditForm(null); 
+    setActionMenuOpenForIdx(null); 
+  };
   
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
@@ -527,7 +558,7 @@ export default function App() {
         symptoms: [...fm.symptoms, { 
             txt: fm.symptomInput.trim(), 
             time: fm.symptomTime, 
-            strength: fm.newSymptomStrength
+            strength: fm.newSymptomStrength 
         }], 
         symptomInput: "", 
         symptomTime: 0,
@@ -556,23 +587,40 @@ export default function App() {
         : ent
       ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
     );
-    cancelEdit(); addToast("Eintrag aktualisiert");
+    cancelEdit(); 
+    addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit();
+    if (editingIdx === i) cancelEdit(); // Schließt Edit-Modus, falls der gelöschte Eintrag bearbeitet wurde
+    setActionMenuOpenForIdx(null); // Schließt Aktionsmenü
     addToast("Eintrag gelöscht");
   };
 
   const toggleNote = idx => {
     setNoteOpenIdx(noteOpenIdx === idx ? null : idx);
     if (noteOpenIdx !== idx) setNoteDraft(entries[idx].comment);
+    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü, wenn Notiz geöffnet wird
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
     setNoteOpenIdx(null);
     addToast("Notiz gespeichert");
   };
+
+  // Klick-Handler für den Hauptcontainer, um Menüs zu schließen
+  const handleContainerClick = (e) => {
+      // Prüfe, ob der Klick außerhalb des aktuell geöffneten Aktionsmenüs und seines Triggers war
+      if (actionMenuOpenForIdx !== null) {
+          const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
+          const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
+          if (!triggerClicked && !menuClicked) {
+              setActionMenuOpenForIdx(null);
+          }
+      }
+      // Ähnliche Logik könnte für das Notizfeld hinzugefügt werden, falls es über ein Overlay läuft
+  };
+
 
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
@@ -591,7 +639,7 @@ export default function App() {
 
   if (view === "insights") {
     return (
-      <div style={styles.container(isMobile)}>
+      <div style={styles.container(isMobile)} onClick={handleContainerClick}>
         {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
         <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
         <Insights entries={entries} />
@@ -600,7 +648,7 @@ export default function App() {
   }
 
   return (
-    <div style={styles.container(isMobile)}>
+    <div style={styles.container(isMobile)} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
 
       <div style={styles.topBar}>
@@ -683,91 +731,12 @@ export default function App() {
                 <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
                   {editingIdx === idx ? (
                     <>
-                      <input
-                        type="datetime-local"
-                        value={editForm.date}
-                        onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
-                        style={{...styles.input, marginBottom: '12px', width: '100%'}}
-                      />
-                      <input
-                        value={editForm.food}
-                        onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
-                        onFocus={handleFocus}
-                        style={{...styles.input, marginBottom: '8px'}}
-                      />
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}>
-                        <CameraButton onClick={() => fileRefEdit.current?.click()} />
-                        <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} />
-                        {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
-                      </div>
-                      
-                      <div style={{ marginBottom: 12 }}>
-                        <input 
-                            list="symptom-list-edit" placeholder="Symptom hinzufügen..." 
-                            value={editForm.symptomInput} 
-                            onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} 
-                            onFocus={handleFocus} 
-                            style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} 
-                        />
-                        <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
-                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}>
-                            <select 
-                                value={editForm.symptomTime} 
-                                onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} 
-                                onFocus={handleFocus} 
-                                style={{...styles.smallInput, width: '110px', flexShrink:0 }}
-                            >
-                                {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
-                            <select
-                                value={editForm.newSymptomStrength}
-                                onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
-                                onFocus={handleFocus} 
-                                style={{...styles.smallInput, width: '100px', flexShrink:0 }}
-                            >
-                                {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
-                            </select>
-                            <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button>
-                        </div>
-                      </div>
-
-                      <div style={{ marginBottom: 8 }}>
-                        {editForm.symptoms.map((s, j) => (
-                          <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}>
-                            <span style={{ flexGrow: 1, overflowWrap: 'break-word', minWidth: '80px', fontSize: '15px', paddingRight: '5px' }}>{s.txt}</span>
-                            <select
-                              value={s.time}
-                              onChange={e_select => {
-                                const newTime = Number(e_select.target.value);
-                                setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], time: newTime }; return { ...fm, symptoms: updatedSymptoms }; });
-                              }}
-                              style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}
-                            >
-                              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
-                            <select
-                                value={s.strength || 1}
-                                onChange={e_strength => {
-                                    const newStrength = Number(e_strength.target.value);
-                                    setEditForm(fm => {
-                                        const updatedSymptoms = [...fm.symptoms];
-                                        updatedSymptoms[j] = { ...updatedSymptoms[j], strength: Math.min(Math.max(newStrength,1),3) };
-                                        return { ...fm, symptoms: updatedSymptoms };
-                                    });
-                                }}
-                                style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}
-                            >
-                                {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                            <button onClick={() => removeEditSymptom(j)} title="Symptom löschen" style={{...styles.buttonSecondary("#d32f2f"), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }} >×</button>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div style={{ display: "flex", gap: 5, marginTop: '16px' }}>
-                        <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
-                        <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
-                      </div>
+                      <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
+                      <input value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, marginBottom: '8px'}} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
+                      <div style={{ marginBottom: 12 }}> <input list="symptom-list-edit" placeholder="Symptom hinzufügen..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} /> <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist> <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}> <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '110px', flexShrink:0 }}> {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} </select> <select value={editForm.newSymptomStrength} onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink:0 }}> {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)} </select> <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button> </div> </div>
+                      <div style={{ marginBottom: 8 }}> {editForm.symptoms.map((s, j) => ( <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}> <span style={{ flexGrow: 1, overflowWrap: 'break-word', minWidth: '80px', fontSize: '15px', paddingRight: '5px' }}>{s.txt}</span> <select value={s.time} onChange={e_select => { const newTime = Number(e_select.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], time: newTime }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} </select> <select value={s.strength || 1} onChange={e_strength => { const newStrength = Number(e_strength.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], strength: Math.min(Math.max(newStrength,1),3) }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)} </select> <button onClick={() => removeEditSymptom(j)} title="Symptom löschen" style={{...styles.buttonSecondary("#d32f2f"), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }} >×</button> </div> ))} </div>
+                      <div style={{ display: "flex", gap: 5, marginTop: '16px' }}> <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button> <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button> </div>
                     </>
                   ) : (
                     <>
@@ -779,24 +748,49 @@ export default function App() {
                           <SymTag key={j} txt={s.txt} time={s.time} strength={s.strength} dark={dark}/>
                         ))}
                       </div>
-                      <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                        <button onClick={() => startEdit(idx)} style={styles.buttonSecondary("#1976d2")}>Bearbeiten</button>
-                        <button onClick={() => { if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) { deleteEntry(idx); } }} style={styles.buttonSecondary("#d32f2f")} >Löschen</button>
-                        <span style={{ marginLeft:"auto" }}>
-                          <button onClick={() => toggleNote(idx)} style={styles.noteButton(dark, !!entry.comment)}>🗒️</button> {/* dark prop hier übergeben */}
-                        </span>
+                      <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:0 }}>
+                        <button 
+                            id={`action-menu-trigger-${idx}`} // Eindeutige ID für den Trigger
+                            onClick={(e) => { e.stopPropagation(); setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);}} 
+                            style={styles.glassyIconButton(dark)}
+                            title="Aktionen"
+                        >
+                            ✏️
+                        </button>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); toggleNote(idx);}} 
+                            style={styles.glassyIconButton(dark)} // Gleicher Style wie Bleistift
+                            title="Notiz"
+                        >
+                            🗒️
+                        </button>
                       </div>
-                      {noteOpenIdx === idx && (
-                        <div>
-                          <textarea value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
-                          <button onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }} >Notiz speichern</button>
+
+                      {actionMenuOpenForIdx === idx && (
+                        <div id={`action-menu-content-${idx}`} style={styles.actionMenu(dark)} onClick={e => e.stopPropagation()}>
+                            <button 
+                                onClick={() => { startEdit(idx); /* setActionMenuOpenForIdx(null) implizit durch cancelEdit in startEdit, falls Bearbeitung gestartet wird */}} 
+                                style={styles.actionMenuItem(dark)}
+                            >
+                                Bearbeiten
+                            </button>
+                            <button 
+                                onClick={() => { 
+                                    if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) {
+                                        deleteEntry(idx); // deleteEntry schließt auch das Menü via setActionMenuOpenForIdx(null)
+                                    } else {
+                                        setActionMenuOpenForIdx(null); // Schließe Menü auch bei Abbruch
+                                    }
+                                }} 
+                                style={styles.actionMenuItem(dark, true)}
+                            >
+                                Löschen
+                            </button>
                         </div>
                       )}
-                      {entry.comment && noteOpenIdx !== idx && (
-                        <div style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box" }}>
-                          {entry.comment}
-                        </div>
-                      )}
+
+                      {noteOpenIdx === idx && ( <div> <textarea value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} /> <button onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }} >Notiz speichern</button> </div> )}
+                      {entry.comment && noteOpenIdx !== idx && ( <div style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box" }}> {entry.comment} </div> )}
                     </>
                   )}
                 </div>
