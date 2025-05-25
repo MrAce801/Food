@@ -218,18 +218,18 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
       {strength && (
-        <span style={{
+        <span style={{ // MODIFIED: Kreisgröße und Schriftgröße angepasst
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '22px', 
-            height: '22px',
+            width: '18px', // War 22px
+            height: '18px', // War 22px
             borderRadius: '50%',
             backgroundColor: getStrengthColor(strength),
             color: '#fff', 
-            fontSize: '13px',
+            fontSize: '11px', // War 13px
             fontWeight: 'bold',
-            marginRight: '8px',
+            marginRight: '6px', // War 8px
             flexShrink: 0,
             border: dark ? '1px solid #555' : '1px solid #ddd'
         }}>
@@ -320,8 +320,6 @@ function Insights({ entries }) {
     e.symptoms.forEach(s => {
       if (!map[s.txt]) map[s.txt] = { count: 0, foods: {} };
       map[s.txt].count++;
-      // Die Stärke könnte hier aggregiert werden, z.B. Durchschnittsstärke pro Nahrungsmittel
-      // Fürs Erste bleibt es bei der Zählung der Nahrungsmittel.
       const foodKey = e.food || "(Kein Essen)";
       map[s.txt].foods[foodKey] = (map[s.txt].foods[foodKey] || 0) + 1;
     });
@@ -626,7 +624,7 @@ export default function App() {
           <select
             value={newForm.symptomStrength}
             onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
-            onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '100px', flexShrink: 0}} // Angepasste Breite für Stärke
+            onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '100px', flexShrink: 0}}
           >
             {[1,2,3,4,5].map(n => <option key={n} value={n}>Stärke {n}</option>)}
           </select>
@@ -680,8 +678,8 @@ export default function App() {
                       </div>
                       
                       <div style={{ display: "flex", alignItems: "center", gap: '6px', marginBottom: 12, flexWrap: 'wrap' }}>
-                        <input list="symptom-list" placeholder="Symptom..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, flexGrow: 1, minWidth: '100px'}} />
-                        <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist> {/* Ensure unique datalist id if needed, or reuse */}
+                        <input list="symptom-list-edit" placeholder="Symptom..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, flexGrow: 1, minWidth: '100px'}} />
+                        <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
                         <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, flexBasis: '110px', flexShrink: 0 }}>
                           {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </select>
