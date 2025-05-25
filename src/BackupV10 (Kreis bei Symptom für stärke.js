@@ -72,7 +72,7 @@ const styles = {
     cursor: "pointer"
   }),
   entryCard: (dark, isSymptomOnly = false) => ({
-    position: 'relative', // Für absolute Positionierung des Aktionsmenüs
+    position: 'relative', 
     marginBottom: 16,
     padding: 12,
     borderRadius: 8,
@@ -105,7 +105,7 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   },
-  glassyIconButton: (dark) => ({ // Style für Bleistift und Notiz-Symbol
+  glassyIconButton: (dark) => ({ 
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
     borderRadius: 6,
@@ -120,9 +120,9 @@ const styles = {
     position: 'absolute',
     right: '12px', 
     bottom: '45px', 
-    background: dark ? '#383840' : '#ffffff', // Dunklerer Hintergrund für Darkmode-Menü
+    background: dark ? '#383840' : '#ffffff',
     borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.2)', // Stärkerer Schatten
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
     padding: '8px',
     zIndex: 20,
     display: 'flex',
@@ -131,8 +131,8 @@ const styles = {
     minWidth: '120px',
   }),
   actionMenuItem: (dark, isDestructive = false) => ({
-    background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'), // Angepasste Farben
-    color: '#fff', // Weiße Schrift für bessere Lesbarkeit auf farbigem Hintergrund
+    background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
+    color: '#fff', 
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -188,7 +188,7 @@ const getStrengthColor = (strengthVal) => {
     switch (s) {
         case 1: return 'hsl(120, 65%, 50%)'; 
         case 2: return 'hsl(35, 90%, 55%)';  
-        case 3: return 'hsl(0, 75%, 55%)';  
+        case 3: return 'hsl(0, 75%, 55%)';   
         default: 
             if (s && s >= 3) return 'hsl(0, 75%, 55%)';
             return 'hsl(120, 65%, 50%)';
@@ -430,7 +430,6 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
   const [actionMenuOpenForIdx, setActionMenuOpenForIdx] = useState(null);
 
-
   useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
   useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
   useEffect(() => {
@@ -447,7 +446,7 @@ export default function App() {
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
   useEffect(() => {
     if (editingIdx !== null) {
-      document.getElementById(`entry-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.getElementById(`entry-card-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [editingIdx]);
 
@@ -460,15 +459,22 @@ export default function App() {
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
+    const currentActionMenu = actionMenuOpenForIdx; // Zustand sichern
+    setActionMenuOpenForIdx(null); // Menü für PDF-Export ausblenden
+    await new Promise(resolve => setTimeout(resolve, 50)); // Kurze Verzögerung für UI-Update
+
     const imgs = Array.from(el.querySelectorAll("img"));
     const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
     imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; });
+    
     const canvas = await html2canvas(el, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
+    
     imgs.forEach((img, i) => { img.style.width = originals[i].w; img.style.height = originals[i].h; });
+    setActionMenuOpenForIdx(currentActionMenu); // Menü wiederherstellen
   };
 
   const handleNewFile = async e => {
@@ -543,7 +549,7 @@ export default function App() {
         newSymptomStrength: 1,
         date: toDateTimePickerFormat(e.date) 
     });
-    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü beim Starten des Edits
+    setActionMenuOpenForIdx(null); 
   };
   const cancelEdit = () => { 
     setEditingIdx(null); 
@@ -592,15 +598,21 @@ export default function App() {
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit(); // Schließt Edit-Modus, falls der gelöschte Eintrag bearbeitet wurde
-    setActionMenuOpenForIdx(null); // Schließt Aktionsmenü
+    if (editingIdx === i) cancelEdit(); 
+    setActionMenuOpenForIdx(null); 
     addToast("Eintrag gelöscht");
   };
 
   const toggleNote = idx => {
-    setNoteOpenIdx(noteOpenIdx === idx ? null : idx);
-    if (noteOpenIdx !== idx) setNoteDraft(entries[idx].comment);
-    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü, wenn Notiz geöffnet wird
+    setNoteOpenIdx(prevOpenIdx => {
+        if (prevOpenIdx === idx) {
+            return null;
+        } else { 
+            setNoteDraft(entries[idx].comment || "");
+            return idx;
+        }
+    });
+    setActionMenuOpenForIdx(null); 
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
@@ -608,9 +620,7 @@ export default function App() {
     addToast("Notiz gespeichert");
   };
 
-  // Klick-Handler für den Hauptcontainer, um Menüs zu schließen
   const handleContainerClick = (e) => {
-      // Prüfe, ob der Klick außerhalb des aktuell geöffneten Aktionsmenüs und seines Triggers war
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
@@ -618,9 +628,17 @@ export default function App() {
               setActionMenuOpenForIdx(null);
           }
       }
-      // Ähnliche Logik könnte für das Notizfeld hinzugefügt werden, falls es über ein Overlay läuft
+      if (noteOpenIdx !== null) {
+          const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
+          const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
+          const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
+          const displayedNoteTextClicked = e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
+          
+          if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextClicked) {
+              setNoteOpenIdx(null);
+          }
+      }
   };
-
 
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
@@ -650,7 +668,6 @@ export default function App() {
   return (
     <div style={styles.container(isMobile)} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
-
       <div style={styles.topBar}>
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
@@ -660,7 +677,6 @@ export default function App() {
           <InsightsButton onClick={() => setView("insights")} />
         </div>
       </div>
-
       <h2 style={styles.title}>Food Diary</h2>
 
       {/* Neuer Eintrag Form */}
@@ -671,42 +687,21 @@ export default function App() {
           <input ref={fileRefNew} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleNewFile} style={{ display: "none" }} />
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
-        
         <div style={{ marginBottom: 8 }}>
-          <input
-            list="symptom-list" placeholder="Symptom..."
-            value={newForm.symptomInput}
-            onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-            onFocus={handleFocus} 
-            style={{...styles.smallInput, width: '100%', marginBottom: '8px'}}
-          />
+          <input list="symptom-list" placeholder="Symptom..." value={newForm.symptomInput} onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}}/>
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
-          
           <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}>
-            <select
-              value={newForm.symptomTime}
-              onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
-              onFocus={handleFocus} 
-              style={{...styles.smallInput, width: '110px', flexShrink: 0 }}
-            >
+            <select value={newForm.symptomTime} onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '110px', flexShrink: 0 }}>
               {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <select
-              value={newForm.symptomStrength}
-              onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
-              onFocus={handleFocus} 
-              style={{...styles.smallInput, width: '100px', flexShrink: 0 }}
-            >
+            <select value={newForm.symptomStrength} onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink: 0 }}>
               {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
             </select>
             <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0, padding: '8px 12px' }}>+</button>
           </div>
         </div>
-
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-          {newSymptoms.map((s, i) => (
-            <SymTag key={i} txt={s.txt} time={s.time} strength={s.strength} dark={dark} onDel={() => removeNewSymptom(i)} />
-          ))}
+          {newSymptoms.map((s, i) => ( <SymTag key={i} txt={s.txt} time={s.time} strength={s.strength} dark={dark} onDel={() => removeNewSymptom(i)} /> ))}
         </div>
         <button onClick={addEntry} disabled={!newForm.food.trim() && newSymptoms.length === 0} style={{ ...styles.buttonPrimary, opacity: (newForm.food.trim() || newSymptoms.length > 0) ? 1 : 0.5 }} >Eintrag hinzufügen</button>
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
@@ -728,7 +723,7 @@ export default function App() {
               const sortedAllDisplay = [...knownDisplay, ...customDisplay];
 
               return (
-                <div key={idx} id={`entry-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
+                <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
                   {editingIdx === idx ? (
                     <>
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
@@ -750,47 +745,41 @@ export default function App() {
                       </div>
                       <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:0 }}>
                         <button 
-                            id={`action-menu-trigger-${idx}`} // Eindeutige ID für den Trigger
-                            onClick={(e) => { e.stopPropagation(); setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);}} 
+                            id={`action-menu-trigger-${idx}`}
+                            onClick={(e) => { e.stopPropagation(); setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx); setNoteOpenIdx(null);}} 
                             style={styles.glassyIconButton(dark)}
                             title="Aktionen"
-                        >
-                            ✏️
-                        </button>
+                        >✏️</button>
                         <button 
+                            id={`note-icon-button-${idx}`}
                             onClick={(e) => { e.stopPropagation(); toggleNote(idx);}} 
-                            style={styles.glassyIconButton(dark)} // Gleicher Style wie Bleistift
+                            style={styles.glassyIconButton(dark)} // Verwendet den gleichen Style
                             title="Notiz"
-                        >
-                            🗒️
-                        </button>
+                        >🗒️</button>
                       </div>
 
                       {actionMenuOpenForIdx === idx && (
                         <div id={`action-menu-content-${idx}`} style={styles.actionMenu(dark)} onClick={e => e.stopPropagation()}>
-                            <button 
-                                onClick={() => { startEdit(idx); /* setActionMenuOpenForIdx(null) implizit durch cancelEdit in startEdit, falls Bearbeitung gestartet wird */}} 
-                                style={styles.actionMenuItem(dark)}
-                            >
-                                Bearbeiten
-                            </button>
-                            <button 
-                                onClick={() => { 
-                                    if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) {
-                                        deleteEntry(idx); // deleteEntry schließt auch das Menü via setActionMenuOpenForIdx(null)
-                                    } else {
-                                        setActionMenuOpenForIdx(null); // Schließe Menü auch bei Abbruch
-                                    }
-                                }} 
-                                style={styles.actionMenuItem(dark, true)}
-                            >
-                                Löschen
-                            </button>
+                            <button onClick={() => { startEdit(idx); }} style={styles.actionMenuItem(dark)} > Bearbeiten </button>
+                            <button onClick={() => { if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) { deleteEntry(idx); } else { setActionMenuOpenForIdx(null); } }} style={styles.actionMenuItem(dark, true)} > Löschen </button>
                         </div>
                       )}
 
-                      {noteOpenIdx === idx && ( <div> <textarea value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} /> <button onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary("#FBC02D"), marginTop: 8 }} >Notiz speichern</button> </div> )}
-                      {entry.comment && noteOpenIdx !== idx && ( <div style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box" }}> {entry.comment} </div> )}
+                      {noteOpenIdx === idx && (
+                        <div onClick={e => e.stopPropagation()} style={{marginTop: '8px'}}>
+                          <textarea id={`note-textarea-${idx}`} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
+                          <button id={`note-save-button-${idx}`} onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary(dark ? '#555' : "#FBC02D"), color: dark ? '#fff' : '#333', marginTop: 8 }} >Notiz speichern</button>
+                        </div>
+                      )}
+                      {entry.comment && noteOpenIdx !== idx && (
+                        <div 
+                            id={`displayed-note-text-${idx}`}
+                            onClick={(e) => { e.stopPropagation(); setNoteOpenIdx(idx); setNoteDraft(entry.comment || ""); setActionMenuOpenForIdx(null);}}
+                            style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box", cursor: 'pointer' }}
+                        >
+                          {entry.comment}
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
