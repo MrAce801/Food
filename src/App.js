@@ -115,7 +115,7 @@ const styles = {
   })
 };
 
-// --- Symptom-Farb-Mapping ---
+// --- Symptom-Farb-Mapping (wird im SymTag nicht mehr für Hintergrund verwendet) ---
 const SYMPTOM_COLOR_MAP = {
   Bauchschmerzen: "#D0E1F9",
   Durchfall: "#D6EAE0",
@@ -158,7 +158,7 @@ function resizeToJpeg(file, maxWidth = 800) {
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal) || 1;
     const hue = Math.max(0, 120 - ((s - 1) * 30));
-    return `hsl(${hue}, 70%, 55%)`;
+    return `hsl(${hue}, 70%, 55%)`; // Saturation 70%, Lightness 55%
 };
 
 // --- UI-Komponenten ---
@@ -207,43 +207,48 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const bg = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
+  // MODIFIED: Hintergrundfarbe basiert jetzt auf Stärke
+  const tagBackgroundColor = getStrengthColor(strength); 
+  const tagTextColor = '#fff'; // Weißer Text für guten Kontrast
+
   return (
     <div onClick={onClick} style={{
       display: "inline-flex", alignItems: "center",
-      background: bg, color: "#1a1f3d",
+      background: tagBackgroundColor, // Hintergrund ist jetzt Stärkefarbe
+      color: tagTextColor,           // Textfarbe für Kontrast
       borderRadius: 6, padding: "6px 10px",
       margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
       {strength && (
-        <span style={{ // MODIFIED: Kreisgröße, Schriftgröße und Margin erneut angepasst
+        <span style={{
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '16px',   // War 18px
-            height: '16px',  // War 18px
+            width: '16px',
+            height: '16px',
             borderRadius: '50%',
-            backgroundColor: getStrengthColor(strength),
-            color: '#fff', 
-            fontSize: '10px',  // War 11px
+            backgroundColor: 'rgba(0,0,0,0.15)', // Subtiler Hintergrund für den Zahlenkreis
+            // color: tagTextColor, // Erbt Textfarbe (weiß)
+            fontSize: '10px',
             fontWeight: 'bold',
-            marginRight: '5px', // War 6px
+            marginRight: '5px',
             flexShrink: 0,
-            border: dark ? '1px solid #555' : '1px solid #ddd'
         }}>
             {strength}
         </span>
       )}
       {txt}
-      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
+      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.85, flexShrink: 0 }}> {/* Opazität leicht erhöht für Lesbarkeit */}
         {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
           marginLeft: 8, cursor: "pointer",
-          fontSize: 16, color: "#c00", fontWeight: 700
+          fontSize: 16, 
+          color: 'rgba(255,255,255,0.7)', // Hellere Farbe für Löschen-Symbol
+          fontWeight: 700
         }}>×</span>
       )}
     </div>
