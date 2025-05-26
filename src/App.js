@@ -30,7 +30,7 @@ const styles = {
     border: "1px solid #ccc",
     boxSizing: "border-box",
   },
-  smallInput: {
+  smallInput: { // Wird für die Selects verwendet, hat bereits fontSize: 16
     padding: "8px 10px",
     fontSize: 16,
     WebkitTextSizeAdjust: "100%",
@@ -62,17 +62,17 @@ const styles = {
     cursor: "pointer",
     width: "100%"
   },
-  buttonSecondary: bg => ({
-    padding: "8px 16px",
-    fontSize: 14,
+  buttonSecondary: bg => ({ // Basis für den "+" Button
+    padding: "8px 16px", // Wird inline überschrieben
+    fontSize: 14,        // Wird inline überschrieben
     borderRadius: 6,
-    border: 0,
+    border: 0, // Wichtig für die Höhenberechnung des "+" Buttons
     background: bg,
     color: "#fff",
     cursor: "pointer"
   }),
   entryCard: (dark, isSymptomOnly = false) => ({
-    position: 'relative', // Wichtig für absolute Positionierung der Icons
+    position: 'relative',
     marginBottom: 16,
     padding: 12,
     borderRadius: 8,
@@ -109,17 +109,16 @@ const styles = {
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
     borderRadius: 6,
-    padding: "6px 8px", // Standard padding
+    padding: "6px 8px",
     cursor: "pointer",
     fontSize: 16,
     lineHeight: 1,
     color: dark ? '#f0f0f8' : '#333',
-    // marginRight: '4px', // Entfernt, da wir 'gap' im neuen Icon-Container verwenden
   }),
   actionMenu: (dark) => ({
     position: 'absolute',
     right: '12px',
-    top: '44px', // Angepasst: 12px (Karten-Padding oben) + ~28px (Icon-Höhe) + 4px (Abstand)
+    top: '44px',
     background: dark ? '#383840' : '#ffffff',
     borderRadius: 8,
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
@@ -251,7 +250,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       background: tagBackgroundColor,
       color: tagTextColor,
       borderRadius: 6, padding: "6px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14, // Dieser Margin beeinflusst den Abstand zum Kartenrand mit
+      margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
@@ -359,7 +358,7 @@ const fromDateTimePickerFormat = (pickerDateStr) => {
 function Insights({ entries }) {
   const map = {};
   entries.forEach(e => {
-    (e.symptoms || []).forEach(s => { // Sicherstellen, dass symptoms existiert
+    (e.symptoms || []).forEach(s => {
       if (!map[s.txt]) map[s.txt] = { count: 0, foods: {} };
       map[s.txt].count++;
       const foodKey = e.food || "(Kein Essen)";
@@ -647,7 +646,7 @@ export default function App() {
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (entry.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) || // Sicherstellen, dass symptoms existiert
+      (entry.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   const toDisplay = filteredWithIdx.slice(0, displayCount);
@@ -701,7 +700,17 @@ export default function App() {
             <select value={newForm.symptomStrength} onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink: 0 }}>
               {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
             </select>
-            <button onClick={addNewSymptom} style={{ ...styles.buttonSecondary("#247be5"), flexShrink: 0, padding: '8px 12px' }}>+</button>
+            {/* ANGEPASSTER + BUTTON */}
+            <button 
+              onClick={addNewSymptom} 
+              style={{ 
+                ...styles.buttonSecondary("#247be5"), 
+                flexShrink: 0, 
+                fontSize: '16px',       // Schriftgröße angepasst
+                padding: '9px 12px',    // Padding für Höhe angepasst
+                boxSizing: 'border-box' // Für konsistente Höhenberechnung
+              }}
+            >+</button>
           </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
@@ -730,11 +739,33 @@ export default function App() {
                 <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
                   {editingIdx === idx ? (
                     <>
-                      {/* Editieransicht bleibt unverändert */}
+                      {/* Editieransicht */}
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
-                      <div style={{ marginBottom: 12 }}> <input list="symptom-list-edit" placeholder="Symptom hinzufügen..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} /> <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist> <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}> <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '110px', flexShrink:0 }}> {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} </select> <select value={editForm.newSymptomStrength} onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink:0 }}> {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)} </select> <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button> </div> </div>
+                      <div style={{ marginBottom: 12 }}> 
+                        <input list="symptom-list-edit" placeholder="Symptom hinzufügen..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} /> 
+                        <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist> 
+                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}> 
+                          <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '110px', flexShrink:0 }}> 
+                            {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} 
+                          </select> 
+                          <select value={editForm.newSymptomStrength} onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink:0 }}> 
+                            {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)} 
+                          </select> 
+                          {/* ANGEPASSTER + BUTTON im Editierformular */}
+                          <button 
+                            onClick={addEditSymptom} 
+                            style={{
+                              ...styles.buttonSecondary("#247be5"),
+                              flexShrink:0, 
+                              fontSize: '16px',       // Schriftgröße angepasst
+                              padding: '9px 12px',    // Padding für Höhe angepasst
+                              boxSizing: 'border-box' // Für konsistente Höhenberechnung
+                            }}
+                          >+</button> 
+                        </div> 
+                      </div>
                       <div style={{ marginBottom: 8 }}> {editForm.symptoms.map((s, j) => ( <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}> <span style={{ flexGrow: 1, overflowWrap: 'break-word', minWidth: '80px', fontSize: '15px', paddingRight: '5px' }}>{s.txt}</span> <select value={s.time} onChange={e_select => { const newTime = Number(e_select.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], time: newTime }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} </select> <select value={s.strength || 1} onChange={e_strength => { const newStrength = Number(e_strength.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], strength: Math.min(Math.max(newStrength,1),3) }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)} </select> <button onClick={() => removeEditSymptom(j)} title="Symptom löschen" style={{...styles.buttonSecondary("#d32f2f"), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }} >×</button> </div> ))} </div>
                       <div style={{ display: "flex", gap: 5, marginTop: '16px' }}> <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button> <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button> </div>
                     </>
@@ -763,14 +794,12 @@ export default function App() {
                       </div>
 
                       {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
-                      {/* SYMPTOMS - Angepasster Margin-Bottom */}
-                      <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 0" }}> {/* <<< HIER IST DIE ÄNDERUNG */}
+                      <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 0" }}>
                         {sortedAllDisplay.map((s,j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} strength={s.strength} dark={dark}/>
                         ))}
                       </div>
 
-                      {/* Action Menu - wird durch Klick auf ✏️ gesteuert und durch CSS positioniert */}
                       {actionMenuOpenForIdx === idx && (
                         <div id={`action-menu-content-${idx}`} style={styles.actionMenu(dark)} onClick={e => e.stopPropagation()}>
                             <button onClick={() => { startEdit(idx); }} style={styles.actionMenuItem(dark)} > Bearbeiten </button>
@@ -778,7 +807,6 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Notiz-Funktionalität bleibt hier, wird durch 🗒️ gesteuert */}
                       {noteOpenIdx === idx && (
                         <div onClick={e => e.stopPropagation()} style={{marginTop: '8px'}}>
                           <textarea id={`note-textarea-${idx}`} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
