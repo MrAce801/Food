@@ -132,7 +132,7 @@ const styles = {
   }),
   actionMenuItem: (dark, isDestructive = false) => ({
     background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff', // Für destructive Buttons sollte die Farbe ggf. angepasst werden, falls sie nicht gut lesbar ist oder 'white' bleiben
+    color: '#fff',
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -242,7 +242,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
-  const tagTextColor = "#1a1f3d"; // Ggf. an Darkmode anpassen bei Bedarf
+  const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
@@ -251,7 +251,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       background: tagBackgroundColor,
       color: tagTextColor,
       borderRadius: 6, padding: "6px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14,
+      margin: "3px 4px 3px 0", fontSize: 14, // Dieser Margin beeinflusst den Abstand zum Kartenrand mit
       cursor: onClick ? "pointer" : "default",
       overflowWrap: "break-word", whiteSpace: "normal"
     }}>
@@ -263,13 +263,13 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)', // Leichter Hintergrund für Sichtbarkeit auf farbigen Tags
-            color: '#333333', // Dunkle Zahl für Kontrast
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            color: '#333333',
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
             flexShrink: 0,
-            border: `2px solid ${getStrengthColor(displayStrength)}`, // Farbiger Rand basierend auf Stärke
+            border: `2px solid ${getStrengthColor(displayStrength)}`,
             boxSizing: 'border-box',
         }}>
             {displayStrength}
@@ -316,7 +316,7 @@ const now = () => {
 };
 
 const parseDateString = (dateStr) => {
-    if (!dateStr || typeof dateStr !== 'string') return new Date(0); // Frühes Datum für ungültige Eingaben
+    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
     const [datePart, timePart] = dateStr.split(' ');
     if (!datePart || !timePart) return new Date(0);
     const dateComponents = datePart.split('.').map(Number);
@@ -325,7 +325,7 @@ const parseDateString = (dateStr) => {
     if ([...dateComponents, ...timeComponents].some(isNaN)) return new Date(0);
     const [day, month, year] = dateComponents;
     const [hour, minute] = timeComponents;
-    return new Date(year, month - 1, day, hour, minute); // Monat ist 0-basiert
+    return new Date(year, month - 1, day, hour, minute);
 };
 
 const toDateTimePickerFormat = (displayDateStr) => {
@@ -337,10 +337,7 @@ const toDateTimePickerFormat = (displayDateStr) => {
     const [day, month, year] = dateComponents.map(s => String(s).padStart(2,'0'));
     const timeParts = timePart.split(':').map(s => String(s).padStart(2,'0'));
     if (timeParts.length !== 2) return "";
-
-    // Sicherstellen, dass die Komponenten gültige Zahlen sind, bevor sie verwendet werden
     if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
-
     return `${year}-${month}-${day}T${timeParts[0]}:${timeParts[1]}`;
 };
 
@@ -353,9 +350,7 @@ const fromDateTimePickerFormat = (pickerDateStr) => {
     const [year, month, day] = dateComponents;
     const timeParts = timePart.split(':');
     if (timeParts.length !== 2) return "";
-
     if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
-
     return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year} ${String(timeParts[0]).padStart(2, '0')}:${String(timeParts[1]).padStart(2, '0')}`;
 };
 
@@ -364,7 +359,7 @@ const fromDateTimePickerFormat = (pickerDateStr) => {
 function Insights({ entries }) {
   const map = {};
   entries.forEach(e => {
-    e.symptoms.forEach(s => {
+    (e.symptoms || []).forEach(s => { // Sicherstellen, dass symptoms existiert
       if (!map[s.txt]) map[s.txt] = { count: 0, foods: {} };
       map[s.txt].count++;
       const foodKey = e.food || "(Kein Essen)";
@@ -404,9 +399,9 @@ export default function App() {
       const loadedEntries = JSON.parse(localStorage.getItem("fd-entries") || "[]")
         .map(e => ({
             ...e,
-            comment: e.comment || "", // Standardwert für Kommentar
-            food: e.food || "", // Standardwert für Essen
-            symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })) // Stärke normalisieren
+            comment: e.comment || "",
+            food: e.food || "",
+            symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }))
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
     } catch { return []; }
@@ -419,7 +414,6 @@ export default function App() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
-            // Sicherstellen, dass symptomStrength ein gültiger Wert ist
             const strength = Math.min(parseInt(parsed.symptomStrength) || 1, 3);
             return { ...initialForm, ...parsed, symptomStrength: strength };
         } catch { return initialForm; }
@@ -468,13 +462,13 @@ export default function App() {
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
-    const currentActionMenu = actionMenuOpenForIdx; // Zustand sichern
-    setActionMenuOpenForIdx(null); // Menü für PDF-Export ausblenden
-    await new Promise(resolve => setTimeout(resolve, 50)); // Kurze Verzögerung für UI-Update
+    const currentActionMenu = actionMenuOpenForIdx;
+    setActionMenuOpenForIdx(null);
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     const imgs = Array.from(el.querySelectorAll("img"));
     const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
-    imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; }); // Bilder für PDF vergrößern/standardisieren
+    imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; });
 
     const canvas = await html2canvas(el, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
@@ -482,8 +476,8 @@ export default function App() {
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
 
-    imgs.forEach((img, i) => { img.style.width = originals[i].w; img.style.height = originals[i].h; }); // Bildgrößen wiederherstellen
-    setActionMenuOpenForIdx(currentActionMenu); // Menü wiederherstellen
+    imgs.forEach((img, i) => { img.style.width = originals[i].w; img.style.height = originals[i].h; });
+    setActionMenuOpenForIdx(currentActionMenu);
   };
 
   const handleNewFile = async e => {
@@ -523,9 +517,9 @@ export default function App() {
     setNewSymptoms(s => [...s, {
         txt: newForm.symptomInput.trim(),
         time: newForm.symptomTime,
-        strength: newForm.symptomStrength // Stärke hier schon korrekt aus newForm
+        strength: newForm.symptomStrength
     }]);
-    setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 })); // Reset für nächstes Symptom
+    setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 }));
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
@@ -535,7 +529,7 @@ export default function App() {
       food: newForm.food.trim(),
       imgs: newForm.imgs,
       symptoms: newSymptoms,
-      comment: "", // Initial leerer Kommentar
+      comment: "",
       date: now()
     };
     setEntries(prevEntries =>
@@ -551,19 +545,19 @@ export default function App() {
     setEditingIdx(i);
     setEditForm({
         food: e.food,
-        imgs: [...e.imgs], // Kopie erstellen
-        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })), // Kopie und Normalisierung
-        symptomInput: "", // Für neues Symptom im Edit-Modus
-        symptomTime: 0,   // Für neues Symptom im Edit-Modus
-        newSymptomStrength: 1, // Stärke für neues Symptom im Edit-Modus
-        date: toDateTimePickerFormat(e.date) // Datum für den Picker formatieren
+        imgs: [...e.imgs],
+        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
+        symptomInput: "",
+        symptomTime: 0,
+        newSymptomStrength: 1,
+        date: toDateTimePickerFormat(e.date)
     });
-    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü beim Starten der Bearbeitung
+    setActionMenuOpenForIdx(null);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null); // Sicherstellen, dass das Menü geschlossen wird
+    setActionMenuOpenForIdx(null);
   };
 
   const addEditSymptom = () => {
@@ -573,11 +567,11 @@ export default function App() {
         symptoms: [...fm.symptoms, {
             txt: fm.symptomInput.trim(),
             time: fm.symptomTime,
-            strength: fm.newSymptomStrength // Stärke für das neue Symptom
+            strength: fm.newSymptomStrength
         }],
-        symptomInput: "", // Reset
-        symptomTime: 0,   // Reset
-        newSymptomStrength: 1 // Reset
+        symptomInput: "",
+        symptomTime: 0,
+        newSymptomStrength: 1
     }));
   };
   const removeEditSymptom = idx => setEditForm(fm => ({
@@ -595,42 +589,41 @@ export default function App() {
         ? {
             food: editForm.food.trim(),
             imgs: editForm.imgs,
-            symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})), // Stärke normalisieren
-            comment: ent.comment, // Kommentar beibehalten
+            symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})),
+            comment: ent.comment,
             date: displayDateToSave
           }
         : ent
       ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
     );
-    cancelEdit(); // Schließt Edit-Modus und Formular
+    cancelEdit();
     addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit(); // Wenn der bearbeitete Eintrag gelöscht wird
-    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü
+    if (editingIdx === i) cancelEdit();
+    setActionMenuOpenForIdx(null);
     addToast("Eintrag gelöscht");
   };
 
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
-        if (prevOpenIdx === idx) { // Wenn schon offen, schließen
+        if (prevOpenIdx === idx) {
             return null;
-        } else { // Sonst öffnen und Text laden
+        } else {
             setNoteDraft(entries[idx].comment || "");
             return idx;
         }
     });
-    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü, falls offen
+    setActionMenuOpenForIdx(null);
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null); // Schließe Notiz-Editor
+    setNoteOpenIdx(null);
     addToast("Notiz gespeichert");
   };
 
   const handleContainerClick = (e) => {
-      // Schließe ActionMenu, wenn außerhalb geklickt wird
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
@@ -638,12 +631,11 @@ export default function App() {
               setActionMenuOpenForIdx(null);
           }
       }
-      // Schließe NoteEditor, wenn außerhalb geklickt wird (mit mehr Selektoren)
       if (noteOpenIdx !== null) {
           const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
           const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
-          const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`); // Der Trigger-Button selbst
-          const displayedNoteTextClicked = e.target.closest(`#displayed-note-text-${noteOpenIdx}`); // Der angezeigte Notiztext
+          const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
+          const displayedNoteTextClicked = e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
 
           if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextClicked) {
               setNoteOpenIdx(null);
@@ -655,8 +647,8 @@ export default function App() {
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase())) // Suche auch in Kommentaren
+      (entry.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) || // Sicherstellen, dass symptoms existiert
+      (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   const toDisplay = filteredWithIdx.slice(0, displayCount);
   const grouped = toDisplay.reduce((acc, { entry, idx }) => {
@@ -665,7 +657,7 @@ export default function App() {
     return acc;
   }, {});
   const dates = Object.keys(grouped)
-    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date)); // Neueste zuerst
+    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
 
   if (view === "insights") {
     return (
@@ -693,13 +685,12 @@ export default function App() {
 
       {/* Neuer Eintrag Form */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 /* Weniger Margin unter Food Input*/ }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <input placeholder="Essen..." value={newForm.food} onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={styles.input} />
           <CameraButton onClick={() => fileRefNew.current?.click()} />
           <input ref={fileRefNew} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleNewFile} style={{ display: "none" }} />
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
-        {/* Symptom Eingabe unter Bilder verschoben und kompakter */}
         <div style={{ marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
           <input list="symptom-list" placeholder="Symptom..." value={newForm.symptomInput} onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}}/>
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
@@ -729,7 +720,7 @@ export default function App() {
           <div key={day}>
             <div style={styles.groupHeader}>{day}</div>
             {grouped[day].map(({ entry, idx }) => {
-              const isSymptomOnlyEntry = !entry.food && entry.symptoms && entry.symptoms.length > 0;
+              const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
               const symptomsForDisplay = (entry.symptoms || []).map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)}));
               const knownDisplay = symptomsForDisplay.filter(s => SYMPTOM_CHOICES.includes(s.txt)).sort((a,b) => a.txt.localeCompare(b.txt));
               const customDisplay = symptomsForDisplay.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
@@ -754,25 +745,26 @@ export default function App() {
                         <button
                           id={`note-icon-button-${idx}`}
                           onClick={(e) => { e.stopPropagation(); toggleNote(idx); setActionMenuOpenForIdx(null);}}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Kompakteres Padding
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
                           title="Notiz"
                         >🗒️</button>
                         <button
                           id={`action-menu-trigger-${idx}`}
                           onClick={(e) => { e.stopPropagation(); setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx); setNoteOpenIdx(null);}}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Kompakteres Padding
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
                           title="Aktionen"
                         >✏️</button>
                       </div>
 
                       {/* Inhalte der Karte, mit Margin für die Icons */}
-                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px' /* Platz für Icons */ }}>{entry.date}</div>
-                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' /* Platz für Icons und Umbruch langer Titel */ }}>
+                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px' }}>{entry.date}</div>
+                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' }}>
                         {entry.food || (isSymptomOnlyEntry ? "Nur Symptome" : "(Kein Essen)") }
                       </div>
 
                       {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
-                      <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
+                      {/* SYMPTOMS - Angepasster Margin-Bottom */}
+                      <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 0" }}> {/* <<< HIER IST DIE ÄNDERUNG */}
                         {sortedAllDisplay.map((s,j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} strength={s.strength} dark={dark}/>
                         ))}
