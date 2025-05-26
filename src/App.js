@@ -25,14 +25,14 @@ const styles = {
   input: {
     flex: 1,
     padding: "10px 12px",
-    fontSize: 16, 
+    fontSize: 16,
     borderRadius: 6,
     border: "1px solid #ccc",
     boxSizing: "border-box",
   },
   smallInput: {
     padding: "8px 10px",
-    fontSize: 16, 
+    fontSize: 16,
     WebkitTextSizeAdjust: "100%",
     borderRadius: 6,
     border: "1px solid #ccc",
@@ -42,7 +42,7 @@ const styles = {
   textarea: {
     width: "100%",
     padding: "8px",
-    fontSize: 16, 
+    fontSize: 16,
     WebkitTextSizeAdjust: "100%",
     borderRadius: 6,
     border: "1px solid #ccc",
@@ -72,7 +72,7 @@ const styles = {
     cursor: "pointer"
   }),
   entryCard: (dark, isSymptomOnly = false) => ({
-    position: 'relative', 
+    position: 'relative', // Wichtig für absolute Positionierung der Icons
     marginBottom: 16,
     padding: 12,
     borderRadius: 8,
@@ -105,21 +105,21 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   },
-  glassyIconButton: (dark) => ({ 
+  glassyIconButton: (dark) => ({
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
     borderRadius: 6,
-    padding: "6px 8px", 
+    padding: "6px 8px", // Standard padding
     cursor: "pointer",
-    fontSize: 16, 
+    fontSize: 16,
     lineHeight: 1,
     color: dark ? '#f0f0f8' : '#333',
-    marginRight: '4px', 
+    // marginRight: '4px', // Entfernt, da wir 'gap' im neuen Icon-Container verwenden
   }),
   actionMenu: (dark) => ({
     position: 'absolute',
-    right: '12px', 
-    bottom: '45px', 
+    right: '12px',
+    top: '44px', // Angepasst: 12px (Karten-Padding oben) + ~28px (Icon-Höhe) + 4px (Abstand)
     background: dark ? '#383840' : '#ffffff',
     borderRadius: 8,
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
@@ -132,7 +132,7 @@ const styles = {
   }),
   actionMenuItem: (dark, isDestructive = false) => ({
     background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff', 
+    color: '#fff', // Für destructive Buttons sollte die Farbe ggf. angepasst werden, falls sie nicht gut lesbar ist oder 'white' bleiben
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -186,10 +186,10 @@ function resizeToJpeg(file, maxWidth = 800) {
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal);
     switch (s) {
-        case 1: return 'hsl(120, 65%, 50%)'; 
-        case 2: return 'hsl(35, 90%, 55%)';  
-        case 3: return 'hsl(0, 75%, 55%)';   
-        default: 
+        case 1: return 'hsl(120, 65%, 50%)';
+        case 2: return 'hsl(35, 90%, 55%)';
+        case 3: return 'hsl(0, 75%, 55%)';
+        default:
             if (s && s >= 3) return 'hsl(0, 75%, 55%)';
             return 'hsl(120, 65%, 50%)';
     }
@@ -241,8 +241,8 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; 
-  const tagTextColor = "#1a1f3d"; 
+  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
+  const tagTextColor = "#1a1f3d"; // Ggf. an Darkmode anpassen bei Bedarf
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
@@ -263,13 +263,13 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)', 
-            color: '#333333', 
+            backgroundColor: 'rgba(255, 255, 255, 0.2)', // Leichter Hintergrund für Sichtbarkeit auf farbigen Tags
+            color: '#333333', // Dunkle Zahl für Kontrast
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
             flexShrink: 0,
-            border: `2px solid ${getStrengthColor(displayStrength)}`, 
+            border: `2px solid ${getStrengthColor(displayStrength)}`, // Farbiger Rand basierend auf Stärke
             boxSizing: 'border-box',
         }}>
             {displayStrength}
@@ -282,7 +282,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
           marginLeft: 8, cursor: "pointer",
-          fontSize: 16, 
+          fontSize: 16,
           color: "#c00",
           fontWeight: 700
         }}>×</span>
@@ -298,10 +298,10 @@ const SYMPTOM_CHOICES = [
   "Niesen","Kopfschmerzen","Rötung Haut"
 ];
 const TIME_CHOICES = [
-  { label: "sofort", value: 0 }, { label: "nach 5 min", value: 5 }, 
-  { label: "nach 10 min", value: 10 }, { label: "nach 15 min", value: 15 }, 
-  { label: "nach 30 min", value: 30 }, { label: "nach 45 min", value: 45 }, 
-  { label: "nach 60 min", value: 60 }, { label: "nach 1,5 h", value: 90 }, 
+  { label: "sofort", value: 0 }, { label: "nach 5 min", value: 5 },
+  { label: "nach 10 min", value: 10 }, { label: "nach 15 min", value: 15 },
+  { label: "nach 30 min", value: 30 }, { label: "nach 45 min", value: 45 },
+  { label: "nach 60 min", value: 60 }, { label: "nach 1,5 h", value: 90 },
   { label: "nach 3 h", value: 180 }
 ];
 
@@ -316,7 +316,7 @@ const now = () => {
 };
 
 const parseDateString = (dateStr) => {
-    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+    if (!dateStr || typeof dateStr !== 'string') return new Date(0); // Frühes Datum für ungültige Eingaben
     const [datePart, timePart] = dateStr.split(' ');
     if (!datePart || !timePart) return new Date(0);
     const dateComponents = datePart.split('.').map(Number);
@@ -325,7 +325,7 @@ const parseDateString = (dateStr) => {
     if ([...dateComponents, ...timeComponents].some(isNaN)) return new Date(0);
     const [day, month, year] = dateComponents;
     const [hour, minute] = timeComponents;
-    return new Date(year, month - 1, day, hour, minute);
+    return new Date(year, month - 1, day, hour, minute); // Monat ist 0-basiert
 };
 
 const toDateTimePickerFormat = (displayDateStr) => {
@@ -337,7 +337,10 @@ const toDateTimePickerFormat = (displayDateStr) => {
     const [day, month, year] = dateComponents.map(s => String(s).padStart(2,'0'));
     const timeParts = timePart.split(':').map(s => String(s).padStart(2,'0'));
     if (timeParts.length !== 2) return "";
+
+    // Sicherstellen, dass die Komponenten gültige Zahlen sind, bevor sie verwendet werden
     if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+
     return `${year}-${month}-${day}T${timeParts[0]}:${timeParts[1]}`;
 };
 
@@ -350,9 +353,12 @@ const fromDateTimePickerFormat = (pickerDateStr) => {
     const [year, month, day] = dateComponents;
     const timeParts = timePart.split(':');
     if (timeParts.length !== 2) return "";
+
     if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+
     return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year} ${String(timeParts[0]).padStart(2, '0')}:${String(timeParts[1]).padStart(2, '0')}`;
 };
+
 
 // --- Insights-Komponente ---
 function Insights({ entries }) {
@@ -396,11 +402,11 @@ export default function App() {
   const [entries, setEntries] = useState(() => {
     try {
       const loadedEntries = JSON.parse(localStorage.getItem("fd-entries") || "[]")
-        .map(e => ({ 
-            ...e, 
-            comment: e.comment || "", 
-            food: e.food || "",
-            symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }))
+        .map(e => ({
+            ...e,
+            comment: e.comment || "", // Standardwert für Kommentar
+            food: e.food || "", // Standardwert für Essen
+            symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })) // Stärke normalisieren
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
     } catch { return []; }
@@ -413,6 +419,7 @@ export default function App() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
+            // Sicherstellen, dass symptomStrength ein gültiger Wert ist
             const strength = Math.min(parseInt(parsed.symptomStrength) || 1, 3);
             return { ...initialForm, ...parsed, symptomStrength: strength };
         } catch { return initialForm; }
@@ -429,6 +436,7 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
   const [actionMenuOpenForIdx, setActionMenuOpenForIdx] = useState(null);
+
 
   useEffect(() => { localStorage.setItem("fd-entries", JSON.stringify(entries)); }, [entries]);
   useEffect(() => { localStorage.setItem("fd-form-new", JSON.stringify(newForm)); }, [newForm]);
@@ -450,6 +458,7 @@ export default function App() {
     }
   }, [editingIdx]);
 
+
   const addToast = msg => {
     const id = Date.now();
     setToasts(t => [...t, { id, msg }]);
@@ -465,26 +474,26 @@ export default function App() {
 
     const imgs = Array.from(el.querySelectorAll("img"));
     const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
-    imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; });
-    
+    imgs.forEach(img => { img.style.width = "80px"; img.style.height = "80px"; }); // Bilder für PDF vergrößern/standardisieren
+
     const canvas = await html2canvas(el, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
-    
-    imgs.forEach((img, i) => { img.style.width = originals[i].w; img.style.height = originals[i].h; });
+
+    imgs.forEach((img, i) => { img.style.width = originals[i].w; img.style.height = originals[i].h; }); // Bildgrößen wiederherstellen
     setActionMenuOpenForIdx(currentActionMenu); // Menü wiederherstellen
   };
 
   const handleNewFile = async e => {
     for (let file of Array.from(e.target.files || [])) {
       try {
-        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß");
+        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß (max 2MB)");
         const smallB64 = await resizeToJpeg(file, 800);
         setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
         addToast("Foto hinzugefügt (verkleinert)");
-      } catch { addToast("Ungültiges oder zu großes Bild"); }
+      } catch (err) { addToast(err.message || "Ungültiges oder zu großes Bild"); }
     }
     e.target.value = "";
   };
@@ -496,11 +505,11 @@ export default function App() {
   const handleEditFile = async e => {
     for (let file of Array.from(e.target.files || [])) {
       try {
-        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß");
+        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß (max 2MB)");
         const smallB64 = await resizeToJpeg(file, 800);
         setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
         addToast("Foto hinzugefügt (verkleinert)");
-      } catch { addToast("Ungültiges oder zu großes Bild"); }
+      } catch (err) { addToast(err.message || "Ungültiges oder zu großes Bild"); }
     }
     e.target.value = "";
   };
@@ -508,15 +517,15 @@ export default function App() {
     setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     addToast("Foto gelöscht");
   };
-  
+
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
-    setNewSymptoms(s => [...s, { 
-        txt: newForm.symptomInput.trim(), 
-        time: newForm.symptomTime, 
-        strength: newForm.symptomStrength 
+    setNewSymptoms(s => [...s, {
+        txt: newForm.symptomInput.trim(),
+        time: newForm.symptomTime,
+        strength: newForm.symptomStrength // Stärke hier schon korrekt aus newForm
     }]);
-    setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 }));
+    setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 })); // Reset für nächstes Symptom
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
@@ -526,7 +535,7 @@ export default function App() {
       food: newForm.food.trim(),
       imgs: newForm.imgs,
       symptoms: newSymptoms,
-      comment: "",
+      comment: "", // Initial leerer Kommentar
       date: now()
     };
     setEntries(prevEntries =>
@@ -540,40 +549,40 @@ export default function App() {
   const startEdit = i => {
     const e = entries[i];
     setEditingIdx(i);
-    setEditForm({ 
-        food: e.food, 
-        imgs: [...e.imgs], 
-        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })), 
-        symptomInput: "", 
-        symptomTime: 0, 
-        newSymptomStrength: 1,
-        date: toDateTimePickerFormat(e.date) 
+    setEditForm({
+        food: e.food,
+        imgs: [...e.imgs], // Kopie erstellen
+        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })), // Kopie und Normalisierung
+        symptomInput: "", // Für neues Symptom im Edit-Modus
+        symptomTime: 0,   // Für neues Symptom im Edit-Modus
+        newSymptomStrength: 1, // Stärke für neues Symptom im Edit-Modus
+        date: toDateTimePickerFormat(e.date) // Datum für den Picker formatieren
     });
-    setActionMenuOpenForIdx(null); 
+    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü beim Starten der Bearbeitung
   };
-  const cancelEdit = () => { 
-    setEditingIdx(null); 
-    setEditForm(null); 
-    setActionMenuOpenForIdx(null); 
+  const cancelEdit = () => {
+    setEditingIdx(null);
+    setEditForm(null);
+    setActionMenuOpenForIdx(null); // Sicherstellen, dass das Menü geschlossen wird
   };
-  
+
   const addEditSymptom = () => {
     if (!editForm.symptomInput.trim()) return;
-    setEditForm(fm => ({ 
-        ...fm, 
-        symptoms: [...fm.symptoms, { 
-            txt: fm.symptomInput.trim(), 
-            time: fm.symptomTime, 
-            strength: fm.newSymptomStrength 
-        }], 
-        symptomInput: "", 
-        symptomTime: 0,
-        newSymptomStrength: 1 
+    setEditForm(fm => ({
+        ...fm,
+        symptoms: [...fm.symptoms, {
+            txt: fm.symptomInput.trim(),
+            time: fm.symptomTime,
+            strength: fm.newSymptomStrength // Stärke für das neue Symptom
+        }],
+        symptomInput: "", // Reset
+        symptomTime: 0,   // Reset
+        newSymptomStrength: 1 // Reset
     }));
   };
-  const removeEditSymptom = idx => setEditForm(fm => ({ 
-      ...fm, 
-      symptoms: fm.symptoms.filter((_, i) => i !== idx) 
+  const removeEditSymptom = idx => setEditForm(fm => ({
+      ...fm,
+      symptoms: fm.symptoms.filter((_, i) => i !== idx)
   }));
 
   const saveEdit = () => {
@@ -583,44 +592,45 @@ export default function App() {
     setEntries(prevEntries =>
       prevEntries.map((ent, j) =>
         j === editingIdx
-        ? { 
-            food: editForm.food.trim(), 
-            imgs: editForm.imgs, 
-            symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})), 
-            comment: ent.comment, 
-            date: displayDateToSave 
+        ? {
+            food: editForm.food.trim(),
+            imgs: editForm.imgs,
+            symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})), // Stärke normalisieren
+            comment: ent.comment, // Kommentar beibehalten
+            date: displayDateToSave
           }
         : ent
       ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
     );
-    cancelEdit(); 
+    cancelEdit(); // Schließt Edit-Modus und Formular
     addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit(); 
-    setActionMenuOpenForIdx(null); 
+    if (editingIdx === i) cancelEdit(); // Wenn der bearbeitete Eintrag gelöscht wird
+    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü
     addToast("Eintrag gelöscht");
   };
 
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
-        if (prevOpenIdx === idx) {
+        if (prevOpenIdx === idx) { // Wenn schon offen, schließen
             return null;
-        } else { 
+        } else { // Sonst öffnen und Text laden
             setNoteDraft(entries[idx].comment || "");
             return idx;
         }
     });
-    setActionMenuOpenForIdx(null); 
+    setActionMenuOpenForIdx(null); // Schließe Aktionsmenü, falls offen
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
+    setNoteOpenIdx(null); // Schließe Notiz-Editor
     addToast("Notiz gespeichert");
   };
 
   const handleContainerClick = (e) => {
+      // Schließe ActionMenu, wenn außerhalb geklickt wird
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
@@ -628,23 +638,25 @@ export default function App() {
               setActionMenuOpenForIdx(null);
           }
       }
+      // Schließe NoteEditor, wenn außerhalb geklickt wird (mit mehr Selektoren)
       if (noteOpenIdx !== null) {
           const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
           const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
-          const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
-          const displayedNoteTextClicked = e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
-          
+          const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`); // Der Trigger-Button selbst
+          const displayedNoteTextClicked = e.target.closest(`#displayed-note-text-${noteOpenIdx}`); // Der angezeigte Notiztext
+
           if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextClicked) {
               setNoteOpenIdx(null);
           }
       }
   };
 
+
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
     .filter(({ entry }) =>
       (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
       entry.symptoms.some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      entry.comment.toLowerCase().includes(searchTerm.toLowerCase())
+      (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase())) // Suche auch in Kommentaren
     );
   const toDisplay = filteredWithIdx.slice(0, displayCount);
   const grouped = toDisplay.reduce((acc, { entry, idx }) => {
@@ -653,7 +665,7 @@ export default function App() {
     return acc;
   }, {});
   const dates = Object.keys(grouped)
-    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
+    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date)); // Neueste zuerst
 
   if (view === "insights") {
     return (
@@ -669,7 +681,7 @@ export default function App() {
     <div style={styles.container(isMobile)} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar}>
-        <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24 }} title="Theme wechseln">
+        <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
@@ -681,13 +693,14 @@ export default function App() {
 
       {/* Neuer Eintrag Form */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 48 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 /* Weniger Margin unter Food Input*/ }}>
           <input placeholder="Essen..." value={newForm.food} onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={styles.input} />
           <CameraButton onClick={() => fileRefNew.current?.click()} />
           <input ref={fileRefNew} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleNewFile} style={{ display: "none" }} />
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
-        <div style={{ marginBottom: 8 }}>
+        {/* Symptom Eingabe unter Bilder verschoben und kompakter */}
+        <div style={{ marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
           <input list="symptom-list" placeholder="Symptom..." value={newForm.symptomInput} onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}}/>
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
           <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}>
@@ -726,8 +739,9 @@ export default function App() {
                 <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
                   {editingIdx === idx ? (
                     <>
+                      {/* Editieransicht bleibt unverändert */}
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
-                      <input value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, marginBottom: '8px'}} />
+                      <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
                       <div style={{ marginBottom: 12 }}> <input list="symptom-list-edit" placeholder="Symptom hinzufügen..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} /> <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist> <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}> <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '110px', flexShrink:0 }}> {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} </select> <select value={editForm.newSymptomStrength} onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink:0 }}> {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)} </select> <button onClick={addEditSymptom} style={{...styles.buttonSecondary("#247be5"),flexShrink:0, padding: '8px 12px'}}>+</button> </div> </div>
                       <div style={{ marginBottom: 8 }}> {editForm.symptoms.map((s, j) => ( <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}> <span style={{ flexGrow: 1, overflowWrap: 'break-word', minWidth: '80px', fontSize: '15px', paddingRight: '5px' }}>{s.txt}</span> <select value={s.time} onChange={e_select => { const newTime = Number(e_select.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], time: newTime }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} </select> <select value={s.strength || 1} onChange={e_strength => { const newStrength = Number(e_strength.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], strength: Math.min(Math.max(newStrength,1),3) }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)} </select> <button onClick={() => removeEditSymptom(j)} title="Symptom löschen" style={{...styles.buttonSecondary("#d32f2f"), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }} >×</button> </div> ))} </div>
@@ -735,29 +749,36 @@ export default function App() {
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4 }}>{entry.date}</div>
-                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8 }}>{entry.food}</div>
+                      {/* NEUER Container für Icons oben rechts */}
+                      <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', gap: '6px' }}>
+                        <button
+                          id={`note-icon-button-${idx}`}
+                          onClick={(e) => { e.stopPropagation(); toggleNote(idx); setActionMenuOpenForIdx(null);}}
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Kompakteres Padding
+                          title="Notiz"
+                        >🗒️</button>
+                        <button
+                          id={`action-menu-trigger-${idx}`}
+                          onClick={(e) => { e.stopPropagation(); setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx); setNoteOpenIdx(null);}}
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Kompakteres Padding
+                          title="Aktionen"
+                        >✏️</button>
+                      </div>
+
+                      {/* Inhalte der Karte, mit Margin für die Icons */}
+                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px' /* Platz für Icons */ }}>{entry.date}</div>
+                      <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' /* Platz für Icons und Umbruch langer Titel */ }}>
+                        {entry.food || (isSymptomOnlyEntry ? "Nur Symptome" : "(Kein Essen)") }
+                      </div>
+
                       {entry.imgs.length>0 && <ImgStack imgs={entry.imgs}/>}
                       <div style={{ display:"flex", flexWrap:"wrap", margin:"8px 0 20px" }}>
                         {sortedAllDisplay.map((s,j) => (
                           <SymTag key={j} txt={s.txt} time={s.time} strength={s.strength} dark={dark}/>
                         ))}
                       </div>
-                      <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:0 }}>
-                        <button 
-                            id={`action-menu-trigger-${idx}`}
-                            onClick={(e) => { e.stopPropagation(); setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx); setNoteOpenIdx(null);}} 
-                            style={styles.glassyIconButton(dark)}
-                            title="Aktionen"
-                        >✏️</button>
-                        <button 
-                            id={`note-icon-button-${idx}`}
-                            onClick={(e) => { e.stopPropagation(); toggleNote(idx);}} 
-                            style={styles.glassyIconButton(dark)} // Verwendet den gleichen Style
-                            title="Notiz"
-                        >🗒️</button>
-                      </div>
 
+                      {/* Action Menu - wird durch Klick auf ✏️ gesteuert und durch CSS positioniert */}
                       {actionMenuOpenForIdx === idx && (
                         <div id={`action-menu-content-${idx}`} style={styles.actionMenu(dark)} onClick={e => e.stopPropagation()}>
                             <button onClick={() => { startEdit(idx); }} style={styles.actionMenuItem(dark)} > Bearbeiten </button>
@@ -765,6 +786,7 @@ export default function App() {
                         </div>
                       )}
 
+                      {/* Notiz-Funktionalität bleibt hier, wird durch 🗒️ gesteuert */}
                       {noteOpenIdx === idx && (
                         <div onClick={e => e.stopPropagation()} style={{marginTop: '8px'}}>
                           <textarea id={`note-textarea-${idx}`} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
@@ -772,10 +794,10 @@ export default function App() {
                         </div>
                       )}
                       {entry.comment && noteOpenIdx !== idx && (
-                        <div 
-                            id={`displayed-note-text-${idx}`}
-                            onClick={(e) => { e.stopPropagation(); setNoteOpenIdx(idx); setNoteDraft(entry.comment || ""); setActionMenuOpenForIdx(null);}}
-                            style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box", cursor: 'pointer' }}
+                        <div
+                          id={`displayed-note-text-${idx}`}
+                          onClick={(e) => { e.stopPropagation(); setNoteOpenIdx(idx); setNoteDraft(entry.comment || ""); setActionMenuOpenForIdx(null);}}
+                          style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box", cursor: 'pointer' }}
                         >
                           {entry.comment}
                         </div>
