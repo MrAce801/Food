@@ -842,7 +842,7 @@ export default function App() {
                                 marginRight: '6px'
                               }}
                             />
-                            <select
+                            <select // Zeit
                               value={s.time}
                               onChange={e_select => {
                                 const newTime = Number(e_select.target.value);
@@ -855,10 +855,10 @@ export default function App() {
                               }}
                               style={{
                                 ...styles.smallInput,
-                                width: '20px', // ANGEPASSTE BREITE
+                                width: '37px', // STARK REDUZIERTE BREITE
                                 flexShrink: 0,
                                 fontSize: '16px', 
-                                padding: '6px 5px' // ANGEPASSTES PADDING
+                                padding: '6px 2px' // STARK REDUZIERTES SEITLICHES PADDING
                               }}
                             >
                               {TIME_CHOICES.map(t => (
@@ -867,7 +867,7 @@ export default function App() {
                                 </option>
                               ))}
                             </select>
-                            <select
+                            <select // Stärke
                               value={s.strength || 1}
                               onChange={e_strength => {
                                 const newStrength = Number(e_strength.target.value);
@@ -880,10 +880,10 @@ export default function App() {
                               }}
                               style={{
                                 ...styles.smallInput,
-                                width: '50px', // ANGEPASSTE BREITE
+                                width: '25px', // STARK REDUZIERTE BREITE
                                 flexShrink: 0,
                                 fontSize: '16px', 
-                                padding: '6px 5px' // ANGEPASSTES PADDING
+                                padding: '6px 2px' // STARK REDUZIERTES SEITLICHES PADDING
                               }}
                             >
                               {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
