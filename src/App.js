@@ -81,7 +81,7 @@ const styles = {
       ? (dark ? "#3c3c46" : "#f0f0f5")
       : (dark ? "#2a2a32" : "#fff"),
     boxShadow: "0 1px 4px #0002",
-    overflow: 'hidden', // Wichtig für den "Dog Ear" Effekt
+    overflow: 'hidden',
   }),
   groupHeader: {
     fontSize: 18,
@@ -97,7 +97,7 @@ const styles = {
     padding: "8px 12px",
     borderRadius: 4,
     opacity: 0.9,
-    zIndex: 1000 // Ensure toast is above other elements like color picker
+    zIndex: 1000
   },
   backButton: {
     padding: "6px 12px",
@@ -132,9 +132,9 @@ const styles = {
     gap: '6px',
     minWidth: '120px',
   }),
-  actionMenuItem: (dark, isDestructive = false) => ({
+  actionMenuItem: (dark, isDestructive = false) => ({ // ZURÜCKGESETZT auf Original
     background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: isDestructive ? '#fff' : (dark ? '#f0f0f8' : '#333'), // Adjusted for better readability
+    color: '#fff', // ZURÜCKGESETZT auf Original
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -143,7 +143,6 @@ const styles = {
     width: '100%',
     fontSize: '14px',
   }),
-  // --- NEUE STYLES für Tagging ---
   tagMarkerBase: {
     position: 'absolute',
     bottom: 0,
@@ -217,9 +216,9 @@ const TIME_CHOICES = [
 ];
 
 const TAG_COLORS = {
-  GREEN: '#4CAF50', // Standard Grün
-  RED: '#F44336',   // Warn Rot
-  YELLOW: '#FFC107',// Info Gelb
+  GREEN: 'green', // Standard Grün - du kannst hier spezifischere Hex-Werte verwenden, falls gewünscht
+  RED: 'red',     // Warn Rot
+  YELLOW: 'yellow',// Info Gelb
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: "Standard",
@@ -264,9 +263,9 @@ function resizeToJpeg(file, maxWidth = 800) {
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal);
     switch (s) {
-        case 1: return 'hsl(120, 65%, 50%)'; // Grün
-        case 2: return 'hsl(35, 90%, 55%)';  // Orange
-        case 3: return 'hsl(0, 75%, 55%)';   // Rot
+        case 1: return 'hsl(120, 65%, 50%)';
+        case 2: return 'hsl(35, 90%, 55%)';
+        case 3: return 'hsl(0, 75%, 55%)';
         default:
             if (s && s >= 3) return 'hsl(0, 75%, 55%)';
             return 'hsl(120, 65%, 50%)';
@@ -376,8 +375,8 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || (dark ? "#555" : "#fafafa");
-  const tagTextColor = dark ? "#f0f0f0" : "#1a1f3d";
+  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; // ZURÜCKGESETZT auf Original
+  const tagTextColor = "#1a1f3d"; // ZURÜCKGESETZT auf Original
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
@@ -398,8 +397,8 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)', // semi-transparent white for dark text
-            color: '#333333', // dark text for visibility on light strength colors
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            color: '#333333',
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
@@ -469,7 +468,7 @@ export default function App() {
           comment: e.comment || "",
           food: e.food || "",
           symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
-          tagColor: e.tagColor || TAG_COLORS.GREEN, // NEU: tagColor initialisieren
+          tagColor: e.tagColor || TAG_COLORS.GREEN,
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
     } catch { return []; }
@@ -502,12 +501,12 @@ export default function App() {
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
 
   // --- EFFECT HOOKS ---
-  useEffect(() => { // Initial Theme Load
+  useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
     setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
-  useEffect(() => { // Persist Entries
+  useEffect(() => {
     try {
       localStorage.setItem("fd-entries", JSON.stringify(entries));
     } catch (e) {
@@ -523,23 +522,23 @@ export default function App() {
     }
   }, [entries]);
 
-  useEffect(() => { // Persist New Form Draft
+  useEffect(() => {
     localStorage.setItem("fd-form-new", JSON.stringify(newForm));
   }, [newForm]);
 
-  useEffect(() => { // Apply Theme and Persist
+  useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
     localStorage.setItem("fd-theme", dark ? "dark" : "light");
   }, [dark]);
 
-  useEffect(() => { // Mobile Detection
+  useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 700);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  useEffect(() => { // Scroll to Editing Entry
+  useEffect(() => {
     if (editingIdx !== null && !isExportingPdf) {
       document.getElementById(`entry-card-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
@@ -562,6 +561,8 @@ export default function App() {
     const currentColorPicker = colorPickerOpenForIdx;
     setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
+    setNoteOpenIdx(null);
+
 
     addToast("PDF Export wird vorbereitet...");
     setIsExportingPdf(true);
@@ -634,7 +635,7 @@ export default function App() {
         addToast(err.message || "Ungültiges oder zu großes Bild");
       }
     }
-    e.target.value = "";
+    if (e.target) e.target.value = "";
   };
   const removeNewImg = idx => {
     setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
@@ -654,7 +655,7 @@ export default function App() {
         addToast(err.message || "Ungültiges oder zu großes Bild");
       }
     }
-    e.target.value = "";
+    if (e.target) e.target.value = "";
   };
   const removeEditImg = idx => {
     setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
@@ -860,7 +861,6 @@ export default function App() {
       </div>
       <h2 style={styles.title}>Food Diary</h2>
 
-      {/* Neuer Eintrag Formular */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <input placeholder="Essen..." value={newForm.food} onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={styles.input} />
@@ -902,7 +902,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Eintragsliste */}
       <div id="fd-table">
         {dates.map(day => (
           <div key={day}>
