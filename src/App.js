@@ -72,7 +72,7 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   }),
-  entryCard: (dark, isSymptomOnly = false) => ({
+  entryCard: (dark, isSymptomOnly = false) => ({ // ANPASSUNG: overflow: 'hidden' entfernt
     position: 'relative',
     marginBottom: 16,
     padding: 12,
@@ -81,7 +81,7 @@ const styles = {
       ? (dark ? "#3c3c46" : "#f0f0f5")
       : (dark ? "#2a2a32" : "#fff"),
     boxShadow: "0 1px 4px #0002",
-    overflow: 'hidden',
+    // overflow: 'hidden', // Entfernt, damit das ActionMenu nicht abgeschnitten wird
   }),
   groupHeader: {
     fontSize: 18,
@@ -121,20 +121,20 @@ const styles = {
   actionMenu: (dark) => ({
     position: 'absolute',
     right: '12px',
-    top: '44px',
+    top: '44px', // Positioniert unterhalb der Icons
     background: dark ? '#383840' : '#ffffff',
     borderRadius: 8,
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
     padding: '8px',
-    zIndex: 20,
+    zIndex: 20, // Muss über Karteninhalt, aber unter Farbwähler/Toast sein
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
     minWidth: '120px',
   }),
-  actionMenuItem: (dark, isDestructive = false) => ({ // ZURÜCKGESETZT auf Original
+  actionMenuItem: (dark, isDestructive = false) => ({
     background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff', // ZURÜCKGESETZT auf Original
+    color: '#fff',
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -154,26 +154,26 @@ const styles = {
   },
   tagMarkerOuter: (tagColor) => ({
     ...styles.tagMarkerBase,
-    borderWidth: '0 0 35px 35px',
+    borderWidth: '0 0 28px 28px', // ANPASSUNG: Kleiner gemacht
     borderColor: `transparent transparent ${tagColor} transparent`,
     cursor: 'pointer',
   }),
   tagMarkerInnerHint: (cardBgColor) => ({
     ...styles.tagMarkerBase,
-    borderWidth: '0 0 25px 25px',
+    borderWidth: '0 0 20px 20px', // ANPASSUNG: Kleiner gemacht, um Proportion zu wahren
     borderColor: `transparent transparent ${cardBgColor} transparent`,
     pointerEvents: 'none',
     zIndex: 6,
   }),
   colorPickerPopup: (dark) => ({
     position: 'absolute',
-    bottom: '40px',
+    bottom: '32px', // ANPASSUNG: Etwas tiefer wegen kleinerer Markierung
     right: '5px',
     background: dark ? '#4a4a52' : '#fff',
     padding: '8px',
     borderRadius: '6px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
-    zIndex: 30,
+    zIndex: 30, // Höchster zIndex auf der Karte
     display: 'flex',
     gap: '8px',
   }),
@@ -216,9 +216,9 @@ const TIME_CHOICES = [
 ];
 
 const TAG_COLORS = {
-  GREEN: 'green', // Standard Grün - du kannst hier spezifischere Hex-Werte verwenden, falls gewünscht
-  RED: 'red',     // Warn Rot
-  YELLOW: 'yellow',// Info Gelb
+  GREEN: 'green',
+  RED: 'red',
+  YELLOW: 'yellow',
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: "Standard",
@@ -375,8 +375,8 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; // ZURÜCKGESETZT auf Original
-  const tagTextColor = "#1a1f3d"; // ZURÜCKGESETZT auf Original
+  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
+  const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
@@ -559,6 +559,8 @@ export default function App() {
 
     const currentActionMenu = actionMenuOpenForIdx;
     const currentColorPicker = colorPickerOpenForIdx;
+    const currentNote = noteOpenIdx; // PDF Export soll alle Popups schließen
+
     setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
@@ -596,6 +598,7 @@ export default function App() {
         windowWidth: el.scrollWidth,
         windowHeight: el.scrollHeight,
         useCORS: true,
+        // logging: true, // Für Debugging von html2canvas
       });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
@@ -618,8 +621,11 @@ export default function App() {
       });
 
       setIsExportingPdf(false);
-      setActionMenuOpenForIdx(currentActionMenu);
-      setColorPickerOpenForIdx(currentColorPicker);
+      // Stellen Sie sicher, dass die Zustände nach dem Export nicht unbeabsichtigt wiederhergestellt werden,
+      // wenn sie vor dem Export explizit geschlossen werden sollten.
+      // setActionMenuOpenForIdx(currentActionMenu); // Nur wenn es Sinn macht
+      // setColorPickerOpenForIdx(currentColorPicker);
+      // setNoteOpenIdx(currentNote);
     }
   };
 
@@ -710,7 +716,7 @@ export default function App() {
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Auch hier explizit schließen
   };
 
   const addEditSymptom = () => {
@@ -741,7 +747,7 @@ export default function App() {
       prevEntries.map((ent, j) =>
         j === editingIdx
         ? {
-            ...ent,
+            ...ent, // Behält tagColor und comment bei
             food: editForm.food.trim(),
             imgs: editForm.imgs,
             symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})),
@@ -750,13 +756,13 @@ export default function App() {
         : ent
       ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
     );
-    cancelEdit();
+    cancelEdit(); // Schließt auch das ActionMenu
     addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit();
-    setActionMenuOpenForIdx(null);
+    if (editingIdx === i) cancelEdit(); // Stellt sicher, dass der Bearbeitungsmodus verlassen wird
+    setActionMenuOpenForIdx(null); // Explizit schließen
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
     addToast("Eintrag gelöscht");
@@ -765,18 +771,18 @@ export default function App() {
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
         if (prevOpenIdx === idx) {
-            return null;
+            return null; // Schließen, wenn bereits offen
         } else {
-            setNoteDraft(entries[idx].comment || "");
-            setActionMenuOpenForIdx(null);
+            setNoteDraft(entries[idx].comment || ""); // Entwurf setzen
+            setActionMenuOpenForIdx(null); // Andere Popups schließen
             setColorPickerOpenForIdx(null);
-            return idx;
+            return idx; // Öffnen für diesen Index
         }
     });
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
+    setNoteOpenIdx(null); // Notizfeld schließen
     addToast("Notiz gespeichert");
   };
 
@@ -788,10 +794,11 @@ export default function App() {
     );
     const colorName = TAG_COLOR_NAMES[newColor] || newColor;
     addToast(`Markierung auf "${colorName}" geändert.`);
-    setColorPickerOpenForIdx(null);
+    setColorPickerOpenForIdx(null); // Farbauswahl schließen
   };
 
   const handleContainerClick = (e) => {
+      // Schließe Aktionsmenü, wenn außerhalb geklickt wird
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
@@ -799,15 +806,19 @@ export default function App() {
               setActionMenuOpenForIdx(null);
           }
       }
+      // Schließe Notiz-Eingabefeld, wenn außerhalb geklickt wird
       if (noteOpenIdx !== null) {
           const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
           const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
           const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
+          // Verhindere Schließen, wenn auf bereits angezeigten Notiztext geklickt wird (um es zu öffnen)
           const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
+
           if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextTrigger) {
               setNoteOpenIdx(null);
           }
       }
+      // Schließe Farbauswahl, wenn außerhalb geklickt wird
       if (colorPickerOpenForIdx !== null) {
           const pickerTriggerClicked = e.target.closest(`#tag-marker-${colorPickerOpenForIdx}`);
           const pickerContentClicked = e.target.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
@@ -922,7 +933,7 @@ export default function App() {
               return (
                 <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
                   {editingIdx === idx && !isExportingPdf ? (
-                    <>
+                    <> {/* Editieransicht */}
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, width: '100%', marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
@@ -981,7 +992,7 @@ export default function App() {
                       </div>
                     </>
                   ) : (
-                    <>
+                    <> {/* Anzeigeansicht */}
                       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', gap: '6px' }}>
                         <button
                           id={`note-icon-button-${idx}`}
@@ -994,7 +1005,7 @@ export default function App() {
                           onClick={(e) => {
                             e.stopPropagation();
                             setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
-                            setNoteOpenIdx(null);
+                            setNoteOpenIdx(null); // Schließe andere Popups
                             setColorPickerOpenForIdx(null);
                           }}
                           style={{...styles.glassyIconButton(dark), padding: '6px'}}
@@ -1022,7 +1033,7 @@ export default function App() {
                       )}
 
                       {noteOpenIdx === idx && !isExportingPdf && (
-                        <div onClick={e => e.stopPropagation()} style={{marginTop: '8px'}}>
+                        <div onClick={e => e.stopPropagation()} style={{marginTop: '8px', zIndex: 15 /* Über normalen Inhalt aber unter ActionMenu/ColorPicker */}}>
                           <textarea id={`note-textarea-${idx}`} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
                           <button id={`note-save-button-${idx}`} onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary(dark ? '#555' : "#FBC02D"), color: dark ? '#fff' : '#333', marginTop: 8 }} >Notiz speichern</button>
                         </div>
@@ -1030,7 +1041,7 @@ export default function App() {
                       {entry.comment && noteOpenIdx !== idx && !isExportingPdf && (
                         <div
                           id={`displayed-note-text-${idx}`}
-                          onClick={(e) => { e.stopPropagation(); setNoteOpenIdx(idx); setNoteDraft(entry.comment || ""); setActionMenuOpenForIdx(null); setColorPickerOpenForIdx(null);}}
+                          onClick={(e) => { e.stopPropagation(); toggleNote(idx);}}
                           style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box", cursor: 'pointer' }}
                         >
                           {entry.comment}
@@ -1045,7 +1056,7 @@ export default function App() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                              setActionMenuOpenForIdx(null);
+                              setActionMenuOpenForIdx(null); // Schließe andere Popups
                               setNoteOpenIdx(null);
                             }}
                             title={`Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`}
@@ -1056,7 +1067,7 @@ export default function App() {
                             <div 
                               id={`color-picker-popup-${idx}`}
                               style={styles.colorPickerPopup(dark)} 
-                              onClick={e => e.stopPropagation()}
+                              onClick={e => e.stopPropagation()} // Verhindert Schließen bei Klick in Popup
                             >
                               {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW].map(colorValue => (
                                 <div
