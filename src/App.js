@@ -131,7 +131,7 @@ const styles = {
   }),
   actionMenuItem: (dark, isDestructive = false) => ({
     background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff',
+    color: '#fff', // Destructive text is white for better contrast on dark red
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -185,12 +185,13 @@ function resizeToJpeg(file, maxWidth = 800) {
 const getStrengthColor = (strengthVal) => {
     const s = parseInt(strengthVal);
     switch (s) {
-        case 1: return 'hsl(120, 65%, 50%)';
-        case 2: return 'hsl(35, 90%, 55%)';
-        case 3: return 'hsl(0, 75%, 55%)';
+        case 1: return 'hsl(120, 65%, 50%)'; // Grün
+        case 2: return 'hsl(35, 90%, 55%)';  // Orange
+        case 3: return 'hsl(0, 75%, 55%)';   // Rot
         default:
-            if (s && s >= 3) return 'hsl(0, 75%, 55%)';
-            return 'hsl(120, 65%, 50%)';
+            // Fallback, falls ungültiger Wert (sollte durch Validierung nicht passieren)
+            if (s && s >= 3) return 'hsl(0, 75%, 55%)'; // Rot für höhere Werte
+            return 'hsl(120, 65%, 50%)'; // Grün als Standard
     }
 };
 
@@ -241,7 +242,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
-  const tagTextColor = "#1a1f3d";
+  const tagTextColor = "#1a1f3d"; // Dunkler Text für bessere Lesbarkeit auf hellen Tags
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
@@ -252,7 +253,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       borderRadius: 6, padding: "6px 10px",
       margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
-      overflowWrap: "break-word", whiteSpace: "normal"
+      overflowWrap: "break-word", whiteSpace: "normal" // Umbruch bei langen Symptomnamen
     }}>
       {strength && (
         <span style={{
@@ -262,13 +263,13 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            color: '#333333',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)', // leichter Hintergrund für den Kreis
+            color: '#333333', // Textfarbe im Kreis
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
             flexShrink: 0,
-            border: `2px solid ${getStrengthColor(displayStrength)}`,
+            border: `2px solid ${getStrengthColor(displayStrength)}`, // Farbiger Rand basierend auf Stärke
             boxSizing: 'border-box',
         }}>
             {displayStrength}
@@ -281,14 +282,15 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
           marginLeft: 8, cursor: "pointer",
-          fontSize: 16,
-          color: "#c00",
+          fontSize: 16, // Größer für bessere Klickbarkeit
+          color: "#c00", // Deutliche Farbe für Löschen
           fontWeight: 700
         }}>×</span>
       )}
     </div>
   );
 };
+
 
 // --- Konstanten ---
 const SYMPTOM_CHOICES = [
@@ -315,7 +317,7 @@ const now = () => {
 };
 
 const parseDateString = (dateStr) => {
-    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+    if (!dateStr || typeof dateStr !== 'string') return new Date(0); // Return an early, invalid date
     const [datePart, timePart] = dateStr.split(' ');
     if (!datePart || !timePart) return new Date(0);
     const dateComponents = datePart.split('.').map(Number);
@@ -324,6 +326,9 @@ const parseDateString = (dateStr) => {
     if ([...dateComponents, ...timeComponents].some(isNaN)) return new Date(0);
     const [day, month, year] = dateComponents;
     const [hour, minute] = timeComponents;
+    // Basic validation for date components
+    if (year < 1000 || year > 3000 || month < 1 || month > 12 || day < 1 || day > 31) return new Date(0);
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return new Date(0);
     return new Date(year, month - 1, day, hour, minute);
 };
 
@@ -336,7 +341,10 @@ const toDateTimePickerFormat = (displayDateStr) => {
     const [day, month, year] = dateComponents.map(s => String(s).padStart(2,'0'));
     const timeParts = timePart.split(':').map(s => String(s).padStart(2,'0'));
     if (timeParts.length !== 2) return "";
+
     if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+    if (parseInt(month) < 1 || parseInt(month) > 12 || parseInt(day) < 1 || parseInt(day) > 31 || parseInt(timeParts[0]) < 0 || parseInt(timeParts[0]) > 23 || parseInt(timeParts[1]) < 0 || parseInt(timeParts[1]) > 59) return "";
+
     return `${year}-${month}-${day}T${timeParts[0]}:${timeParts[1]}`;
 };
 
@@ -349,7 +357,10 @@ const fromDateTimePickerFormat = (pickerDateStr) => {
     const [year, month, day] = dateComponents;
     const timeParts = timePart.split(':');
     if (timeParts.length !== 2) return "";
+
     if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+    if (parseInt(month) < 1 || parseInt(month) > 12 || parseInt(day) < 1 || parseInt(day) > 31 || parseInt(timeParts[0]) < 0 || parseInt(timeParts[0]) > 23 || parseInt(timeParts[1]) < 0 || parseInt(timeParts[1]) > 59) return "";
+    
     return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year} ${String(timeParts[0]).padStart(2, '0')}:${String(timeParts[1]).padStart(2, '0')}`;
 };
 
@@ -399,7 +410,7 @@ export default function App() {
         .map(e => ({
             ...e,
             comment: e.comment || "",
-            food: e.food || "",
+            food: e.food || "", // Ensure food is always a string
             symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }))
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
@@ -413,6 +424,7 @@ export default function App() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
+            // Ensure strength is valid, default to 1 if not or invalid
             const strength = Math.min(parseInt(parsed.symptomStrength) || 1, 3);
             return { ...initialForm, ...parsed, symptomStrength: strength };
         } catch { return initialForm; }
@@ -461,9 +473,9 @@ export default function App() {
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
-    const currentActionMenu = actionMenuOpenForIdx;
-    setActionMenuOpenForIdx(null);
-    await new Promise(resolve => setTimeout(resolve, 50));
+    const currentActionMenu = actionMenuOpenForIdx; // Save current state
+    setActionMenuOpenForIdx(null); // Close menu for PDF export
+    await new Promise(resolve => setTimeout(resolve, 50)); // Wait for menu to disappear
 
     const imgs = Array.from(el.querySelectorAll("img"));
     const originals = imgs.map(img => ({ w: img.style.width, h: img.style.height }));
@@ -476,7 +488,7 @@ export default function App() {
     pdf.save("FoodDiary.pdf");
 
     imgs.forEach((img, i) => { img.style.width = originals[i].w; img.style.height = originals[i].h; });
-    setActionMenuOpenForIdx(currentActionMenu);
+    setActionMenuOpenForIdx(currentActionMenu); // Restore menu state
   };
 
   const handleNewFile = async e => {
@@ -544,19 +556,19 @@ export default function App() {
     setEditingIdx(i);
     setEditForm({
         food: e.food,
-        imgs: [...e.imgs],
+        imgs: [...e.imgs], // Create a new array for imgs
         symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
-        symptomInput: "",
-        symptomTime: 0,
-        newSymptomStrength: 1,
+        symptomInput: "", // For adding new symptoms during edit
+        symptomTime: 0,   // Default time for new symptom in edit mode
+        newSymptomStrength: 1, // Default strength for new symptom in edit mode
         date: toDateTimePickerFormat(e.date)
     });
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Close action menu when editing starts
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Also ensure menu is closed on cancel
   };
 
   const addEditSymptom = () => {
@@ -587,9 +599,9 @@ export default function App() {
         j === editingIdx
         ? {
             food: editForm.food.trim(),
-            imgs: editForm.imgs,
+            imgs: editForm.imgs, // Already a new array from startEdit or handleEditFile
             symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})),
-            comment: ent.comment,
+            comment: ent.comment, // Preserve existing comment
             date: displayDateToSave
           }
         : ent
@@ -600,21 +612,21 @@ export default function App() {
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit();
-    setActionMenuOpenForIdx(null);
+    if (editingIdx === i) cancelEdit(); // If deleting the entry currently being edited
+    setActionMenuOpenForIdx(null); // Close menu after deletion
     addToast("Eintrag gelöscht");
   };
 
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
-        if (prevOpenIdx === idx) {
+        if (prevOpenIdx === idx) { // If clicking the same note icon again, close it
             return null;
-        } else {
+        } else { // Open new note or switch to another
             setNoteDraft(entries[idx].comment || "");
             return idx;
         }
     });
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Ensure action menu is closed when note is toggled
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
@@ -623,6 +635,7 @@ export default function App() {
   };
 
   const handleContainerClick = (e) => {
+      // Close Action Menu if click is outside
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
@@ -630,13 +643,15 @@ export default function App() {
               setActionMenuOpenForIdx(null);
           }
       }
+      // Close Note Editor if click is outside (and not on the note display triggering open)
       if (noteOpenIdx !== null) {
           const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
           const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
           const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
-          const displayedNoteTextClicked = e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
+          // Check if the click was on the displayed note text (which opens the editor)
+          const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
 
-          if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextClicked) {
+          if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextTrigger) {
               setNoteOpenIdx(null);
           }
       }
@@ -700,13 +715,12 @@ export default function App() {
             <select value={newForm.symptomStrength} onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink: 0 }}>
               {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
             </select>
-            {/* ANGEPASSTER + BUTTON */}
             <button 
               onClick={addNewSymptom} 
               style={{ 
                 ...styles.buttonSecondary("#247be5"), 
                 flexShrink: 0, 
-                fontSize: '16px',       // Schriftgröße angepasst
+                fontSize: '16px',    // Schriftgröße angepasst
                 padding: '9px 12px',    // Padding für Höhe angepasst
                 boxSizing: 'border-box' // Für konsistente Höhenberechnung
               }}
@@ -743,6 +757,8 @@ export default function App() {
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
+                      
+                      {/* Symptom-Eingabe für neue Symptome im Edit-Modus */}
                       <div style={{ marginBottom: 12 }}> 
                         <input list="symptom-list-edit" placeholder="Symptom hinzufügen..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} /> 
                         <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist> 
@@ -753,25 +769,91 @@ export default function App() {
                           <select value={editForm.newSymptomStrength} onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink:0 }}> 
                             {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)} 
                           </select> 
-                          {/* ANGEPASSTER + BUTTON im Editierformular */}
                           <button 
                             onClick={addEditSymptom} 
                             style={{
                               ...styles.buttonSecondary("#247be5"),
                               flexShrink:0, 
-                              fontSize: '16px',       // Schriftgröße angepasst
+                              fontSize: '16px',    // Schriftgröße angepasst
                               padding: '9px 12px',    // Padding für Höhe angepasst
                               boxSizing: 'border-box' // Für konsistente Höhenberechnung
                             }}
                           >+</button> 
                         </div> 
                       </div>
-                      <div style={{ marginBottom: 8 }}> {editForm.symptoms.map((s, j) => ( <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}> <span style={{ flexGrow: 1, overflowWrap: 'break-word', minWidth: '80px', fontSize: '15px', paddingRight: '5px' }}>{s.txt}</span> <select value={s.time} onChange={e_select => { const newTime = Number(e_select.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], time: newTime }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} </select> <select value={s.strength || 1} onChange={e_strength => { const newStrength = Number(e_strength.target.value); setEditForm(fm => { const updatedSymptoms = [...fm.symptoms]; updatedSymptoms[j] = { ...updatedSymptoms[j], strength: Math.min(Math.max(newStrength,1),3) }; return { ...fm, symptoms: updatedSymptoms }; }); }} style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px' }}> {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)} </select> <button onClick={() => removeEditSymptom(j)} title="Symptom löschen" style={{...styles.buttonSecondary("#d32f2f"), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }} >×</button> </div> ))} </div>
-                      <div style={{ display: "flex", gap: 5, marginTop: '16px' }}> <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button> <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button> </div>
+
+                      {/* MODIFIZIERTER BEREICH: Bestehende Symptome bearbeiten */}
+                      <div style={{ marginBottom: 8 }}>
+                        {editForm.symptoms.map((s, j) => (
+                          <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}>
+                            <input
+                              type="text"
+                              list="symptom-list-edit" // Wiederverwendung der Datalist
+                              value={s.txt}
+                              onChange={e_text => {
+                                const newText = e_text.target.value;
+                                setEditForm(fm => ({
+                                  ...fm,
+                                  symptoms: fm.symptoms.map((sym, index) =>
+                                    index === j ? { ...sym, txt: newText.trim() } : sym
+                                  )
+                                }));
+                              }}
+                              onFocus={handleFocus}
+                              style={{
+                                ...styles.smallInput,
+                                flexGrow: 1,
+                                marginRight: '6px'
+                              }}
+                            />
+                            <select
+                              value={s.time}
+                              onChange={e_select => {
+                                const newTime = Number(e_select.target.value);
+                                setEditForm(fm => ({
+                                  ...fm,
+                                  symptoms: fm.symptoms.map((sym, index) =>
+                                    index === j ? { ...sym, time: newTime } : sym
+                                  )
+                                }));
+                              }}
+                              style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px'}}
+                            >
+                              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                            <select
+                              value={s.strength || 1}
+                              onChange={e_strength => {
+                                const newStrength = Number(e_strength.target.value);
+                                setEditForm(fm => ({
+                                  ...fm,
+                                  symptoms: fm.symptoms.map((sym, index) =>
+                                    index === j ? { ...sym, strength: Math.min(Math.max(newStrength,1),3) } : sym
+                                  )
+                                }));
+                              }}
+                              style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px'}}
+                            >
+                              {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                            <button
+                              onClick={() => removeEditSymptom(j)}
+                              title="Symptom löschen"
+                              style={{...styles.buttonSecondary("#d32f2f"), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }}
+                            >×</button>
+                          </div>
+                        ))}
+                      </div>
+                      {/* ENDE MODIFIZIERTER BEREICH */}
+
+                      <div style={{ display: "flex", gap: 5, marginTop: '16px' }}>
+                        <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
+                        <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
+                      </div>
                     </>
                   ) : (
                     <>
-                      {/* NEUER Container für Icons oben rechts */}
+                      {/* Anzeigeansicht der Karte */}
                       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', gap: '6px' }}>
                         <button
                           id={`note-icon-button-${idx}`}
@@ -787,7 +869,6 @@ export default function App() {
                         >✏️</button>
                       </div>
 
-                      {/* Inhalte der Karte, mit Margin für die Icons */}
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px' }}>{entry.date}</div>
                       <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' }}>
                         {entry.food || (isSymptomOnlyEntry ? "Nur Symptome" : "(Kein Essen)") }
