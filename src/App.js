@@ -123,7 +123,7 @@ const styles = {
   }),
   rotatedIcon: {
     display: 'inline-block',
-    transform: 'rotate(92deg)',
+    transform: 'rotate(91deg)',
   },
   actionMenu: (dark) => ({
     position: 'absolute',
