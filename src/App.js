@@ -482,12 +482,12 @@ export default function App() {
     setActionMenuOpenForIdx(null);
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    const imgsToResize = Array.from(el.querySelectorAll(`#fd-table img`)); // Nur Bilder im PDF Bereich
+    const imgsToResize = Array.from(el.querySelectorAll(`#fd-table img`));
     const originals = imgsToResize.map(img => ({ el: img, w: img.style.width, h: img.style.height, objectFit: img.style.objectFit }));
     imgsToResize.forEach(img => {
-        img.style.width = "60px"; // Kleinere Größe für PDF
+        img.style.width = "60px";
         img.style.height = "60px";
-        img.style.objectFit = "contain"; // Sicherstellen, dass das Bild nicht abgeschnitten wird
+        img.style.objectFit = "contain";
     });
 
     const canvas = await html2canvas(el, { scale: 2, windowWidth: el.scrollWidth, windowHeight: el.scrollHeight });
@@ -496,7 +496,7 @@ export default function App() {
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
     pdf.save("FoodDiary.pdf");
 
-    originals.forEach(orig => { // Stile wiederherstellen
+    originals.forEach(orig => {
         orig.el.style.width = orig.w;
         orig.el.style.height = orig.h;
         orig.el.style.objectFit = orig.objectFit;
@@ -514,7 +514,7 @@ export default function App() {
         addToast("Foto hinzugefügt (verkleinert)");
       } catch (err) { addToast(err.message || "Ungültiges oder zu großes Bild"); }
     }
-    e.target.value = ""; // Erlaubt erneutes Auswählen derselben Datei
+    e.target.value = "";
   };
   const removeNewImg = idx => {
     setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
@@ -818,6 +818,7 @@ export default function App() {
                         </div> 
                       </div>
 
+                      {/* MODIFIZIERTER BEREICH: Bestehende Symptome bearbeiten */}
                       <div style={{ marginBottom: 8 }}>
                         {editForm.symptoms.map((s, j) => (
                           <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}>
@@ -852,9 +853,19 @@ export default function App() {
                                   )
                                 }));
                               }}
-                              style={{...styles.smallInput, width: '120px', flexShrink: 0, fontSize: '16px', padding: '6px 10px'}}
+                              style={{
+                                ...styles.smallInput,
+                                width: '55px', // ANGEPASSTE BREITE
+                                flexShrink: 0,
+                                fontSize: '16px', 
+                                padding: '6px 5px' // ANGEPASSTES PADDING
+                              }}
                             >
-                              {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              {TIME_CHOICES.map(t => (
+                                <option key={t.value} value={t.value}>
+                                  {t.value === 0 ? '0' : t.value}
+                                </option>
+                              ))}
                             </select>
                             <select
                               value={s.strength || 1}
@@ -867,7 +878,13 @@ export default function App() {
                                   )
                                 }));
                               }}
-                              style={{...styles.smallInput, width: '90px', flexShrink: 0, fontSize: '16px', padding: '6px 10px'}}
+                              style={{
+                                ...styles.smallInput,
+                                width: '50px', // ANGEPASSTE BREITE
+                                flexShrink: 0,
+                                fontSize: '16px', 
+                                padding: '6px 5px' // ANGEPASSTES PADDING
+                              }}
                             >
                               {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
                             </select>
@@ -879,6 +896,8 @@ export default function App() {
                           </div>
                         ))}
                       </div>
+                      {/* ENDE MODIFIZIERTER BEREICH */}
+
                       <div style={{ display: "flex", gap: 5, marginTop: '16px' }}>
                         <button onClick={saveEdit} style={styles.buttonSecondary("#1976d2")}>Speichern</button>
                         <button onClick={cancelEdit} style={styles.buttonSecondary("#888")}>Abbrechen</button>
