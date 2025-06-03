@@ -72,7 +72,7 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   }),
-  entryCard: (dark, isSymptomOnly = false) => ({
+  entryCard: (dark, isSymptomOnly = false) => ({ // ANPASSUNG: overflow: 'hidden' entfernt
     position: 'relative',
     marginBottom: 16,
     padding: 12,
@@ -81,6 +81,7 @@ const styles = {
       ? (dark ? "#3c3c46" : "#f0f0f5")
       : (dark ? "#2a2a32" : "#fff"),
     boxShadow: "0 1px 4px #0002",
+    // overflow: 'hidden', // Entfernt, damit das ActionMenu nicht abgeschnitten wird
   }),
   groupHeader: {
     fontSize: 18,
@@ -111,28 +112,21 @@ const styles = {
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
     borderRadius: 6,
-    padding: "6px 8px", // Beibehaltung des Paddings für Klickfläche
+    padding: "6px 8px",
     cursor: "pointer",
-    fontSize: 16, // Schriftgröße des Emojis
-    lineHeight: 1, // Stellt sicher, dass das Emoji vertikal zentriert ist
+    fontSize: 16,
+    lineHeight: 1,
     color: dark ? '#f0f0f8' : '#333',
-    display: 'flex', // Um das innere Span-Element zentrieren zu können (falls nötig)
-    alignItems: 'center',
-    justifyContent: 'center',
   }),
-  rotatedIcon: { // Neuer Style für das gedrehte Icon-Span
-    display: 'inline-block',
-    transform: 'rotate(-45deg)',
-  },
   actionMenu: (dark) => ({
     position: 'absolute',
     right: '12px',
-    top: '44px',
+    top: '44px', // Positioniert unterhalb der Icons
     background: dark ? '#383840' : '#ffffff',
     borderRadius: 8,
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
     padding: '8px',
-    zIndex: 20,
+    zIndex: 20, // Muss über Karteninhalt, aber unter Farbwähler/Toast sein
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
@@ -160,26 +154,26 @@ const styles = {
   },
   tagMarkerOuter: (tagColor) => ({
     ...styles.tagMarkerBase,
-    borderWidth: '0 0 28px 28px', // Gesamtgröße der Markierung
+    borderWidth: '0 0 28px 28px', // ANPASSUNG: Kleiner gemacht
     borderColor: `transparent transparent ${tagColor} transparent`,
     cursor: 'pointer',
   }),
   tagMarkerInnerHint: (cardBgColor) => ({
     ...styles.tagMarkerBase,
-    borderWidth: '0 0 16px 16px', // ANPASSUNG: Verkleinert für dickeren farbigen Rand
+    borderWidth: '0 0 20px 20px', // ANPASSUNG: Kleiner gemacht, um Proportion zu wahren
     borderColor: `transparent transparent ${cardBgColor} transparent`,
     pointerEvents: 'none',
     zIndex: 6,
   }),
   colorPickerPopup: (dark) => ({
     position: 'absolute',
-    bottom: '30px', // ANPASSUNG: Position eventuell anpassen, wenn Markierung dicker/anders
+    bottom: '32px', // ANPASSUNG: Etwas tiefer wegen kleinerer Markierung
     right: '5px',
     background: dark ? '#4a4a52' : '#fff',
     padding: '8px',
     borderRadius: '6px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
-    zIndex: 30,
+    zIndex: 30, // Höchster zIndex auf der Karte
     display: 'flex',
     gap: '8px',
   }),
@@ -195,25 +189,275 @@ const styles = {
 };
 
 // --- GLOBALE KONSTANTEN & FARBMAPPINGS ---
-const SYMPTOM_COLOR_MAP = { /* ... unverändert ... */ };
-const SYMPTOM_CHOICES = [ /* ... unverändert ... */ ];
-const TIME_CHOICES = [ /* ... unverändert ... */ ];
-const TAG_COLORS = { /* ... unverändert ... */ };
-const TAG_COLOR_NAMES = { /* ... unverändert ... */ };
+const SYMPTOM_COLOR_MAP = {
+  Bauchschmerzen: "#D0E1F9",
+  Durchfall: "#D6EAE0",
+  Blähungen: "#E4D9F0",
+  Hautausschlag: "#F0D9D9",
+  Juckreiz: "#E1BEE7",
+  "Schwellung am Gaumen": "#FFCCBC",
+  "Schleim im Hals": "#D9F2F9",
+  Niesen: "#C8E6C9",
+  Kopfschmerzen: "#D9EAF9",
+  "Rötung Haut": "#F2D9DB"
+};
+
+const SYMPTOM_CHOICES = [
+  "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
+  "Juckreiz","Schwellung am Gaumen","Schleim im Hals",
+  "Niesen","Kopfschmerzen","Rötung Haut"
+];
+const TIME_CHOICES = [
+  { label: "sofort", value: 0 }, { label: "nach 5 min", value: 5 },
+  { label: "nach 10 min", value: 10 }, { label: "nach 15 min", value: 15 },
+  { label: "nach 30 min", value: 30 }, { label: "nach 45 min", value: 45 },
+  { label: "nach 60 min", value: 60 }, { label: "nach 1,5 h", value: 90 },
+  { label: "nach 3 h", value: 180 }
+];
+
+const TAG_COLORS = {
+  GREEN: 'green',
+  RED: 'red',
+  YELLOW: 'yellow',
+};
+const TAG_COLOR_NAMES = {
+  [TAG_COLORS.GREEN]: "Standard",
+  [TAG_COLORS.RED]: "Symptome",
+  [TAG_COLORS.YELLOW]: "Vorgeschichte",
+};
 
 // --- HILFSFUNKTIONEN ---
-// ... (resizeToJpeg, getStrengthColor, now, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat bleiben unverändert) ...
+function resizeToJpeg(file, maxWidth = 800) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = (e) => { console.error("FileReader Error:", e); reject(reader.error); };
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = (e) => { console.error("Image Load Error:", e); reject(new Error("Bild konnte nicht als Bild interpretiert werden")); };
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, maxWidth / img.width);
+          const w = img.width * scale;
+          const h = img.height * scale;
+          const c = document.createElement("canvas");
+          c.width = w;
+          c.height = h;
+          const ctx = c.getContext("2d");
+          if (!ctx) {
+            console.error("Canvas Context nicht erhalten");
+            return reject(new Error("Canvas Context Fehler"));
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL("image/jpeg", 0.8));
+        } catch (canvasError) {
+          console.error("Canvas Error:", canvasError);
+          reject(new Error("Fehler bei der Bildverkleinerung (Canvas)"));
+        }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+const getStrengthColor = (strengthVal) => {
+    const s = parseInt(strengthVal);
+    switch (s) {
+        case 1: return 'hsl(120, 65%, 50%)';
+        case 2: return 'hsl(35, 90%, 55%)';
+        case 3: return 'hsl(0, 75%, 55%)';
+        default:
+            if (s && s >= 3) return 'hsl(0, 75%, 55%)';
+            return 'hsl(120, 65%, 50%)';
+    }
+};
+
+const now = () => {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return `${day}.${month}.${year} ${time}`;
+};
+
+const parseDateString = (dateStr) => {
+    if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+    const [datePart, timePart] = dateStr.split(' ');
+    if (!datePart || !timePart) return new Date(0);
+    const dateComponents = datePart.split('.').map(Number);
+    const timeComponents = timePart.split(':').map(Number);
+    if (dateComponents.length !== 3 || timeComponents.length !== 2) return new Date(0);
+    if ([...dateComponents, ...timeComponents].some(isNaN)) return new Date(0);
+    const [day, month, year] = dateComponents;
+    const [hour, minute] = timeComponents;
+    if (year < 1000 || year > 3000 || month < 1 || month > 12 || day < 1 || day > 31) return new Date(0);
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return new Date(0);
+    return new Date(year, month - 1, day, hour, minute);
+};
+
+const toDateTimePickerFormat = (displayDateStr) => {
+    if (!displayDateStr || typeof displayDateStr !== 'string') return "";
+    const [datePart, timePart] = displayDateStr.split(' ');
+    if (!datePart || !timePart) return "";
+    const dateComponents = datePart.split('.');
+    if (dateComponents.length !== 3) return "";
+    const [day, month, year] = dateComponents.map(s => String(s).padStart(2,'0'));
+    const timeParts = timePart.split(':').map(s => String(s).padStart(2,'0'));
+    if (timeParts.length !== 2) return "";
+    if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+    if (parseInt(month) < 1 || parseInt(month) > 12 || parseInt(day) < 1 || parseInt(day) > 31 || parseInt(timeParts[0]) < 0 || parseInt(timeParts[0]) > 23 || parseInt(timeParts[1]) < 0 || parseInt(timeParts[1]) > 59) return "";
+    return `${year}-${month}-${day}T${timeParts[0]}:${timeParts[1]}`;
+};
+
+const fromDateTimePickerFormat = (pickerDateStr) => {
+    if (!pickerDateStr || typeof pickerDateStr !== 'string') return "";
+    const [datePart, timePart] = pickerDateStr.split('T');
+    if (!datePart || !timePart) return "";
+    const dateComponents = datePart.split('-');
+    if (dateComponents.length !== 3) return "";
+    const [year, month, day] = dateComponents;
+    const timeParts = timePart.split(':');
+    if (timeParts.length !== 2) return "";
+    if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day)) || isNaN(parseInt(timeParts[0])) || isNaN(parseInt(timeParts[1]))) return "";
+    if (parseInt(month) < 1 || parseInt(month) > 12 || parseInt(day) < 1 || parseInt(day) > 31 || parseInt(timeParts[0]) < 0 || parseInt(timeParts[0]) > 23 || parseInt(timeParts[1]) < 0 || parseInt(timeParts[1]) > 59) return "";
+    return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year} ${String(timeParts[0]).padStart(2, '0')}:${String(timeParts[1]).padStart(2, '0')}`;
+};
 
 // --- UI UTILITY KOMPONENTEN ---
-// ... (PdfButton, InsightsButton, BackButton, CameraButton, ImgStack, SymTag bleiben unverändert) ...
+const PdfButton = ({ onClick }) => (
+  <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
+    PDF
+  </button>
+);
+const InsightsButton = ({ onClick }) => (
+  <button onClick={onClick} title="Insights" style={styles.buttonSecondary("#1976d2")}>
+    Insights
+  </button>
+);
+const BackButton = ({ onClick }) => (
+  <button onClick={onClick} title="Zurück" style={styles.backButton}>← Zurück</button>
+);
+const CameraButton = ({ onClick }) => (
+  <button onClick={onClick} title="Foto" style={{
+    width: 36, height: 36, borderRadius: 6, border: 0,
+    background: "#247be5", display: "flex", alignItems: "center",
+    justifyContent: "center", cursor: "pointer"
+  }}>📷</button>
+);
+const ImgStack = ({ imgs, onDelete }) => (
+  <div className="img-stack-container" style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+    {imgs.map((src, i) => (
+      <div key={i} className="img-stack-item" style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
+        <img
+          src={src}
+          alt={`entry_image_${i}`}
+          style={{
+            width: 40, height: 40, objectFit: "cover",
+            borderRadius: 6, border: "2px solid #fff",
+            boxShadow: "0 1px 4px #0003"
+          }}
+          onError={e => { e.currentTarget.style.display = "none"; }}
+        />
+        {onDelete && (
+          <span onClick={() => onDelete(i)} style={{
+            position: "absolute", top: -6, right: -6,
+            background: "#c00", color: "#fff",
+            borderRadius: "50%", width: 18, height: 18,
+            display: "flex", alignItems: "center",
+            justifyContent: "center", fontSize: 12,
+            cursor: "pointer"
+          }}>×</span>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
+  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
+  const tagTextColor = "#1a1f3d";
+  const displayStrength = Math.min(parseInt(strength) || 1, 3);
+
+  return (
+    <div onClick={onClick} style={{
+      display: "inline-flex", alignItems: "center",
+      background: tagBackgroundColor,
+      color: tagTextColor,
+      borderRadius: 6, padding: "6px 10px",
+      margin: "3px 4px 3px 0", fontSize: 14,
+      cursor: onClick ? "pointer" : "default",
+      overflowWrap: "break-word", whiteSpace: "normal"
+    }}>
+      {strength && (
+        <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            color: '#333333',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            marginRight: '5px',
+            flexShrink: 0,
+            border: `2px solid ${getStrengthColor(displayStrength)}`,
+            boxSizing: 'border-box',
+        }}>
+            {displayStrength}
+        </span>
+      )}
+      {txt}
+      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
+        {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
+      </span>
+      {onDel && (
+        <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
+          marginLeft: 8, cursor: "pointer",
+          fontSize: 16,
+          color: "#c00",
+          fontWeight: 700
+        }}>×</span>
+      )}
+    </div>
+  );
+};
 
 // --- DATENVERARBEITUNGSKOMPONENTEN (z.B. Insights) ---
-// ... (Insights Komponente bleibt unverändert) ...
+function Insights({ entries }) {
+  const map = {};
+  entries.forEach(e => {
+    (e.symptoms || []).forEach(s => {
+      if (!map[s.txt]) map[s.txt] = { count: 0, foods: {} };
+      map[s.txt].count++;
+      const foodKey = e.food || "(Kein Essen)";
+      map[s.txt].foods[foodKey] = (map[s.txt].foods[foodKey] || 0) + 1;
+    });
+  });
+  const sorted = Object.entries(map).sort((a, b) => b[1].count - a[1].count);
+  return (
+    <div>
+      <h2 style={{ textAlign: "center", margin: "16px 0" }}>Insights</h2>
+      {sorted.length === 0 && <p>Keine Symptome erfasst.</p>}
+      {sorted.map(([symptom, data]) => (
+        <div key={symptom} style={{ marginBottom: 24 }}>
+          <h3>{symptom} ({data.count})</h3>
+          <ul>
+            {Object.entries(data.foods).sort((a, b) => b[1] - a[1]).map(([food, cnt]) => (
+              <li key={food}>{food}: {cnt}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
   // --- STATE VARIABLEN ---
-  // ... (alle State Variablen bleiben unverändert) ...
   const [dark, setDark] = useState(false);
   const [view, setView] = useState("diary");
   const [entries, setEntries] = useState(() => {
@@ -257,7 +501,6 @@ export default function App() {
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
 
   // --- EFFECT HOOKS ---
-  // ... (alle Effect Hooks bleiben unverändert) ...
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
     setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -301,9 +544,7 @@ export default function App() {
     }
   }, [editingIdx, isExportingPdf]);
 
-
   // --- KERNLOGIK & EVENT HANDLER ---
-  // ... (handleFocus, addToast, handleExportPDF, Datei-Handling, Symptom-Management, Eintrags-Management etc. bleiben unverändert) ...
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
 
   const addToast = msg => {
@@ -318,7 +559,7 @@ export default function App() {
 
     const currentActionMenu = actionMenuOpenForIdx;
     const currentColorPicker = colorPickerOpenForIdx;
-    const currentNote = noteOpenIdx;
+    const currentNote = noteOpenIdx; // PDF Export soll alle Popups schließen
 
     setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
@@ -357,6 +598,7 @@ export default function App() {
         windowWidth: el.scrollWidth,
         windowHeight: el.scrollHeight,
         useCORS: true,
+        // logging: true, // Für Debugging von html2canvas
       });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
@@ -377,7 +619,13 @@ export default function App() {
         orig.el.style.height = orig.height;
         orig.el.style.objectFit = orig.objectFit;
       });
+
       setIsExportingPdf(false);
+      // Stellen Sie sicher, dass die Zustände nach dem Export nicht unbeabsichtigt wiederhergestellt werden,
+      // wenn sie vor dem Export explizit geschlossen werden sollten.
+      // setActionMenuOpenForIdx(currentActionMenu); // Nur wenn es Sinn macht
+      // setColorPickerOpenForIdx(currentColorPicker);
+      // setNoteOpenIdx(currentNote);
     }
   };
 
@@ -468,7 +716,7 @@ export default function App() {
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Auch hier explizit schließen
   };
 
   const addEditSymptom = () => {
@@ -499,7 +747,7 @@ export default function App() {
       prevEntries.map((ent, j) =>
         j === editingIdx
         ? {
-            ...ent,
+            ...ent, // Behält tagColor und comment bei
             food: editForm.food.trim(),
             imgs: editForm.imgs,
             symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})),
@@ -508,13 +756,13 @@ export default function App() {
         : ent
       ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
     );
-    cancelEdit();
+    cancelEdit(); // Schließt auch das ActionMenu
     addToast("Eintrag aktualisiert");
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit();
-    setActionMenuOpenForIdx(null);
+    if (editingIdx === i) cancelEdit(); // Stellt sicher, dass der Bearbeitungsmodus verlassen wird
+    setActionMenuOpenForIdx(null); // Explizit schließen
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
     addToast("Eintrag gelöscht");
@@ -523,18 +771,18 @@ export default function App() {
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
         if (prevOpenIdx === idx) {
-            return null;
+            return null; // Schließen, wenn bereits offen
         } else {
-            setNoteDraft(entries[idx].comment || "");
-            setActionMenuOpenForIdx(null);
+            setNoteDraft(entries[idx].comment || ""); // Entwurf setzen
+            setActionMenuOpenForIdx(null); // Andere Popups schließen
             setColorPickerOpenForIdx(null);
-            return idx;
+            return idx; // Öffnen für diesen Index
         }
     });
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
+    setNoteOpenIdx(null); // Notizfeld schließen
     addToast("Notiz gespeichert");
   };
 
@@ -546,10 +794,11 @@ export default function App() {
     );
     const colorName = TAG_COLOR_NAMES[newColor] || newColor;
     addToast(`Markierung auf "${colorName}" geändert.`);
-    setColorPickerOpenForIdx(null);
+    setColorPickerOpenForIdx(null); // Farbauswahl schließen
   };
 
   const handleContainerClick = (e) => {
+      // Schließe Aktionsmenü, wenn außerhalb geklickt wird
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
@@ -557,15 +806,19 @@ export default function App() {
               setActionMenuOpenForIdx(null);
           }
       }
+      // Schließe Notiz-Eingabefeld, wenn außerhalb geklickt wird
       if (noteOpenIdx !== null) {
           const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
           const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
           const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
+          // Verhindere Schließen, wenn auf bereits angezeigten Notiztext geklickt wird (um es zu öffnen)
           const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
+
           if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextTrigger) {
               setNoteOpenIdx(null);
           }
       }
+      // Schließe Farbauswahl, wenn außerhalb geklickt wird
       if (colorPickerOpenForIdx !== null) {
           const pickerTriggerClicked = e.target.closest(`#tag-marker-${colorPickerOpenForIdx}`);
           const pickerContentClicked = e.target.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
@@ -574,22 +827,24 @@ export default function App() {
           }
       }
   };
+
+  // --- DATENVORBEREITUNG FÜR DIE ANZEIGE ---
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
-  .filter(({ entry }) =>
-    (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (entry.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+    .filter(({ entry }) =>
+      (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (entry.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
-const entriesToRenderForUiOrPdf = isExportingPdf ? filteredWithIdx : filteredWithIdx.slice(0, displayCount);
+  const entriesToRenderForUiOrPdf = isExportingPdf ? filteredWithIdx : filteredWithIdx.slice(0, displayCount);
 
-const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
-  const day = entry.date.split(" ")[0];
-  (acc[day] = acc[day] || []).push({ entry, idx });
-  return acc;
-}, {});
-const dates = Object.keys(grouped)
-  .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
+  const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
+    const day = entry.date.split(" ")[0];
+    (acc[day] = acc[day] || []).push({ entry, idx });
+    return acc;
+  }, {});
+  const dates = Object.keys(grouped)
+    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
 
 
   // --- JSX RENDERING LOGIK ---
@@ -618,7 +873,6 @@ const dates = Object.keys(grouped)
       <h2 style={styles.title}>Food Diary</h2>
 
       <div style={{ marginBottom: 24 }}>
-        {/* ... Neuer Eintrag Formular (unverändert) ... */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <input placeholder="Essen..." value={newForm.food} onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={styles.input} />
           <CameraButton onClick={() => fileRefNew.current?.click()} />
@@ -679,8 +933,8 @@ const dates = Object.keys(grouped)
               return (
                 <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
                   {editingIdx === idx && !isExportingPdf ? (
-                    <> {/* Editieransicht unverändert */}
-                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
+                    <> {/* Editieransicht */}
+                      <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, width: '100%', marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
                       
@@ -751,14 +1005,12 @@ const dates = Object.keys(grouped)
                           onClick={(e) => {
                             e.stopPropagation();
                             setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
-                            setNoteOpenIdx(null);
+                            setNoteOpenIdx(null); // Schließe andere Popups
                             setColorPickerOpenForIdx(null);
                           }}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Padding hier beibehalten für Klickfläche
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
                           title="Aktionen"
-                        >
-                          <span style={styles.rotatedIcon}>✏️</span> {/* ANPASSUNG: Icon gedreht */}
-                        </button>
+                        >✏️</button>
                       </div>
 
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px' }}>{entry.date}</div>
@@ -781,7 +1033,7 @@ const dates = Object.keys(grouped)
                       )}
 
                       {noteOpenIdx === idx && !isExportingPdf && (
-                        <div onClick={e => e.stopPropagation()} style={{marginTop: '8px', zIndex: 15 }}>
+                        <div onClick={e => e.stopPropagation()} style={{marginTop: '8px', zIndex: 15 /* Über normalen Inhalt aber unter ActionMenu/ColorPicker */}}>
                           <textarea id={`note-textarea-${idx}`} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
                           <button id={`note-save-button-${idx}`} onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary(dark ? '#555' : "#FBC02D"), color: dark ? '#fff' : '#333', marginTop: 8 }} >Notiz speichern</button>
                         </div>
@@ -804,7 +1056,7 @@ const dates = Object.keys(grouped)
                             onClick={(e) => {
                               e.stopPropagation();
                               setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                              setActionMenuOpenForIdx(null);
+                              setActionMenuOpenForIdx(null); // Schließe andere Popups
                               setNoteOpenIdx(null);
                             }}
                             title={`Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`}
@@ -815,7 +1067,7 @@ const dates = Object.keys(grouped)
                             <div 
                               id={`color-picker-popup-${idx}`}
                               style={styles.colorPickerPopup(dark)} 
-                              onClick={e => e.stopPropagation()}
+                              onClick={e => e.stopPropagation()} // Verhindert Schließen bei Klick in Popup
                             >
                               {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW].map(colorValue => (
                                 <div
