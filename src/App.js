@@ -855,7 +855,7 @@ export default function App() {
                               }}
                               style={{
                                 ...styles.smallInput,
-                                width: '40px', // ANGEPASSTE BREITE
+                                width: '20px', // ANGEPASSTE BREITE
                                 flexShrink: 0,
                                 fontSize: '16px', 
                                 padding: '6px 5px' // ANGEPASSTES PADDING
