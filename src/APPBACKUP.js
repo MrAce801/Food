@@ -4,7 +4,6 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
 // --- STILDEFINITIONEN ---
-// ... (Styles bleiben unverändert) ...
 const styles = {
   container: isMobile => ({
     maxWidth: 600,
@@ -81,7 +80,8 @@ const styles = {
     background: isSymptomOnly
       ? (dark ? "#3c3c46" : "#f0f0f5")
       : (dark ? "#2a2a32" : "#fff"),
-    boxShadow: "0 1px 4px #0002"
+    boxShadow: "0 1px 4px #0002",
+    // overflow: 'hidden', // Entfernt, damit das ActionMenu nicht abgeschnitten wird
   }),
   groupHeader: {
     fontSize: 18,
@@ -96,7 +96,8 @@ const styles = {
     color: "#fff",
     padding: "8px 12px",
     borderRadius: 4,
-    opacity: 0.9
+    opacity: 0.9,
+    zIndex: 1000 // Höchster zIndex
   },
   backButton: {
     padding: "6px 12px",
@@ -116,7 +117,14 @@ const styles = {
     fontSize: 16,
     lineHeight: 1,
     color: dark ? '#f0f0f8' : '#333',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }),
+  rotatedIcon: {
+    display: 'inline-block',
+    transform: 'rotate(90deg)',
+  },
   actionMenu: (dark) => ({
     position: 'absolute',
     right: '12px',
@@ -125,7 +133,7 @@ const styles = {
     borderRadius: 8,
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
     padding: '8px',
-    zIndex: 20,
+    zIndex: 20, // Unter Toasts und ColorPicker, aber über Karteninhalt
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
@@ -133,7 +141,7 @@ const styles = {
   }),
   actionMenuItem: (dark, isDestructive = false) => ({
     background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff',
+    color: '#fff', // Zurückgesetzt auf Originalvorgabe
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -141,11 +149,53 @@ const styles = {
     textAlign: 'left',
     width: '100%',
     fontSize: '14px',
-  })
+  }),
+  tagMarkerBase: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 0,
+    height: 0,
+    borderStyle: 'solid',
+    zIndex: 5, // Unter Popups
+  },
+  tagMarkerOuter: (tagColor) => ({
+    ...styles.tagMarkerBase,
+    borderWidth: '0 0 28px 28px',
+    borderColor: `transparent transparent ${tagColor} transparent`,
+    cursor: 'pointer',
+  }),
+  tagMarkerInnerHint: (cardBgColor) => ({
+    ...styles.tagMarkerBase,
+    borderWidth: '0 0 16px 16px', // Für dickeren farbigen Rand
+    borderColor: `transparent transparent ${cardBgColor} transparent`,
+    pointerEvents: 'none',
+    zIndex: 6, // Über äußerem Marker
+  }),
+  colorPickerPopup: (dark) => ({
+    position: 'absolute',
+    bottom: '30px', // Angepasst an Markierungsgröße
+    right: '5px',
+    background: dark ? '#4a4a52' : '#fff',
+    padding: '8px',
+    borderRadius: '6px',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+    zIndex: 30, // Über ActionMenu
+    display: 'flex',
+    gap: '8px',
+  }),
+  colorPickerItem: (color, isActive, currentThemeDark) => ({
+    width: '24px',
+    height: '24px',
+    backgroundColor: color,
+    borderRadius: '4px',
+    cursor: 'pointer',
+    border: isActive ? (currentThemeDark ? '2px solid #FFFFFF' : '2px solid #000000') : '2px solid transparent',
+    boxSizing: 'border-box',
+  }),
 };
 
 // --- GLOBALE KONSTANTEN & FARBMAPPINGS ---
-// ... (bleiben unverändert) ...
 const SYMPTOM_COLOR_MAP = {
   Bauchschmerzen: "#D0E1F9",
   Durchfall: "#D6EAE0",
@@ -172,9 +222,19 @@ const TIME_CHOICES = [
   { label: "nach 3 h", value: 180 }
 ];
 
+const TAG_COLORS = {
+  GREEN: 'green',
+  RED: 'red',
+  YELLOW: 'yellow',
+};
+const TAG_COLOR_NAMES = {
+  [TAG_COLORS.GREEN]: "Standard",
+  [TAG_COLORS.RED]: "Symptome",
+  [TAG_COLORS.YELLOW]: "Vorgeschichte",
+};
+
 // --- HILFSFUNKTIONEN ---
-// ... (bleiben unverändert) ...
-function resizeToJpeg(file, maxWidth = 800) { 
+function resizeToJpeg(file, maxWidth = 800) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = (e) => { console.error("FileReader Error:", e); reject(reader.error); };
@@ -272,7 +332,6 @@ const fromDateTimePickerFormat = (pickerDateStr) => {
 };
 
 // --- UI UTILITY KOMPONENTEN ---
-// ... (PdfButton, InsightsButton, BackButton, CameraButton bleiben unverändert) ...
 const PdfButton = ({ onClick }) => (
   <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
     PDF
@@ -297,14 +356,14 @@ const ImgStack = ({ imgs, onDelete }) => (
   <div className="img-stack-container" style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
     {imgs.map((src, i) => (
       <div key={i} className="img-stack-item" style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
-        <img 
-          src={src} 
-          alt={`entry_image_${i}`} 
+        <img
+          src={src}
+          alt={`entry_image_${i}`}
           style={{
             width: 40, height: 40, objectFit: "cover",
             borderRadius: 6, border: "2px solid #fff",
             boxShadow: "0 1px 4px #0003"
-          }} 
+          }}
           onError={e => { e.currentTarget.style.display = "none"; }}
         />
         {onDelete && (
@@ -323,8 +382,8 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
-  const tagTextColor = "#1a1f3d";
+  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; // Zurückgesetzt auf Original
+  const tagTextColor = "#1a1f3d"; // Zurückgesetzt auf Original
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
@@ -374,7 +433,6 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
 };
 
 // --- DATENVERARBEITUNGSKOMPONENTEN (z.B. Insights) ---
-// ... (Insights Komponente bleibt unverändert) ...
 function Insights({ entries }) {
   const map = {};
   entries.forEach(e => {
@@ -413,10 +471,11 @@ export default function App() {
     try {
       const loadedEntries = JSON.parse(localStorage.getItem("fd-entries") || "[]")
         .map(e => ({
-            ...e,
-            comment: e.comment || "",
-            food: e.food || "",
-            symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }))
+          ...e,
+          comment: e.comment || "",
+          food: e.food || "",
+          symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
+          tagColor: e.tagColor || TAG_COLORS.GREEN,
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
     } catch { return []; }
@@ -445,19 +504,20 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
   const [actionMenuOpenForIdx, setActionMenuOpenForIdx] = useState(null);
-  const [isExportingPdf, setIsExportingPdf] = useState(false); // NEUER STATE für PDF Export
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
 
   // --- EFFECT HOOKS ---
-  useEffect(() => { // Initial Theme Load
+  useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
     setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
-  useEffect(() => { // Persist Entries (mit Fehlerbehandlung für Speicherlimit)
+  useEffect(() => {
     try {
       localStorage.setItem("fd-entries", JSON.stringify(entries));
     } catch (e) {
-      if (e.name === 'QuotaExceededError' || 
+      if (e.name === 'QuotaExceededError' ||
           e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
           (e.code && (e.code === 22 || e.code === 1014))) {
         console.error("LocalStorage Quota Exceeded:", e);
@@ -467,93 +527,80 @@ export default function App() {
         addToast("Ein Fehler ist beim Speichern der Daten aufgetreten.");
       }
     }
-  }, [entries]); // addToast hier als Dependency, falls es sich ändert (unwahrscheinlich, aber sauberer)
+  }, [entries]); // addToast hier nicht als Dependency, da es sich nicht ändert und keine States liest
 
-  useEffect(() => { // Persist New Form Draft
+  useEffect(() => {
     localStorage.setItem("fd-form-new", JSON.stringify(newForm));
   }, [newForm]);
 
-  useEffect(() => { // Apply Theme and Persist
+  useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
     localStorage.setItem("fd-theme", dark ? "dark" : "light");
   }, [dark]);
 
-  useEffect(() => { // Mobile Detection
+  useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 700);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  
-  useEffect(() => { // Scroll to Editing Entry
-    if (editingIdx !== null && !isExportingPdf) { // Nicht scrollen während PDF Export
+
+  useEffect(() => {
+    if (editingIdx !== null && !isExportingPdf) {
       document.getElementById(`entry-card-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [editingIdx, isExportingPdf]);
 
   // --- KERNLOGIK & EVENT HANDLER ---
-
-  // --- Fokus-Handler ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  // --- Toast-Benachrichtigungen ---
   const addToast = msg => {
     const id = Date.now();
     setToasts(t => [...t, { id, msg }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // --- PDF Export (MODIFIZIERT für alle Einträge und Bilddarstellung) ---
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
 
-    const currentActionMenu = actionMenuOpenForIdx;
-    setActionMenuOpenForIdx(null); 
-    
+    // Schließe alle Popups vor dem Export
+    setActionMenuOpenForIdx(null);
+    setColorPickerOpenForIdx(null);
+    setNoteOpenIdx(null);
+
     addToast("PDF Export wird vorbereitet...");
     setIsExportingPdf(true); // Signal zum Rendern aller gefilterten Einträge
-    
-    await new Promise(resolve => setTimeout(resolve, 300)); // Warte auf DOM Update (ggf. anpassen)
+
+    await new Promise(resolve => setTimeout(resolve, 300)); // Warte auf DOM Update
 
     const imgStackItemOriginalStyles = [];
     const individualImageOriginalStyles = [];
 
     try {
-      // Temporäre Styles für ImgStack-Layout (Bilder nebeneinander)
       const imgStackContainers = Array.from(el.querySelectorAll(".img-stack-container"));
       imgStackContainers.forEach(stackContainer => {
-          const childrenItems = Array.from(stackContainer.children).filter(child => child.classList.contains("img-stack-item"));
-          childrenItems.forEach((item, index) => {
-              imgStackItemOriginalStyles.push({
-                  el: item,
-                  marginLeft: item.style.marginLeft,
-                  zIndex: item.style.zIndex,
-              });
-              item.style.marginLeft = index > 0 ? "4px" : "0px"; 
-              item.style.zIndex = "auto"; 
-          });
+        const childrenItems = Array.from(stackContainer.children).filter(child => child.classList.contains("img-stack-item"));
+        childrenItems.forEach((item, index) => {
+          imgStackItemOriginalStyles.push({ el: item, marginLeft: item.style.marginLeft, zIndex: item.style.zIndex });
+          item.style.marginLeft = index > 0 ? "4px" : "0px";
+          item.style.zIndex = "auto";
+        });
       });
 
-      // Temporäre Styles für Bildgrößen
-      const allImagesInTable = Array.from(el.querySelectorAll("#fd-table img"));
+      const allImagesInTable = Array.from(el.querySelectorAll("#fd-table img")); // Nur Bilder in der Tabelle
       allImagesInTable.forEach(img => {
-          individualImageOriginalStyles.push({
-              el: img,
-              width: img.style.width,
-              height: img.style.height,
-              objectFit: img.style.objectFit,
-          });
-          img.style.width = "120px"; 
-          img.style.height = "120px";
-          img.style.objectFit = "contain"; 
+        individualImageOriginalStyles.push({ el: img, width: img.style.width, height: img.style.height, objectFit: img.style.objectFit });
+        img.style.width = "120px";
+        img.style.height = "120px";
+        img.style.objectFit = "contain";
       });
-      
-      const canvas = await html2canvas(el, { 
-          scale: 2, 
-          windowWidth: el.scrollWidth, 
-          windowHeight: el.scrollHeight,
-          useCORS: true, 
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
+        useCORS: true,
       });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
@@ -562,26 +609,23 @@ export default function App() {
       addToast("PDF erfolgreich exportiert!");
 
     } catch (error) {
-        console.error("Fehler beim Erstellen des PDFs:", error);
-        addToast("Fehler beim PDF-Export.");
+      console.error("Fehler beim Erstellen des PDFs:", error);
+      addToast("Fehler beim PDF-Export.");
     } finally {
-      // Ursprüngliche Styles wiederherstellen
       imgStackItemOriginalStyles.forEach(orig => {
-          orig.el.style.marginLeft = orig.marginLeft;
-          orig.el.style.zIndex = orig.zIndex;
+        orig.el.style.marginLeft = orig.marginLeft;
+        orig.el.style.zIndex = orig.zIndex;
       });
       individualImageOriginalStyles.forEach(orig => {
-          orig.el.style.width = orig.width;
-          orig.el.style.height = orig.height;
-          orig.el.style.objectFit = orig.objectFit;
+        orig.el.style.width = orig.width;
+        orig.el.style.height = orig.height;
+        orig.el.style.objectFit = orig.objectFit;
       });
-
       setIsExportingPdf(false); // Zurück zur normalen Ansicht
-      setActionMenuOpenForIdx(currentActionMenu); 
+      // Zustände der Popups nicht automatisch wiederherstellen, sie wurden ja bewusst geschlossen.
     }
   };
 
-  // --- Datei-Handling (Neuer Eintrag) ---
   const handleNewFile = async e => {
     for (let file of Array.from(e.target.files || [])) {
       try {
@@ -594,14 +638,13 @@ export default function App() {
         addToast(err.message || "Ungültiges oder zu großes Bild");
       }
     }
-    e.target.value = "";
+    if (e.target) e.target.value = ""; // Input leeren für erneuten Upload derselben Datei
   };
   const removeNewImg = idx => {
     setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     addToast("Foto gelöscht");
   };
 
-  // --- Datei-Handling (Eintrag bearbeiten) ---
   const handleEditFile = async e => {
     if (!editForm) return;
     for (let file of Array.from(e.target.files || [])) {
@@ -615,15 +658,13 @@ export default function App() {
         addToast(err.message || "Ungültiges oder zu großes Bild");
       }
     }
-    e.target.value = "";
+    if (e.target) e.target.value = "";
   };
   const removeEditImg = idx => {
     setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
     addToast("Foto gelöscht");
   };
 
-  // --- Symptom-Management (Neuer Eintrag) ---
-  // ... (bleibt unverändert) ...
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
     setNewSymptoms(s => [...s, {
@@ -635,8 +676,6 @@ export default function App() {
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
-  // --- Eintrags-Management (Hinzufügen) ---
-  // ... (bleibt unverändert) ...
   const addEntry = () => {
     if (!newForm.food.trim() && newSymptoms.length === 0) return;
     const entry = {
@@ -644,7 +683,8 @@ export default function App() {
       imgs: newForm.imgs,
       symptoms: newSymptoms,
       comment: "",
-      date: now()
+      date: now(),
+      tagColor: TAG_COLORS.GREEN, // Standard-Tag-Farbe
     };
     setEntries(prevEntries =>
       [...prevEntries, entry].sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
@@ -654,30 +694,29 @@ export default function App() {
     addToast("Eintrag gespeichert");
   };
 
-  // --- Eintrags-Management (Bearbeiten Start/Abbruch) ---
-  // ... (bleibt unverändert) ...
   const startEdit = i => {
     const e = entries[i];
     setEditingIdx(i);
     setEditForm({
         food: e.food,
-        imgs: [...e.imgs],
-        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
+        imgs: [...e.imgs], // Kopie für Bearbeitung
+        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })), // Kopie
         symptomInput: "",
         symptomTime: 0,
         newSymptomStrength: 1,
         date: toDateTimePickerFormat(e.date)
+        // tagColor wird nicht im editForm benötigt, da es separat gehandhabt wird
     });
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Andere Popups schließen
+    setColorPickerOpenForIdx(null);
+    setNoteOpenIdx(null);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Auch hier explizit schließen, falls es offen war
   };
 
-  // --- Symptom-Management (Eintrag bearbeiten) ---
-  // ... (bleibt unverändert) ...
   const addEditSymptom = () => {
     if (!editForm || !editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
@@ -697,8 +736,6 @@ export default function App() {
       symptoms: fm.symptoms.filter((_, i) => i !== idx)
   }));
 
-  // --- Eintrags-Management (Speichern/Löschen) ---
-  // ... (bleibt unverändert) ...
   const saveEdit = () => {
     if (!editForm) return;
     const displayDateToSave = fromDateTimePickerFormat(editForm.date);
@@ -708,10 +745,10 @@ export default function App() {
       prevEntries.map((ent, j) =>
         j === editingIdx
         ? {
+            ...ent, // Wichtig, um tagColor und comment beizubehalten
             food: editForm.food.trim(),
             imgs: editForm.imgs,
             symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})),
-            comment: ent.comment,
             date: displayDateToSave
           }
         : ent
@@ -723,31 +760,41 @@ export default function App() {
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
-    setActionMenuOpenForIdx(null);
+    setActionMenuOpenForIdx(null); // Sicherstellen, dass alle Popups für diesen Eintrag geschlossen werden
+    setColorPickerOpenForIdx(null);
+    setNoteOpenIdx(null);
     addToast("Eintrag gelöscht");
   };
 
-  // --- Notiz-Management ---
-  // ... (bleibt unverändert) ...
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
-        if (prevOpenIdx === idx) {
+        if (prevOpenIdx === idx) { // Wenn schon offen, schließen
             return null;
-        } else {
+        } else { // Sonst öffnen und andere schließen
             setNoteDraft(entries[idx].comment || "");
+            setActionMenuOpenForIdx(null);
+            setColorPickerOpenForIdx(null);
             return idx;
         }
     });
-    setActionMenuOpenForIdx(null);
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
+    setNoteOpenIdx(null); // Notizfeld schließen
     addToast("Notiz gespeichert");
   };
-  
-  // --- Globale UI Interaktions-Handler (Container Klick für Menü/Notiz schließen) ---
-  // ... (bleibt unverändert) ...
+
+  const handleTagColorChange = (entryIdx, newColor) => {
+    setEntries(prevEntries =>
+        prevEntries.map((entry, i) =>
+            i === entryIdx ? { ...entry, tagColor: newColor } : entry
+        )
+    );
+    const colorName = TAG_COLOR_NAMES[newColor] || newColor;
+    addToast(`Markierung auf "${colorName}" geändert.`);
+    setColorPickerOpenForIdx(null); // Farbauswahl schließen nach Auswahl
+  };
+
   const handleContainerClick = (e) => {
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
@@ -761,9 +808,15 @@ export default function App() {
           const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
           const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
           const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
-
           if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextTrigger) {
               setNoteOpenIdx(null);
+          }
+      }
+      if (colorPickerOpenForIdx !== null) {
+          const pickerTriggerClicked = e.target.closest(`#tag-marker-${colorPickerOpenForIdx}`);
+          const pickerContentClicked = e.target.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
+          if (!pickerTriggerClicked && !pickerContentClicked) {
+              setColorPickerOpenForIdx(null);
           }
       }
   };
@@ -776,7 +829,6 @@ export default function App() {
       (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-  // NEUE Logik: Wenn isExportingPdf true ist, alle gefilterten Einträge verwenden, sonst displayCount beachten
   const entriesToRenderForUiOrPdf = isExportingPdf ? filteredWithIdx : filteredWithIdx.slice(0, displayCount);
 
   const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
@@ -789,8 +841,6 @@ export default function App() {
 
 
   // --- JSX RENDERING LOGIK ---
-  // ... (Restliche JSX Struktur, die `grouped` und `dates` verwendet, bleibt gleich) ...
-  // ... (Die Änderungen an den Feldgrößen für editForm.symptoms sind bereits im Code enthalten) ...
   if (view === "insights") {
     return (
       <div style={styles.container(isMobile)} onClick={handleContainerClick}>
@@ -815,6 +865,7 @@ export default function App() {
       </div>
       <h2 style={styles.title}>Food Diary</h2>
 
+      {/* Neuer Eintrag Formular */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <input placeholder="Essen..." value={newForm.food} onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={styles.input} />
@@ -822,7 +873,7 @@ export default function App() {
           <input ref={fileRefNew} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleNewFile} style={{ display: "none" }} />
         </div>
         {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
-        
+
         <div style={{ marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
           <input list="symptom-list" placeholder="Symptom..." value={newForm.symptomInput} onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}}/>
           <datalist id="symptom-list">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
@@ -833,11 +884,11 @@ export default function App() {
             <select value={newForm.symptomStrength} onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink: 0 }}>
               {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
             </select>
-            <button 
-              onClick={addNewSymptom} 
-              style={{ 
-                ...styles.buttonSecondary("#247be5"), 
-                flexShrink: 0, 
+            <button
+              onClick={addNewSymptom}
+              style={{
+                ...styles.buttonSecondary("#247be5"),
+                flexShrink: 0,
                 fontSize: '16px',
                 padding: '9px 12px',
                 boxSizing: 'border-box'
@@ -849,13 +900,14 @@ export default function App() {
           {newSymptoms.map((s, i) => ( <SymTag key={i} txt={s.txt} time={s.time} strength={s.strength} dark={dark} onDel={() => removeNewSymptom(i)} /> ))}
         </div>
         <button onClick={addEntry} disabled={!newForm.food.trim() && newSymptoms.length === 0} style={{ ...styles.buttonPrimary, opacity: (newForm.food.trim() || newSymptoms.length > 0) ? 1 : 0.5 }} >Eintrag hinzufügen</button>
-        
+
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
           <input placeholder="Suche..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{...styles.smallInput, flexGrow: 1}} />
           { !isExportingPdf && <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>Mehr laden</button> }
         </div>
       </div>
 
+      {/* Eintragsliste */}
       <div id="fd-table">
         {dates.map(day => (
           <div key={day}>
@@ -867,35 +919,41 @@ export default function App() {
               const customDisplay = symptomsForDisplay.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
               const sortedAllDisplay = [...knownDisplay, ...customDisplay];
 
+              const cardBackgroundColor = isSymptomOnlyEntry
+                ? (dark ? styles.entryCard(dark, true).background : styles.entryCard(false, true).background)
+                : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
+              
+              const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
+
               return (
                 <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
-                  {editingIdx === idx && !isExportingPdf ? ( // Stelle sicher, dass der Editiermodus nicht während des Exports aktiv ist
-                    <>
+                  {editingIdx === idx && !isExportingPdf ? (
+                    <> {/* Editieransicht */}
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, width: '100%', marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
                       
-                      <div style={{ marginBottom: 12 }}> 
-                        <input list="symptom-list-edit" placeholder="Symptom hinzufügen..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} /> 
-                        <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist> 
-                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}> 
-                          <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '110px', flexShrink:0 }}> 
-                            {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)} 
-                          </select> 
-                          <select value={editForm.newSymptomStrength} onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink:0 }}> 
-                            {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)} 
-                          </select> 
-                          <button 
-                            onClick={addEditSymptom} 
+                      <div style={{ marginBottom: 12 }}>
+                        <input list="symptom-list-edit" placeholder="Symptom hinzufügen..." value={editForm.symptomInput} onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100%', marginBottom: '8px'}} />
+                        <datalist id="symptom-list-edit">{SYMPTOM_CHOICES.map(s => <option key={s} value={s} />)}</datalist>
+                        <div style={{ display: "flex", alignItems: "center", gap: '6px', flexWrap: 'nowrap' }}>
+                          <select value={editForm.symptomTime} onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '110px', flexShrink:0 }}>
+                            {TIME_CHOICES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                          </select>
+                          <select value={editForm.newSymptomStrength} onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))} onFocus={handleFocus} style={{...styles.smallInput, width: '100px', flexShrink:0 }}>
+                            {[1,2,3].map(n => <option key={n} value={n}>Stärke {n}</option>)}
+                          </select>
+                          <button
+                            onClick={addEditSymptom}
                             style={{
                               ...styles.buttonSecondary("#247be5"),
-                              flexShrink:0, 
+                              flexShrink:0,
                               fontSize: '16px',
                               padding: '9px 12px',
                               boxSizing: 'border-box'
                             }}
-                          >+</button> 
-                        </div> 
+                          >+</button>
+                        </div>
                       </div>
 
                       <div style={{ marginBottom: 8 }}>
@@ -905,16 +963,16 @@ export default function App() {
                               type="text"
                               list="symptom-list-edit"
                               value={s.txt}
-                              onChange={e_text => { /* ... */ }}
+                              onChange={e_text => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.map((sym, k) => k === j ? {...sym, txt: e_text.target.value} : sym) }))}
                               onFocus={handleFocus}
                               style={{...styles.smallInput, flexGrow: 1, marginRight: '6px'}}
                             />
-                            <select value={s.time} onChange={e_select => { /* ... */ }}
+                            <select value={s.time} onChange={e_select => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.map((sym, k) => k === j ? {...sym, time: Number(e_select.target.value)} : sym) }))}
                               style={{...styles.smallInput, width: '37px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                             >
                               {TIME_CHOICES.map(t => (<option key={t.value} value={t.value}>{t.value === 0 ? '0' : t.value}</option>))}
                             </select>
-                            <select value={s.strength || 1} onChange={e_strength => { /* ... */ }}
+                            <select value={s.strength || 1} onChange={e_strength => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.map((sym, k) => k === j ? {...sym, strength: Number(e_strength.target.value)} : sym) }))}
                               style={{...styles.smallInput, width: '25px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                             >
                               {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
@@ -929,20 +987,27 @@ export default function App() {
                       </div>
                     </>
                   ) : (
-                    <>
+                    <> {/* Anzeigeansicht */}
                       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', gap: '6px' }}>
                         <button
                           id={`note-icon-button-${idx}`}
-                          onClick={(e) => { e.stopPropagation(); toggleNote(idx); setActionMenuOpenForIdx(null);}}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
+                          onClick={(e) => { e.stopPropagation(); toggleNote(idx); }}
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Padding für Klickfläche
                           title="Notiz"
                         >🗒️</button>
                         <button
                           id={`action-menu-trigger-${idx}`}
-                          onClick={(e) => { e.stopPropagation(); setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx); setNoteOpenIdx(null);}}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
+                            setNoteOpenIdx(null);
+                            setColorPickerOpenForIdx(null);
+                          }}
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Padding für Klickfläche
                           title="Aktionen"
-                        >✏️</button>
+                        >
+                          <span style={styles.rotatedIcon}>✏️</span>
+                        </button>
                       </div>
 
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px' }}>{entry.date}</div>
@@ -965,7 +1030,7 @@ export default function App() {
                       )}
 
                       {noteOpenIdx === idx && !isExportingPdf && (
-                        <div onClick={e => e.stopPropagation()} style={{marginTop: '8px'}}>
+                        <div onClick={e => e.stopPropagation()} style={{marginTop: '8px', zIndex: 15 }}>
                           <textarea id={`note-textarea-${idx}`} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
                           <button id={`note-save-button-${idx}`} onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary(dark ? '#555' : "#FBC02D"), color: dark ? '#fff' : '#333', marginTop: 8 }} >Notiz speichern</button>
                         </div>
@@ -973,11 +1038,45 @@ export default function App() {
                       {entry.comment && noteOpenIdx !== idx && !isExportingPdf && (
                         <div
                           id={`displayed-note-text-${idx}`}
-                          onClick={(e) => { e.stopPropagation(); setNoteOpenIdx(idx); setNoteDraft(entry.comment || ""); setActionMenuOpenForIdx(null);}}
+                          onClick={(e) => { e.stopPropagation(); toggleNote(idx);}}
                           style={{ marginTop: 8, background: dark ? "#3a3a42" : "#f0f0f5", padding: "6px 8px", borderRadius: 4, color: dark ? "#e0e0e0" : "#333", overflowWrap: "break-word", whiteSpace: "pre-wrap", boxSizing: "border-box", cursor: 'pointer' }}
                         >
                           {entry.comment}
                         </div>
+                      )}
+
+                      {!isExportingPdf && (
+                        <>
+                          <div
+                            id={`tag-marker-${idx}`}
+                            style={styles.tagMarkerOuter(currentTagColor)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
+                              setActionMenuOpenForIdx(null);
+                              setNoteOpenIdx(null);
+                            }}
+                            title={`Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`}
+                          />
+                          <div style={styles.tagMarkerInnerHint(cardBackgroundColor)} />
+                        
+                          {colorPickerOpenForIdx === idx && (
+                            <div 
+                              id={`color-picker-popup-${idx}`}
+                              style={styles.colorPickerPopup(dark)} 
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW].map(colorValue => (
+                                <div
+                                  key={colorValue}
+                                  style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
+                                  title={TAG_COLOR_NAMES[colorValue] || colorValue}
+                                  onClick={() => handleTagColorChange(idx, colorValue)}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </>
                       )}
                     </>
                   )}

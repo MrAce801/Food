@@ -65,7 +65,7 @@ const styles = {
   },
   buttonSecondary: bg => ({
     padding: "8px 16px",
-    fontSize: 14,
+    fontSize: 14, // Standard-Fontsize für secondary buttons
     borderRadius: 6,
     border: 0,
     background: bg,
@@ -81,7 +81,6 @@ const styles = {
       ? (dark ? "#3c3c46" : "#f0f0f5")
       : (dark ? "#2a2a32" : "#fff"),
     boxShadow: "0 1px 4px #0002",
-    // overflow: 'hidden', // Entfernt, damit das ActionMenu nicht abgeschnitten wird
   }),
   groupHeader: {
     fontSize: 18,
@@ -97,7 +96,7 @@ const styles = {
     padding: "8px 12px",
     borderRadius: 4,
     opacity: 0.9,
-    zIndex: 1000 // Höchster zIndex
+    zIndex: 1000
   },
   backButton: {
     padding: "6px 12px",
@@ -123,7 +122,7 @@ const styles = {
   }),
   rotatedIcon: {
     display: 'inline-block',
-    transform: 'rotate(90deg)',
+    transform: 'rotate(90deg)', // Winkel wie vom User zuletzt bereitgestellt
   },
   actionMenu: (dark) => ({
     position: 'absolute',
@@ -133,7 +132,7 @@ const styles = {
     borderRadius: 8,
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
     padding: '8px',
-    zIndex: 20, // Unter Toasts und ColorPicker, aber über Karteninhalt
+    zIndex: 20,
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
@@ -141,7 +140,7 @@ const styles = {
   }),
   actionMenuItem: (dark, isDestructive = false) => ({
     background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff', // Zurückgesetzt auf Originalvorgabe
+    color: '#fff',
     border: 'none',
     padding: '8px 12px',
     borderRadius: 4,
@@ -157,7 +156,7 @@ const styles = {
     width: 0,
     height: 0,
     borderStyle: 'solid',
-    zIndex: 5, // Unter Popups
+    zIndex: 5,
   },
   tagMarkerOuter: (tagColor) => ({
     ...styles.tagMarkerBase,
@@ -167,20 +166,20 @@ const styles = {
   }),
   tagMarkerInnerHint: (cardBgColor) => ({
     ...styles.tagMarkerBase,
-    borderWidth: '0 0 16px 16px', // Für dickeren farbigen Rand
+    borderWidth: '0 0 16px 16px',
     borderColor: `transparent transparent ${cardBgColor} transparent`,
     pointerEvents: 'none',
-    zIndex: 6, // Über äußerem Marker
+    zIndex: 6,
   }),
   colorPickerPopup: (dark) => ({
     position: 'absolute',
-    bottom: '30px', // Angepasst an Markierungsgröße
+    bottom: '30px',
     right: '5px',
     background: dark ? '#4a4a52' : '#fff',
     padding: '8px',
     borderRadius: '6px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
-    zIndex: 30, // Über ActionMenu
+    zIndex: 30,
     display: 'flex',
     gap: '8px',
   }),
@@ -382,8 +381,8 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa"; // Zurückgesetzt auf Original
-  const tagTextColor = "#1a1f3d"; // Zurückgesetzt auf Original
+  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
+  const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
   return (
@@ -527,7 +526,7 @@ export default function App() {
         addToast("Ein Fehler ist beim Speichern der Daten aufgetreten.");
       }
     }
-  }, [entries]); // addToast hier nicht als Dependency, da es sich nicht ändert und keine States liest
+  }, [entries]);
 
   useEffect(() => {
     localStorage.setItem("fd-form-new", JSON.stringify(newForm));
@@ -564,15 +563,14 @@ export default function App() {
     const el = document.getElementById("fd-table");
     if (!el) return;
 
-    // Schließe alle Popups vor dem Export
     setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
 
     addToast("PDF Export wird vorbereitet...");
-    setIsExportingPdf(true); // Signal zum Rendern aller gefilterten Einträge
+    setIsExportingPdf(true);
 
-    await new Promise(resolve => setTimeout(resolve, 300)); // Warte auf DOM Update
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     const imgStackItemOriginalStyles = [];
     const individualImageOriginalStyles = [];
@@ -588,7 +586,7 @@ export default function App() {
         });
       });
 
-      const allImagesInTable = Array.from(el.querySelectorAll("#fd-table img")); // Nur Bilder in der Tabelle
+      const allImagesInTable = Array.from(el.querySelectorAll("#fd-table img"));
       allImagesInTable.forEach(img => {
         individualImageOriginalStyles.push({ el: img, width: img.style.width, height: img.style.height, objectFit: img.style.objectFit });
         img.style.width = "120px";
@@ -621,8 +619,7 @@ export default function App() {
         orig.el.style.height = orig.height;
         orig.el.style.objectFit = orig.objectFit;
       });
-      setIsExportingPdf(false); // Zurück zur normalen Ansicht
-      // Zustände der Popups nicht automatisch wiederherstellen, sie wurden ja bewusst geschlossen.
+      setIsExportingPdf(false);
     }
   };
 
@@ -638,7 +635,7 @@ export default function App() {
         addToast(err.message || "Ungültiges oder zu großes Bild");
       }
     }
-    if (e.target) e.target.value = ""; // Input leeren für erneuten Upload derselben Datei
+    if (e.target) e.target.value = "";
   };
   const removeNewImg = idx => {
     setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
@@ -684,7 +681,7 @@ export default function App() {
       symptoms: newSymptoms,
       comment: "",
       date: now(),
-      tagColor: TAG_COLORS.GREEN, // Standard-Tag-Farbe
+      tagColor: TAG_COLORS.GREEN,
     };
     setEntries(prevEntries =>
       [...prevEntries, entry].sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
@@ -699,22 +696,21 @@ export default function App() {
     setEditingIdx(i);
     setEditForm({
         food: e.food,
-        imgs: [...e.imgs], // Kopie für Bearbeitung
-        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })), // Kopie
+        imgs: [...e.imgs],
+        symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
         symptomInput: "",
         symptomTime: 0,
         newSymptomStrength: 1,
         date: toDateTimePickerFormat(e.date)
-        // tagColor wird nicht im editForm benötigt, da es separat gehandhabt wird
     });
-    setActionMenuOpenForIdx(null); // Andere Popups schließen
+    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null); // Auch hier explizit schließen, falls es offen war
+    setActionMenuOpenForIdx(null);
   };
 
   const addEditSymptom = () => {
@@ -745,7 +741,7 @@ export default function App() {
       prevEntries.map((ent, j) =>
         j === editingIdx
         ? {
-            ...ent, // Wichtig, um tagColor und comment beizubehalten
+            ...ent,
             food: editForm.food.trim(),
             imgs: editForm.imgs,
             symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})),
@@ -760,7 +756,7 @@ export default function App() {
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
-    setActionMenuOpenForIdx(null); // Sicherstellen, dass alle Popups für diesen Eintrag geschlossen werden
+    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
     addToast("Eintrag gelöscht");
@@ -768,9 +764,9 @@ export default function App() {
 
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
-        if (prevOpenIdx === idx) { // Wenn schon offen, schließen
+        if (prevOpenIdx === idx) {
             return null;
-        } else { // Sonst öffnen und andere schließen
+        } else {
             setNoteDraft(entries[idx].comment || "");
             setActionMenuOpenForIdx(null);
             setColorPickerOpenForIdx(null);
@@ -780,7 +776,7 @@ export default function App() {
   };
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null); // Notizfeld schließen
+    setNoteOpenIdx(null);
     addToast("Notiz gespeichert");
   };
 
@@ -792,7 +788,7 @@ export default function App() {
     );
     const colorName = TAG_COLOR_NAMES[newColor] || newColor;
     addToast(`Markierung auf "${colorName}" geändert.`);
-    setColorPickerOpenForIdx(null); // Farbauswahl schließen nach Auswahl
+    setColorPickerOpenForIdx(null);
   };
 
   const handleContainerClick = (e) => {
@@ -889,9 +885,10 @@ export default function App() {
               style={{
                 ...styles.buttonSecondary("#247be5"),
                 flexShrink: 0,
-                fontSize: '16px',
-                padding: '9px 12px',
-                boxSizing: 'border-box'
+                fontSize: '16px', // Beibehaltung der Schriftgröße
+                padding: '8px 12px', // ANPASSUNG: Vertikales Padding reduziert
+                boxSizing: 'border-box',
+                // Höhe wird durch Padding und Schriftgröße bestimmt
               }}
             >+</button>
           </div>
@@ -948,8 +945,8 @@ export default function App() {
                             style={{
                               ...styles.buttonSecondary("#247be5"),
                               flexShrink:0,
-                              fontSize: '16px',
-                              padding: '9px 12px',
+                              fontSize: '16px', // Beibehaltung der Schriftgröße
+                              padding: '8px 12px', // ANPASSUNG: Vertikales Padding reduziert (konsistent)
                               boxSizing: 'border-box'
                             }}
                           >+</button>
@@ -992,7 +989,7 @@ export default function App() {
                         <button
                           id={`note-icon-button-${idx}`}
                           onClick={(e) => { e.stopPropagation(); toggleNote(idx); }}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Padding für Klickfläche
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
                           title="Notiz"
                         >🗒️</button>
                         <button
@@ -1003,7 +1000,7 @@ export default function App() {
                             setNoteOpenIdx(null);
                             setColorPickerOpenForIdx(null);
                           }}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}} // Padding für Klickfläche
+                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
                           title="Aktionen"
                         >
                           <span style={styles.rotatedIcon}>✏️</span>
@@ -1045,39 +1042,41 @@ export default function App() {
                         </div>
                       )}
 
-                      {!isExportingPdf && (
-                        <>
-                          <div
-                            id={`tag-marker-${idx}`}
-                            style={styles.tagMarkerOuter(currentTagColor)}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                              setActionMenuOpenForIdx(null);
-                              setNoteOpenIdx(null);
-                            }}
-                            title={`Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`}
-                          />
-                          <div style={styles.tagMarkerInnerHint(cardBackgroundColor)} />
-                        
-                          {colorPickerOpenForIdx === idx && (
-                            <div 
-                              id={`color-picker-popup-${idx}`}
-                              style={styles.colorPickerPopup(dark)} 
-                              onClick={e => e.stopPropagation()}
-                            >
-                              {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW].map(colorValue => (
-                                <div
-                                  key={colorValue}
-                                  style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
-                                  title={TAG_COLOR_NAMES[colorValue] || colorValue}
-                                  onClick={() => handleTagColorChange(idx, colorValue)}
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
+                      {/* ANPASSUNG: Tag-Markierung jetzt auch im PDF sichtbar, außer Farbauswahl-Popup */}
+                      <> {/* Wrapper für die Markierungsteile */}
+                        <div
+                          id={`tag-marker-${idx}`}
+                          style={styles.tagMarkerOuter(currentTagColor)}
+                          onClick={(e) => {
+                            // Click-Handler nur aktiv, wenn nicht im PDF-Export
+                            if (isExportingPdf) return;
+                            e.stopPropagation();
+                            setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
+                            setActionMenuOpenForIdx(null);
+                            setNoteOpenIdx(null);
+                          }}
+                          title={!isExportingPdf ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.` : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`}
+                        />
+                        <div style={styles.tagMarkerInnerHint(cardBackgroundColor)} />
+                      
+                        {/* Farbauswahl-Popup bleibt nur im UI, nicht im PDF */}
+                        {!isExportingPdf && colorPickerOpenForIdx === idx && (
+                          <div 
+                            id={`color-picker-popup-${idx}`}
+                            style={styles.colorPickerPopup(dark)} 
+                            onClick={e => e.stopPropagation()}
+                          >
+                            {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW].map(colorValue => (
+                              <div
+                                key={colorValue}
+                                style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
+                                title={TAG_COLOR_NAMES[colorValue] || colorValue}
+                                onClick={() => handleTagColorChange(idx, colorValue)}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </>
                     </>
                   )}
                 </div>
