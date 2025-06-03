@@ -172,23 +172,32 @@ const TIME_CHOICES = [
 
 // --- HILFSFUNKTIONEN ---
 // --- Bildverarbeitung ---
-function resizeToJpeg(file, maxWidth = 800) {
+function resizeToJpeg(file, maxWidth = 800) { // Beibehaltung der 800px maxWidth für die gespeicherte Auflösung
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
+    reader.onerror = (e) => { console.error("FileReader Error:", e); reject(reader.error); };
     reader.onload = () => {
       const img = new Image();
-      img.onerror = () => reject(new Error("Bild lädt nicht"));
+      img.onerror = (e) => { console.error("Image Load Error:", e); reject(new Error("Bild konnte nicht als Bild interpretiert werden")); };
       img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.width);
-        const w = img.width * scale;
-        const h = img.height * scale;
-        const c = document.createElement("canvas");
-        c.width = w;
-        c.height = h;
-        const ctx = c.getContext("2d");
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(c.toDataURL("image/jpeg", 0.8));
+        try {
+          const scale = Math.min(1, maxWidth / img.width);
+          const w = img.width * scale;
+          const h = img.height * scale;
+          const c = document.createElement("canvas");
+          c.width = w;
+          c.height = h;
+          const ctx = c.getContext("2d");
+          if (!ctx) {
+            console.error("Canvas Context nicht erhalten");
+            return reject(new Error("Canvas Context Fehler"));
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL("image/jpeg", 0.8));
+        } catch (canvasError) {
+          console.error("Canvas Error:", canvasError);
+          reject(new Error("Fehler bei der Bildverkleinerung (Canvas)"));
+        }
       };
       img.src = reader.result;
     };
@@ -284,7 +293,6 @@ const CameraButton = ({ onClick }) => (
   }}>📷</button>
 );
 
-// MODIFIZIERTE ImgStack Komponente mit Klassen für PDF Export
 const ImgStack = ({ imgs, onDelete }) => (
   <div className="img-stack-container" style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
     {imgs.map((src, i) => (
@@ -481,19 +489,18 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // --- PDF Export (MODIFIZIERT für Bilder) ---
+  // --- PDF Export ---
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
 
     const currentActionMenu = actionMenuOpenForIdx;
-    setActionMenuOpenForIdx(null); // Menü schließen für sauberen Export
-    await new Promise(resolve => setTimeout(resolve, 50)); // Kurze Pause damit UI aktualisiert
+    setActionMenuOpenForIdx(null); 
+    await new Promise(resolve => setTimeout(resolve, 50)); 
 
     const imgStackItemOriginalStyles = [];
     const individualImageOriginalStyles = [];
 
-    // 1. Temporäre Styles für ImgStack-Layout (Bilder nebeneinander)
     const imgStackContainers = Array.from(el.querySelectorAll(".img-stack-container"));
     imgStackContainers.forEach(stackContainer => {
         const childrenItems = Array.from(stackContainer.children).filter(child => child.classList.contains("img-stack-item"));
@@ -503,12 +510,11 @@ export default function App() {
                 marginLeft: item.style.marginLeft,
                 zIndex: item.style.zIndex,
             });
-            item.style.marginLeft = index > 0 ? "4px" : "0px"; // Kleiner Abstand zwischen Bildern
-            item.style.zIndex = "auto"; // zIndex zurücksetzen
+            item.style.marginLeft = index > 0 ? "4px" : "0px"; 
+            item.style.zIndex = "auto"; 
         });
     });
 
-    // 2. Temporäre Styles für Bildgrößen (alle Bilder im Exportbereich verdreifachen)
     const allImagesInTable = Array.from(el.querySelectorAll("#fd-table img"));
     allImagesInTable.forEach(img => {
         individualImageOriginalStyles.push({
@@ -516,20 +522,18 @@ export default function App() {
             width: img.style.width,
             height: img.style.height,
             objectFit: img.style.objectFit,
-            // Optional: Weitere Styles wie border, boxShadow speichern, falls sie geändert werden
         });
-        img.style.width = "120px"; // Verdreifachte Größe (von 40px UI)
+        img.style.width = "120px"; 
         img.style.height = "120px";
-        img.style.objectFit = "contain"; // Stellt sicher, dass das ganze Bild sichtbar ist
+        img.style.objectFit = "contain"; 
     });
     
     try {
         const canvas = await html2canvas(el, { 
-            scale: 2, // Gute Skalierung für Schärfe
+            scale: 2, 
             windowWidth: el.scrollWidth, 
             windowHeight: el.scrollHeight,
-            useCORS: true, // Wichtig, falls Bilder von externen Quellen geladen würden (hier nicht der Fall)
-            // logging: true // Bei Problemen mit html2canvas einkommentieren
+            useCORS: true, 
         });
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
@@ -540,8 +544,6 @@ export default function App() {
         addToast("Fehler beim PDF-Export.");
     }
 
-
-    // 3. Ursprüngliche Styles wiederherstellen
     imgStackItemOriginalStyles.forEach(orig => {
         orig.el.style.marginLeft = orig.marginLeft;
         orig.el.style.zIndex = orig.zIndex;
@@ -550,21 +552,23 @@ export default function App() {
         orig.el.style.width = orig.width;
         orig.el.style.height = orig.height;
         orig.el.style.objectFit = orig.objectFit;
-        // Optional: Weitere Styles wiederherstellen
     });
 
-    setActionMenuOpenForIdx(currentActionMenu); // Menüstatus wiederherstellen
+    setActionMenuOpenForIdx(currentActionMenu); 
   };
 
-  // --- Datei-Handling (Neuer Eintrag) ---
+  // --- Datei-Handling (Neuer Eintrag) --- MODIFIZIERT mit 5MB Limit und console.error
   const handleNewFile = async e => {
     for (let file of Array.from(e.target.files || [])) {
       try {
-        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß (max 2MB)");
+        if (file.size > 5 * 1024 * 1024) throw new Error("Datei zu groß (max 5MB)"); // Erhöhtes Limit
         const smallB64 = await resizeToJpeg(file, 800);
         setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
         addToast("Foto hinzugefügt (verkleinert)");
-      } catch (err) { addToast(err.message || "Ungültiges oder zu großes Bild"); }
+      } catch (err) {
+        console.error("Fehler beim Hinzufügen des Bildes (neuer Eintrag):", err); // Detailliertere Konsolenausgabe
+        addToast(err.message || "Ungültiges oder zu großes Bild");
+      }
     }
     e.target.value = "";
   };
@@ -573,16 +577,19 @@ export default function App() {
     addToast("Foto gelöscht");
   };
 
-  // --- Datei-Handling (Eintrag bearbeiten) ---
+  // --- Datei-Handling (Eintrag bearbeiten) --- MODIFIZIERT mit 5MB Limit und console.error
   const handleEditFile = async e => {
     if (!editForm) return;
     for (let file of Array.from(e.target.files || [])) {
       try {
-        if (file.size > 2 * 1024 * 1024) throw new Error("Datei zu groß (max 2MB)");
+        if (file.size > 5 * 1024 * 1024) throw new Error("Datei zu groß (max 5MB)"); // Erhöhtes Limit
         const smallB64 = await resizeToJpeg(file, 800);
         setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
         addToast("Foto hinzugefügt (verkleinert)");
-      } catch (err) { addToast(err.message || "Ungültiges oder zu großes Bild"); }
+      } catch (err) {
+        console.error("Fehler beim Hinzufügen des Bildes (Eintrag bearbeiten):", err); // Detailliertere Konsolenausgabe
+        addToast(err.message || "Ungültiges oder zu großes Bild");
+      }
     }
     e.target.value = "";
   };

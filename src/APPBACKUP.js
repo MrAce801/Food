@@ -283,15 +283,22 @@ const CameraButton = ({ onClick }) => (
     justifyContent: "center", cursor: "pointer"
   }}>📷</button>
 );
+
+// MODIFIZIERTE ImgStack Komponente mit Klassen für PDF Export
 const ImgStack = ({ imgs, onDelete }) => (
-  <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+  <div className="img-stack-container" style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
     {imgs.map((src, i) => (
-      <div key={i} style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
-        <img src={src} alt="" style={{
-          width: 40, height: 40, objectFit: "cover",
-          borderRadius: 6, border: "2px solid #fff",
-          boxShadow: "0 1px 4px #0003"
-        }} onError={e => { e.currentTarget.style.display = "none"; }}/>
+      <div key={i} className="img-stack-item" style={{ position: "relative", marginLeft: i ? -12 : 0, zIndex: imgs.length - i }}>
+        <img 
+          src={src} 
+          alt={`entry_image_${i}`} 
+          style={{
+            width: 40, height: 40, objectFit: "cover",
+            borderRadius: 6, border: "2px solid #fff",
+            boxShadow: "0 1px 4px #0003"
+          }} 
+          onError={e => { e.currentTarget.style.display = "none"; }}
+        />
         {onDelete && (
           <span onClick={() => onDelete(i)} style={{
             position: "absolute", top: -6, right: -6,
@@ -474,34 +481,79 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
-  // --- PDF Export ---
+  // --- PDF Export (MODIFIZIERT für Bilder) ---
   const handleExportPDF = async () => {
     const el = document.getElementById("fd-table");
     if (!el) return;
+
     const currentActionMenu = actionMenuOpenForIdx;
-    setActionMenuOpenForIdx(null);
-    await new Promise(resolve => setTimeout(resolve, 50));
+    setActionMenuOpenForIdx(null); // Menü schließen für sauberen Export
+    await new Promise(resolve => setTimeout(resolve, 50)); // Kurze Pause damit UI aktualisiert
 
-    const imgsToResize = Array.from(el.querySelectorAll(`#fd-table img`));
-    const originals = imgsToResize.map(img => ({ el: img, w: img.style.width, h: img.style.height, objectFit: img.style.objectFit }));
-    imgsToResize.forEach(img => {
-        img.style.width = "60px";
-        img.style.height = "60px";
-        img.style.objectFit = "contain";
+    const imgStackItemOriginalStyles = [];
+    const individualImageOriginalStyles = [];
+
+    // 1. Temporäre Styles für ImgStack-Layout (Bilder nebeneinander)
+    const imgStackContainers = Array.from(el.querySelectorAll(".img-stack-container"));
+    imgStackContainers.forEach(stackContainer => {
+        const childrenItems = Array.from(stackContainer.children).filter(child => child.classList.contains("img-stack-item"));
+        childrenItems.forEach((item, index) => {
+            imgStackItemOriginalStyles.push({
+                el: item,
+                marginLeft: item.style.marginLeft,
+                zIndex: item.style.zIndex,
+            });
+            item.style.marginLeft = index > 0 ? "4px" : "0px"; // Kleiner Abstand zwischen Bildern
+            item.style.zIndex = "auto"; // zIndex zurücksetzen
+        });
     });
 
-    const canvas = await html2canvas(el, { scale: 2, windowWidth: el.scrollWidth, windowHeight: el.scrollHeight });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save("FoodDiary.pdf");
+    // 2. Temporäre Styles für Bildgrößen (alle Bilder im Exportbereich verdreifachen)
+    const allImagesInTable = Array.from(el.querySelectorAll("#fd-table img"));
+    allImagesInTable.forEach(img => {
+        individualImageOriginalStyles.push({
+            el: img,
+            width: img.style.width,
+            height: img.style.height,
+            objectFit: img.style.objectFit,
+            // Optional: Weitere Styles wie border, boxShadow speichern, falls sie geändert werden
+        });
+        img.style.width = "120px"; // Verdreifachte Größe (von 40px UI)
+        img.style.height = "120px";
+        img.style.objectFit = "contain"; // Stellt sicher, dass das ganze Bild sichtbar ist
+    });
+    
+    try {
+        const canvas = await html2canvas(el, { 
+            scale: 2, // Gute Skalierung für Schärfe
+            windowWidth: el.scrollWidth, 
+            windowHeight: el.scrollHeight,
+            useCORS: true, // Wichtig, falls Bilder von externen Quellen geladen würden (hier nicht der Fall)
+            // logging: true // Bei Problemen mit html2canvas einkommentieren
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
+        pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+        pdf.save("FoodDiary.pdf");
+    } catch (error) {
+        console.error("Fehler beim Erstellen des PDFs:", error);
+        addToast("Fehler beim PDF-Export.");
+    }
 
-    originals.forEach(orig => {
-        orig.el.style.width = orig.w;
-        orig.el.style.height = orig.h;
+
+    // 3. Ursprüngliche Styles wiederherstellen
+    imgStackItemOriginalStyles.forEach(orig => {
+        orig.el.style.marginLeft = orig.marginLeft;
+        orig.el.style.zIndex = orig.zIndex;
+    });
+    individualImageOriginalStyles.forEach(orig => {
+        orig.el.style.width = orig.width;
+        orig.el.style.height = orig.height;
         orig.el.style.objectFit = orig.objectFit;
+        // Optional: Weitere Styles wiederherstellen
     });
-    setActionMenuOpenForIdx(currentActionMenu);
+
+    setActionMenuOpenForIdx(currentActionMenu); // Menüstatus wiederherstellen
   };
 
   // --- Datei-Handling (Neuer Eintrag) ---
@@ -792,7 +844,6 @@ export default function App() {
                     // --- Bearbeitungsansicht einer Eintragskarte ---
                     <>
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
-                      {/* HIER DIE ÄNDERUNG: width: '100%' für das Essens-Eingabefeld */}
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, width: '100%', marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
                       
@@ -856,10 +907,10 @@ export default function App() {
                               }}
                               style={{
                                 ...styles.smallInput,
-                                width: '37px', // STARK REDUZIERTE BREITE
+                                width: '37px', 
                                 flexShrink: 0,
                                 fontSize: '16px', 
-                                padding: '6px 2px' // STARK REDUZIERTES SEITLICHES PADDING
+                                padding: '6px 2px' 
                               }}
                             >
                               {TIME_CHOICES.map(t => (
@@ -881,10 +932,10 @@ export default function App() {
                               }}
                               style={{
                                 ...styles.smallInput,
-                                width: '25px', // STARK REDUZIERTE BREITE
+                                width: '25px', 
                                 flexShrink: 0,
                                 fontSize: '16px', 
-                                padding: '6px 2px' // STARK REDUZIERTES SEITLICHES PADDING
+                                padding: '6px 2px' 
                               }}
                             >
                               {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
