@@ -11,3 +11,20 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.haptic:active {
+  transform: scale(0.96);
+}
+
+.toast-fade {
+  animation: fadeOut 2s forwards;
+}
+@keyframes fadeOut {
+  0% { opacity: 0.9; }
+  80% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+.fade-img {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}

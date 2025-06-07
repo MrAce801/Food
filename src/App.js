@@ -301,6 +301,12 @@ const now = () => {
   });
   return `${day}.${month}.${year} ${time}`;
 };
+const vibrate = (pattern) => {
+  try {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  } catch {}
+};
+
 
 const getTodayDateString = () => {
   const d = new Date();
@@ -364,20 +370,20 @@ const sortSymptomsByTime = (symptoms) => {
 
 // --- UI UTILITY KOMPONENTEN ---
 const PdfButton = ({ onClick }) => (
-  <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
+  <button onClick={onClick} className="haptic" title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
     PDF
   </button>
 );
 const InsightsButton = ({ onClick }) => (
-  <button onClick={onClick} title="Insights" style={styles.buttonSecondary("#1976d2")}>
+  <button onClick={onClick} className="haptic" title="Insights" style={styles.buttonSecondary("#1976d2")}>
     Insights
   </button>
 );
 const BackButton = ({ onClick }) => (
-  <button onClick={onClick} title="Zurück" style={styles.backButton}>← Zurück</button>
+  <button onClick={onClick} className="haptic" title="Zurück" style={styles.backButton}>← Zurück</button>
 );
 const CameraButton = ({ onClick }) => (
-  <button onClick={onClick} title="Foto" style={{
+  <button onClick={onClick} className="haptic" title="Foto" style={{
     width: 36, height: 36, borderRadius: 6, border: 0,
     background: "#247be5", display: "flex", alignItems: "center",
     justifyContent: "center", cursor: "pointer"
@@ -390,11 +396,15 @@ const ImgStack = ({ imgs, onDelete }) => (
         <img
           src={src}
           alt={`entry_image_${i}`}
+          className="fade-img"
           style={{
             width: 40, height: 40, objectFit: "cover",
             borderRadius: 6, border: "2px solid #fff",
-            boxShadow: "0 1px 4px #0003"
+            boxShadow: "0 1px 4px #0003",
+            opacity: 0,
+            transition: 'opacity 0.3s ease'
           }}
+          onLoad={e => { e.currentTarget.style.opacity = 1; }}
           onError={e => { e.currentTarget.style.display = "none"; }}
         />
         {onDelete && (
@@ -746,6 +756,7 @@ export default function App() {
         }
     ]));
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 }));
+    vibrate(20);
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
@@ -765,6 +776,7 @@ export default function App() {
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0, symptomStrength: 1 });
     setNewSymptoms([]);
     addToast("Eintrag gespeichert");
+    vibrate(50);
   };
 
   const startEdit = i => {
@@ -833,6 +845,7 @@ export default function App() {
     );
     cancelEdit();
     addToast("Eintrag aktualisiert");
+    vibrate(30);
   };
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
@@ -841,6 +854,7 @@ export default function App() {
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
     addToast("Eintrag gelöscht");
+    vibrate(100);
   };
 
   const toggleNote = idx => {
@@ -921,7 +935,7 @@ export default function App() {
   if (view === "insights") {
     return (
       <div style={styles.container(isMobile)} onClick={handleContainerClick}>
-        {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
+        {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
         <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
         <Insights entries={entries} />
       </div>
@@ -930,7 +944,7 @@ export default function App() {
 
   return (
     <div style={styles.container(isMobile)} onClick={handleContainerClick}>
-      {toasts.map(t => <div key={t.id} style={styles.toast}>{t.msg}</div>)}
+      {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar}>
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
