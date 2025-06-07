@@ -594,6 +594,21 @@ export default function App() {
     linkingInfoRef.current = linkingInfo;
   }, [linkingInfo]);
 
+  // Cancel linking when user clicks anywhere outside pins/lines
+  useEffect(() => {
+    if (!linkingInfoRef.current) return;
+    const handleDocClick = (e) => {
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+      const pinClicked = targetEl && targetEl.closest('.entry-pin');
+      const lineClicked = targetEl && targetEl.closest('.connection-line');
+      if (!pinClicked && !lineClicked) {
+        cancelLinking();
+      }
+    };
+    document.addEventListener('click', handleDocClick, true);
+    return () => document.removeEventListener('click', handleDocClick, true);
+  }, [linkingInfo]);
+
   // --- EFFECT HOOKS ---
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
@@ -1054,6 +1069,11 @@ export default function App() {
       }
       const baseGroupId = linkingInfoRef.current.id;
       const targetGroupId = entries[idx].linkId;
+      if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
+        // Already part of this group, nothing to do
+        cancelLinking();
+        return;
+      }
       if (targetGroupId) {
         // Ziel hat bereits eine Gruppe -> verschmelze
         setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
@@ -1087,34 +1107,38 @@ export default function App() {
   };
 
   const handleContainerClick = (e) => {
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+
+      if (linkingInfoRef.current !== null) {
+          const pinClicked = targetEl && targetEl.closest('.entry-pin');
+          const lineClicked = targetEl && targetEl.closest('.connection-line');
+          if (!pinClicked && !lineClicked) {
+              cancelLinking();
+              return;
+          }
+      }
+
       if (actionMenuOpenForIdx !== null) {
-          const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
-          const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
+          const triggerClicked = targetEl && targetEl.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
+          const menuClicked = targetEl && targetEl.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
           if (!triggerClicked && !menuClicked) {
               setActionMenuOpenForIdx(null);
           }
       }
       if (noteOpenIdx !== null) {
-          const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
-          const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
-          const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
-          const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
+          const noteTextareaClicked = targetEl && targetEl.closest(`#note-textarea-${noteOpenIdx}`);
+          const noteSaveButtonClicked = targetEl && targetEl.closest(`#note-save-button-${noteOpenIdx}`);
+          const noteIconButtonClicked = targetEl && targetEl.closest(`#note-icon-button-${noteOpenIdx}`);
+          const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && targetEl && targetEl.closest(`#displayed-note-text-${noteOpenIdx}`);
           if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextTrigger) {
               setNoteOpenIdx(null);
           }
       }
       if (colorPickerOpenForIdx !== null) {
-          const pickerTriggerClicked = e.target.closest(`#tag-marker-${colorPickerOpenForIdx}`);
-          const pickerContentClicked = e.target.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
+          const pickerTriggerClicked = targetEl && targetEl.closest(`#tag-marker-${colorPickerOpenForIdx}`);
+          const pickerContentClicked = targetEl && targetEl.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
           if (!pickerTriggerClicked && !pickerContentClicked) {
               setColorPickerOpenForIdx(null);
-          }
-      }
-      if (linkingInfoRef.current !== null) {
-          const pinClicked = e.target.closest('.entry-pin');
-          const lineClicked = e.target.closest('.connection-line');
-          if (!pinClicked && !lineClicked) {
-              cancelLinking();
           }
       }
   };
