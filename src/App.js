@@ -689,22 +689,43 @@ export default function App() {
       const conns = [];
       Object.entries(linkGroups).forEach(([id, arr]) => {
         if (arr.length >= 2) {
-          const sorted = arr.slice().sort((a,b) => a - b);
+          const sorted = arr.slice().sort((a, b) => a - b);
           const startEl = entryRefs.current[sorted[0]];
           const endEl = entryRefs.current[sorted[sorted.length - 1]];
           if (startEl && endEl) {
             const cRect = container.getBoundingClientRect();
             const sRect = startEl.getBoundingClientRect();
             const eRect = endEl.getBoundingClientRect();
+            const cross = [];
+            for (let i = 1; i < sorted.length - 1; i++) {
+              const midEl = entryRefs.current[sorted[i]];
+              if (midEl) {
+                const mRect = midEl.getBoundingClientRect();
+                cross.push(mRect.top - sRect.top);
+              }
+            }
             conns.push({
               id,
               top: sRect.top - cRect.top + 8,
               bottom: eRect.top - cRect.top + 8,
+              cross,
             });
           }
         }
       });
-      setConnections(conns);
+
+      // Offset overlapping lines
+      const sortedConns = conns.slice().sort((a, b) => a.top - b.top);
+      const active = [];
+      sortedConns.forEach((c) => {
+        let lane = 0;
+        while (active.some((a) => a.lane === lane && !(c.bottom < a.top || c.top > a.bottom))) {
+          lane++;
+        }
+        c.lane = lane;
+        active.push(c);
+      });
+      setConnections(sortedConns);
     };
     updateConnections();
     window.addEventListener('scroll', updateConnections);
@@ -1166,23 +1187,31 @@ export default function App() {
 
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
-        {connections.map(c => (
-          <svg
-            key={c.id}
-            className="connection-line"
-            onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
-            style={{...styles.connectionSvg, top: c.top, height: c.bottom - c.top}}
-          >
-            <path
-              d={`M10 0 H0 V${c.bottom - c.top} H10`}
-              stroke="#b22222"
-              strokeWidth="2"
-              fill="none"
-              strokeDasharray="4 2"
-              strokeLinecap="round"
-            />
-          </svg>
-        ))}
+        {connections.map(c => {
+          const offset = -c.lane * 6;
+          const height = c.bottom - c.top;
+          let d = `M10 0 H${offset} V${height} H10`;
+          c.cross.forEach(y => {
+            d += ` M10 ${y} H${offset}`;
+          });
+          return (
+            <svg
+              key={c.id}
+              className="connection-line"
+              onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
+              style={{...styles.connectionSvg, top: c.top, height}}
+            >
+              <path
+                d={d}
+                stroke="#b22222"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="4 2"
+                strokeLinecap="round"
+              />
+            </svg>
+          );
+        })}
         {dates.map(day => (
           <div key={day}>
             {collapsedDays.has(day) && !isExportingPdf ? (
