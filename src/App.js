@@ -564,6 +564,24 @@ export default function App() {
     }
   }, [editingIdx, isExportingPdf]);
 
+  // Automatisches Nachladen alter Einträge beim Scrollen
+  useEffect(() => {
+    const handleScroll = () => {
+      const total = entries.filter(e =>
+        (e.food && e.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (e.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (e.comment && e.comment.toLowerCase().includes(searchTerm.toLowerCase()))
+      ).length;
+
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
+        setDisplayCount(dc => dc >= total ? dc : Math.min(dc + 20, total));
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [entries, searchTerm]);
+
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
 
