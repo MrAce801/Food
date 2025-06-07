@@ -1173,22 +1173,28 @@ export default function App() {
                         viewBox="0 0 16 16"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <circle
-                          cx="5"
-                          cy="5"
-                          r="3"
-                          stroke={linkingIdx === idx ? '#FBC02D' : '#6EC1FF'}
-                          strokeWidth="2"
-                          fill="none"
-                        />
-                        <circle
-                          cx="11"
-                          cy="11"
-                          r="3"
-                          stroke={linkingIdx === idx ? '#FBC02D' : '#B8E0FF'}
-                          strokeWidth="2"
-                          fill="none"
-                        />
+                        <g transform="rotate(-45 6 8)">
+                          <ellipse
+                            cx="6"
+                            cy="8"
+                            rx="4"
+                            ry="2.5"
+                            stroke={linkingIdx === idx ? '#FBC02D' : '#6EC1FF'}
+                            strokeWidth="2"
+                            fill="none"
+                          />
+                        </g>
+                        <g transform="rotate(45 10 8)">
+                          <ellipse
+                            cx="10"
+                            cy="8"
+                            rx="4"
+                            ry="2.5"
+                            stroke={linkingIdx === idx ? '#FBC02D' : '#B8E0FF'}
+                            strokeWidth="2"
+                            fill="none"
+                          />
+                        </g>
                       </svg>
                     </div>
                   </div>
