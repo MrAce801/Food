@@ -585,8 +585,14 @@ export default function App() {
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
+  const linkingInfoRef = useRef(null);
   const entryRefs = useRef([]);
   const [connections, setConnections] = useState([]);
+
+  // keep ref in sync so event handlers see latest state immediately
+  useEffect(() => {
+    linkingInfoRef.current = linkingInfo;
+  }, [linkingInfo]);
 
   // --- EFFECT HOOKS ---
   useEffect(() => {
@@ -715,7 +721,12 @@ export default function App() {
       });
 
       // Offset overlapping lines
-      const sortedConns = conns.slice().sort((a, b) => a.top - b.top);
+      const sortedConns = conns
+        .slice()
+        .sort((a, b) => {
+          const lenDiff = (b.bottom - b.top) - (a.bottom - a.top);
+          return lenDiff !== 0 ? lenDiff : a.top - b.top;
+        });
       const active = [];
       sortedConns.forEach((c) => {
         let lane = 0;
@@ -1022,7 +1033,7 @@ export default function App() {
   };
 
   const handlePinClick = (idx) => {
-    if (!linkingInfo) {
+    if (!linkingInfoRef.current) {
       const group = entries[idx].linkId;
       if (group) {
         // Entferne bestehende Verknüpfung
@@ -1031,15 +1042,16 @@ export default function App() {
         // Starte neuen Link-Vorgang und weise erste ID zu
         const newGroupId = `g-${Date.now()}`;
         setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newGroupId } : e));
-        setLinkingInfo({ baseIdx: idx, id: newGroupId });
+        linkingInfoRef.current = { baseIdx: idx, id: newGroupId };
+        setLinkingInfo(linkingInfoRef.current);
       }
     } else {
-      if (idx === linkingInfo.baseIdx) {
+      if (idx === linkingInfoRef.current.baseIdx) {
         // Beenden des Link-Vorgangs
         cancelLinking();
         return;
       }
-      const baseGroupId = linkingInfo.id;
+      const baseGroupId = linkingInfoRef.current.id;
       const targetGroupId = entries[idx].linkId;
       if (targetGroupId) {
         // Ziel hat bereits eine Gruppe -> verschmelze
@@ -1048,25 +1060,28 @@ export default function App() {
         // Ziel zur aktuellen Gruppe hinzufügen
         setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: baseGroupId } : e));
       }
+      linkingInfoRef.current = null;
       setLinkingInfo(null);
     }
   };
 
   const cancelLinking = () => {
-    if (linkingInfo) {
-      const count = entries.filter(e => e.linkId === linkingInfo.id).length;
+    if (linkingInfoRef.current) {
+      const count = entries.filter(e => e.linkId === linkingInfoRef.current.id).length;
       if (count <= 1) {
-        setEntries(prev => prev.map(e => e.linkId === linkingInfo.id ? { ...e, linkId: null } : e));
+        setEntries(prev => prev.map(e => e.linkId === linkingInfoRef.current.id ? { ...e, linkId: null } : e));
       }
+      linkingInfoRef.current = null;
       setLinkingInfo(null);
     }
   };
 
   const handleConnectionClick = (id) => {
-    if (linkingInfo && linkingInfo.id === id) {
+    if (linkingInfoRef.current && linkingInfoRef.current.id === id) {
       cancelLinking();
     } else {
-      setLinkingInfo({ baseIdx: null, id });
+      linkingInfoRef.current = { baseIdx: null, id };
+      setLinkingInfo(linkingInfoRef.current);
     }
   };
 
@@ -1094,7 +1109,7 @@ export default function App() {
               setColorPickerOpenForIdx(null);
           }
       }
-      if (linkingInfo !== null) {
+      if (linkingInfoRef.current !== null) {
           const pinClicked = e.target.closest('.entry-pin');
           const lineClicked = e.target.closest('.connection-line');
           if (!pinClicked && !lineClicked) {
