@@ -1173,9 +1173,9 @@ export default function App() {
                         viewBox="0 0 16 16"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <g transform="rotate(-45 6 8)">
+                        <g transform="rotate(45 8 8)">
                           <ellipse
-                            cx="6"
+                            cx="5"
                             cy="8"
                             rx="4"
                             ry="2.5"
@@ -1183,10 +1183,8 @@ export default function App() {
                             strokeWidth="2"
                             fill="none"
                           />
-                        </g>
-                        <g transform="rotate(45 10 8)">
                           <ellipse
-                            cx="10"
+                            cx="11"
                             cy="8"
                             rx="4"
                             ry="2.5"
