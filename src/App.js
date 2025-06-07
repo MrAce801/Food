@@ -991,7 +991,7 @@ export default function App() {
             <button
               onClick={addNewSymptom}
               style={{
-                ...styles.buttonSecondary("#247be5"),
+                ...styles.buttonSecondary("#388e3c"),
                 flexShrink: 0,
                 fontSize: '16px', // Beibehaltung der Schriftgröße
                 padding: '8px 12px', // ANPASSUNG: Vertikales Padding reduziert
@@ -1059,7 +1059,7 @@ export default function App() {
                           <button
                             onClick={addEditSymptom}
                             style={{
-                              ...styles.buttonSecondary("#247be5"),
+                              ...styles.buttonSecondary("#388e3c"),
                               flexShrink:0,
                               fontSize: '16px', // Beibehaltung der Schriftgröße
                               padding: '8px 12px', // ANPASSUNG: Vertikales Padding reduziert (konsistent)
