@@ -226,11 +226,10 @@ const styles = {
   },
   pin: (selected) => ({
     position: 'absolute',
-    top: '-8px',
-    left: '-8px',
+    top: '2px',
+    left: '2px',
     width: '16px',
     height: '16px',
-    transform: 'rotate(270deg)',
     cursor: 'pointer',
     pointerEvents: 'auto',
     zIndex: 5,
@@ -238,11 +237,10 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '14px',
-    color: selected ? '#FBC02D' : '#c00',
   }),
   connectionSvg: {
     position: 'absolute',
-    left: '13px',
+    left: '15px',
     width: '20px',
     pointerEvents: 'none',
     overflow: 'visible',
@@ -1168,7 +1166,35 @@ export default function App() {
                       className="entry-pin"
                       onClick={(e) => { e.stopPropagation(); handlePinClick(idx); }}
                       style={styles.pin(linkingIdx === idx)}
-                    >📌</div>
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <g transform="rotate(135 8 8)">
+                          <ellipse
+                            cx="5"
+                            cy="8"
+                            rx="4"
+                            ry="2.5"
+                            stroke={linkingIdx === idx ? '#FBC02D' : '#6EC1FF'}
+                            strokeWidth="2"
+                            fill="none"
+                          />
+                          <ellipse
+                            cx="11"
+                            cy="8"
+                            rx="4"
+                            ry="2.5"
+                            stroke={linkingIdx === idx ? '#FBC02D' : '#B8E0FF'}
+                            strokeWidth="2"
+                            fill="none"
+                          />
+                        </g>
+                      </svg>
+                    </div>
                   </div>
                   {editingIdx === idx && !isExportingPdf ? (
                     <> {/* Editieransicht */}
