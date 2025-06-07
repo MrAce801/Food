@@ -82,11 +82,11 @@ const styles = {
       : (dark ? "#2a2a32" : "#fff"),
     boxShadow: "0 1px 4px #0002",
   }),
-  groupHeader: {
+  groupHeader: (isPdf) => ({
     fontSize: 18,
     fontWeight: 600,
-    margin: "24px 0 8px"
-  },
+    margin: isPdf ? "32px 0 12px" : "24px 0 8px",
+  }),
   dayCover: (dark) => ({
     fontSize: 18,
     fontWeight: 600,
@@ -223,7 +223,7 @@ const TAG_COLORS = {
   GREEN: 'green',
   RED: 'red',
   YELLOW: 'yellow',
-  BROWN: 'brown',
+  BROWN: '#c19a6b', // light brown for bowel movement
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: "Standard",
@@ -999,7 +999,7 @@ export default function App() {
               <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>{day}</div>
             ) : (
               <React.Fragment>
-                <div onClick={() => toggleDay(day)} style={styles.groupHeader}>{day}</div>
+                <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>{day}</div>
                 {grouped[day].map(({ entry, idx }) => {
               const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
               const sortedAllDisplay = sortSymptomsByTime(
@@ -1103,7 +1103,7 @@ export default function App() {
                         </button>
                       </div>
 
-                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px' }}>{entry.date}</div>
+                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px', color: dark ? '#cccccc' : '#444444' }}>{entry.date}</div>
                       <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' }}>
                         {entry.food || (isSymptomOnlyEntry ? "Nur Symptome" : "(Kein Essen)") }
                       </div>
