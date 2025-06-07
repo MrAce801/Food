@@ -87,7 +87,7 @@ const styles = {
   entryCard: (dark, isSymptomOnly = false) => ({
     position: 'relative',
     marginBottom: 16,
-    marginLeft: 20,
+    marginLeft: 5,
     padding: 12,
     borderRadius: 8,
     background: isSymptomOnly
@@ -240,10 +240,11 @@ const styles = {
   }),
   connectionSvg: {
     position: 'absolute',
-    left: '15px',
+    left: '0px',
     width: '20px',
-    pointerEvents: 'none',
+    pointerEvents: 'auto',
     overflow: 'visible',
+    cursor: 'pointer',
   },
 };
 
@@ -583,7 +584,7 @@ export default function App() {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
-  const [linkingIdx, setLinkingIdx] = useState(null);
+  const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
   const entryRefs = useRef([]);
   const [connections, setConnections] = useState([]);
 
@@ -688,8 +689,9 @@ export default function App() {
       const conns = [];
       Object.entries(linkGroups).forEach(([id, arr]) => {
         if (arr.length >= 2) {
-          const startEl = entryRefs.current[arr[0]];
-          const endEl = entryRefs.current[arr[1]];
+          const sorted = arr.slice().sort((a,b) => a - b);
+          const startEl = entryRefs.current[sorted[0]];
+          const endEl = entryRefs.current[sorted[sorted.length - 1]];
           if (startEl && endEl) {
             const cRect = container.getBoundingClientRect();
             const sRect = startEl.getBoundingClientRect();
@@ -999,20 +1001,45 @@ export default function App() {
   };
 
   const handlePinClick = (idx) => {
-    if (linkingIdx === null) {
+    if (!linkingInfo) {
       const group = entries[idx].linkId;
       if (group) {
+        // Entferne bestehende Verknüpfung
         setEntries(prev => prev.map(e => e.linkId === group ? { ...e, linkId: null } : e));
       } else {
-        setLinkingIdx(idx);
+        // Starte neuen Link-Vorgang und weise erste ID zu
+        const newGroupId = `g-${Date.now()}`;
+        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newGroupId } : e));
+        setLinkingInfo({ baseIdx: idx, id: newGroupId });
       }
     } else {
-      if (idx === linkingIdx) { setLinkingIdx(null); return; }
-      const groupId = `g-${Date.now()}`;
-      setEntries(prev => prev.map((e, i) =>
-        (i === linkingIdx || i === idx) ? { ...e, linkId: groupId } : e
-      ));
-      setLinkingIdx(null);
+      if (idx === linkingInfo.baseIdx) {
+        // Beenden des Link-Vorgangs
+        cancelLinking();
+        return;
+      }
+      // Füge weiteren Eintrag der Gruppe hinzu
+      const groupId = linkingInfo.id;
+      setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: groupId } : e));
+      setLinkingInfo(info => ({ ...info, baseIdx: null }));
+    }
+  };
+
+  const cancelLinking = () => {
+    if (linkingInfo) {
+      const count = entries.filter(e => e.linkId === linkingInfo.id).length;
+      if (count <= 1) {
+        setEntries(prev => prev.map(e => e.linkId === linkingInfo.id ? { ...e, linkId: null } : e));
+      }
+      setLinkingInfo(null);
+    }
+  };
+
+  const handleConnectionClick = (id) => {
+    if (linkingInfo && linkingInfo.id === id) {
+      cancelLinking();
+    } else {
+      setLinkingInfo({ baseIdx: null, id });
     }
   };
 
@@ -1040,10 +1067,11 @@ export default function App() {
               setColorPickerOpenForIdx(null);
           }
       }
-      if (linkingIdx !== null) {
+      if (linkingInfo !== null) {
           const pinClicked = e.target.closest('.entry-pin');
-          if (!pinClicked) {
-              setLinkingIdx(null);
+          const lineClicked = e.target.closest('.connection-line');
+          if (!pinClicked && !lineClicked) {
+              cancelLinking();
           }
       }
   };
@@ -1133,8 +1161,20 @@ export default function App() {
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
         {connections.map(c => (
-          <svg key={c.id} style={{...styles.connectionSvg, top: c.top, height: c.bottom - c.top}}>
-            <path d={`M10 0 H0 V${c.bottom - c.top} H10`} stroke="#b22222" strokeWidth="2" fill="none" strokeDasharray="4 2" strokeLinecap="round" />
+          <svg
+            key={c.id}
+            className="connection-line"
+            onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
+            style={{...styles.connectionSvg, top: c.top, height: c.bottom - c.top}}
+          >
+            <path
+              d={`M10 0 H0 V${c.bottom - c.top} H10`}
+              stroke="#b22222"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="4 2"
+              strokeLinecap="round"
+            />
           </svg>
         ))}
         {dates.map(day => (
@@ -1165,7 +1205,7 @@ export default function App() {
                     <div
                       className="entry-pin"
                       onClick={(e) => { e.stopPropagation(); handlePinClick(idx); }}
-                      style={styles.pin(linkingIdx === idx)}
+                      style={styles.pin(linkingInfo && linkingInfo.baseIdx === idx)}
                     >
                       <svg
                         width="16"
@@ -1179,7 +1219,7 @@ export default function App() {
                             cy="8"
                             rx="4"
                             ry="2.5"
-                            stroke={linkingIdx === idx ? '#FBC02D' : '#6EC1FF'}
+                            stroke={linkingInfo && linkingInfo.baseIdx === idx ? '#FBC02D' : '#6EC1FF'}
                             strokeWidth="2"
                             fill="none"
                           />
@@ -1188,7 +1228,7 @@ export default function App() {
                             cy="8"
                             rx="4"
                             ry="2.5"
-                            stroke={linkingIdx === idx ? '#FBC02D' : '#B8E0FF'}
+                            stroke={linkingInfo && linkingInfo.baseIdx === idx ? '#FBC02D' : '#B8E0FF'}
                             strokeWidth="2"
                             fill="none"
                           />
