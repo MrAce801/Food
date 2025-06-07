@@ -721,10 +721,11 @@ export default function App() {
       });
 
       // Offset overlapping lines
+      // sort by length so that shorter connections use inner lanes
       const sortedConns = conns
         .slice()
         .sort((a, b) => {
-          const lenDiff = (b.bottom - b.top) - (a.bottom - a.top);
+          const lenDiff = (a.bottom - a.top) - (b.bottom - b.top);
           return lenDiff !== 0 ? lenDiff : a.top - b.top;
         });
       const active = [];
@@ -1203,7 +1204,7 @@ export default function App() {
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
         {connections.map(c => {
-          const offset = -c.lane * 6;
+          const offset = -c.lane * 5;
           const height = c.bottom - c.top;
           let d = `M10 0 H${offset} V${height} H10`;
           c.cross.forEach(y => {
