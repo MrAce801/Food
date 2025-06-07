@@ -48,7 +48,8 @@ const styles = {
     borderRadius: 6,
     border: "1px solid #ccc",
     marginTop: 8,
-    resize: "vertical",
+    resize: "none",
+    overflow: "hidden",
     overflowWrap: "break-word",
     whiteSpace: "pre-wrap",
     boxSizing: "border-box"
@@ -617,6 +618,16 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [entries, searchTerm]);
 
+  useEffect(() => {
+    if (noteOpenIdx !== null) {
+      const ta = document.getElementById(`note-textarea-${noteOpenIdx}`);
+      if (ta) {
+        ta.style.height = 'auto';
+        ta.style.height = `${ta.scrollHeight}px`;
+      }
+    }
+  }, [noteOpenIdx, noteDraft]);
+
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -1126,7 +1137,17 @@ export default function App() {
 
                       {noteOpenIdx === idx && !isExportingPdf && (
                         <div onClick={e => e.stopPropagation()} style={{marginTop: '8px', zIndex: 15 }}>
-                          <textarea id={`note-textarea-${idx}`} value={noteDraft} onChange={e => setNoteDraft(e.target.value)} placeholder="Notiz..." style={{...styles.textarea, fontSize: '16px'}} />
+                          <textarea
+                            id={`note-textarea-${idx}`}
+                            value={noteDraft}
+                            onChange={e => {
+                              setNoteDraft(e.target.value);
+                              e.target.style.height = 'auto';
+                              e.target.style.height = `${e.target.scrollHeight}px`;
+                            }}
+                            placeholder="Notiz..."
+                            style={{...styles.textarea, fontSize: '16px'}}
+                          />
                           <button id={`note-save-button-${idx}`} onClick={() => saveNote(idx)} style={{ ...styles.buttonSecondary(dark ? '#555' : "#FBC02D"), color: dark ? '#fff' : '#333', marginTop: 8 }} >Notiz speichern</button>
                         </div>
                       )}
