@@ -1018,10 +1018,16 @@ export default function App() {
         cancelLinking();
         return;
       }
-      // Füge weiteren Eintrag der Gruppe hinzu
-      const groupId = linkingInfo.id;
-      setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: groupId } : e));
-      setLinkingInfo(info => ({ ...info, baseIdx: null }));
+      const baseGroupId = linkingInfo.id;
+      const targetGroupId = entries[idx].linkId;
+      if (targetGroupId) {
+        // Ziel hat bereits eine Gruppe -> verschmelze
+        setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
+      } else {
+        // Ziel zur aktuellen Gruppe hinzufügen
+        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: baseGroupId } : e));
+      }
+      setLinkingInfo(null);
     }
   };
 
