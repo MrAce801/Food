@@ -1093,6 +1093,16 @@ export default function App() {
 
   const handleContainerClick = (e) => {
       const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+
+      if (linkingInfoRef.current !== null) {
+          const pinClicked = targetEl && targetEl.closest('.entry-pin');
+          const lineClicked = targetEl && targetEl.closest('.connection-line');
+          if (!pinClicked && !lineClicked) {
+              cancelLinking();
+              return;
+          }
+      }
+
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = targetEl && targetEl.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = targetEl && targetEl.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
@@ -1114,13 +1124,6 @@ export default function App() {
           const pickerContentClicked = targetEl && targetEl.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
           if (!pickerTriggerClicked && !pickerContentClicked) {
               setColorPickerOpenForIdx(null);
-          }
-      }
-      if (linkingInfoRef.current !== null) {
-          const pinClicked = targetEl && targetEl.closest('.entry-pin');
-          const lineClicked = targetEl && targetEl.closest('.connection-line');
-          if (!pinClicked && !lineClicked) {
-              cancelLinking();
           }
       }
   };
