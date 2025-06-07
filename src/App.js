@@ -226,8 +226,8 @@ const styles = {
   },
   pin: (selected) => ({
     position: 'absolute',
-    top: '1px',
-    left: '0px',
+    top: '2px',
+    left: '2px',
     width: '16px',
     height: '16px',
     cursor: 'pointer',
@@ -240,7 +240,7 @@ const styles = {
   }),
   connectionSvg: {
     position: 'absolute',
-    left: '13px',
+    left: '15px',
     width: '20px',
     pointerEvents: 'none',
     overflow: 'visible',
