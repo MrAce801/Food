@@ -335,6 +335,15 @@ const fromDateTimePickerFormat = (pickerDateStr) => {
     return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year} ${String(timeParts[0]).padStart(2, '0')}:${String(timeParts[1]).padStart(2, '0')}`;
 };
 
+const sortSymptomsByTime = (symptoms) => {
+    return [...symptoms].sort((a, b) => {
+        const tA = typeof a.time === 'number' ? a.time : parseFloat(a.time) || 0;
+        const tB = typeof b.time === 'number' ? b.time : parseFloat(b.time) || 0;
+        if (tA === tB) return (a.txt || '').localeCompare(b.txt || '');
+        return tA - tB;
+    });
+};
+
 // --- UI UTILITY KOMPONENTEN ---
 const PdfButton = ({ onClick }) => (
   <button onClick={onClick} title="Export PDF" style={styles.buttonSecondary("#d32f2f")}>
@@ -669,11 +678,14 @@ export default function App() {
 
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
-    setNewSymptoms(s => [...s, {
-        txt: newForm.symptomInput.trim(),
-        time: newForm.symptomTime,
-        strength: newForm.symptomStrength
-    }]);
+    setNewSymptoms(s => sortSymptomsByTime([
+        ...s,
+        {
+            txt: newForm.symptomInput.trim(),
+            time: newForm.symptomTime,
+            strength: newForm.symptomStrength
+        }
+    ]));
     setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 }));
   };
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
@@ -683,7 +695,7 @@ export default function App() {
     const entry = {
       food: newForm.food.trim(),
       imgs: newForm.imgs,
-      symptoms: newSymptoms,
+      symptoms: sortSymptomsByTime(newSymptoms),
       comment: "",
       date: now(),
       tagColor: TAG_COLORS.GREEN,
@@ -722,11 +734,14 @@ export default function App() {
     if (!editForm || !editForm.symptomInput.trim()) return;
     setEditForm(fm => ({
         ...fm,
-        symptoms: [...fm.symptoms, {
-            txt: fm.symptomInput.trim(),
-            time: fm.symptomTime,
-            strength: fm.newSymptomStrength
-        }],
+        symptoms: sortSymptomsByTime([
+            ...fm.symptoms,
+            {
+                txt: fm.symptomInput.trim(),
+                time: fm.symptomTime,
+                strength: fm.newSymptomStrength
+            }
+        ]),
         symptomInput: "",
         symptomTime: 0,
         newSymptomStrength: 1
@@ -749,7 +764,9 @@ export default function App() {
             ...ent,
             food: editForm.food.trim(),
             imgs: editForm.imgs,
-            symptoms: editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)})),
+            symptoms: sortSymptomsByTime(
+                editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)}))
+            ),
             date: displayDateToSave
           }
         : ent
@@ -899,7 +916,9 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 8 }}>
-          {newSymptoms.map((s, i) => ( <SymTag key={i} txt={s.txt} time={s.time} strength={s.strength} dark={dark} onDel={() => removeNewSymptom(i)} /> ))}
+          {sortSymptomsByTime(newSymptoms).map((s, i) => (
+            <SymTag key={i} txt={s.txt} time={s.time} strength={s.strength} dark={dark} onDel={() => removeNewSymptom(i)} />
+          ))}
         </div>
         <button onClick={addEntry} disabled={!newForm.food.trim() && newSymptoms.length === 0} style={{ ...styles.buttonPrimary, opacity: (newForm.food.trim() || newSymptoms.length > 0) ? 1 : 0.5 }} >Eintrag hinzufügen</button>
 
@@ -916,10 +935,12 @@ export default function App() {
             <div style={styles.groupHeader}>{day}</div>
             {grouped[day].map(({ entry, idx }) => {
               const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
-              const symptomsForDisplay = (entry.symptoms || []).map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)}));
-              const knownDisplay = symptomsForDisplay.filter(s => SYMPTOM_CHOICES.includes(s.txt)).sort((a,b) => a.txt.localeCompare(b.txt));
-              const customDisplay = symptomsForDisplay.filter(s => !SYMPTOM_CHOICES.includes(s.txt));
-              const sortedAllDisplay = [...knownDisplay, ...customDisplay];
+              const sortedAllDisplay = sortSymptomsByTime(
+                (entry.symptoms || []).map(s => ({
+                  ...s,
+                  strength: Math.min(parseInt(s.strength) || 1, 3)
+                }))
+              );
 
               const cardBackgroundColor = isSymptomOnlyEntry
                 ? (dark ? styles.entryCard(dark, true).background : styles.entryCard(false, true).background)
@@ -959,7 +980,7 @@ export default function App() {
                       </div>
 
                       <div style={{ marginBottom: 8 }}>
-                        {editForm.symptoms.map((s, j) => (
+                        {sortSymptomsByTime(editForm.symptoms).map((s, j) => (
                           <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}>
                             <input
                               type="text"
@@ -969,7 +990,10 @@ export default function App() {
                               onFocus={handleFocus}
                               style={{...styles.smallInput, flexGrow: 1, marginRight: '6px'}}
                             />
-                            <select value={s.time} onChange={e_select => setEditForm(fm => ({ ...fm, symptoms: fm.symptoms.map((sym, k) => k === j ? {...sym, time: Number(e_select.target.value)} : sym) }))}
+                            <select value={s.time} onChange={e_select => setEditForm(fm => {
+                                const updated = fm.symptoms.map((sym, k) => k === j ? {...sym, time: Number(e_select.target.value)} : sym);
+                                return { ...fm, symptoms: sortSymptomsByTime(updated) };
+                            })}
                               style={{...styles.smallInput, width: '37px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                             >
                               {TIME_CHOICES.map(t => (<option key={t.value} value={t.value}>{t.value === 0 ? '0' : t.value}</option>))}
