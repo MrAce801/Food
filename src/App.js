@@ -242,7 +242,7 @@ const styles = {
   }),
   connectionSvg: {
     position: 'absolute',
-    left: '28px',
+    left: '13px',
     width: '20px',
     pointerEvents: 'none',
     overflow: 'visible',
