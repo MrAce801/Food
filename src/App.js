@@ -1,5 +1,5 @@
 // --- IMPORTS ---
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -228,32 +228,24 @@ const styles = {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: '10px',
-    height: '10px',
-    borderRadius: '50%',
-    background: selected ? '#1976d2' : '#c00',
+    width: '16px',
+    height: '16px',
     transform: 'translate(-50%, -50%)',
     cursor: 'pointer',
     pointerEvents: 'auto',
     zIndex: 5,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '14px',
+    color: selected ? '#1976d2' : '#c00',
   }),
-  pinLineTop: {
+  connectionSvg: {
     position: 'absolute',
-    left: '50%',
-    top: 0,
-    bottom: '50%',
-    width: '2px',
-    background: '#c00',
-    transform: 'translateX(-50%)',
-  },
-  pinLineBottom: {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    bottom: 0,
-    width: '2px',
-    background: '#c00',
-    transform: 'translateX(-50%)',
+    left: '-25px',
+    width: '30px',
+    pointerEvents: 'none',
+    overflow: 'visible',
   },
 };
 
@@ -594,6 +586,8 @@ export default function App() {
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingIdx, setLinkingIdx] = useState(null);
+  const entryRefs = useRef([]);
+  const [connections, setConnections] = useState([]);
 
   // --- EFFECT HOOKS ---
   useEffect(() => {
@@ -680,6 +674,46 @@ export default function App() {
       }
     }
   }, [noteOpenIdx, noteDraft]);
+
+  useLayoutEffect(() => {
+    const updateConnections = () => {
+      const container = document.getElementById('fd-table');
+      if (!container) return;
+      const linkGroups = {};
+      const rendered = Array.from(entryRefs.current.keys());
+      rendered.forEach(idx => {
+        const entry = entries[idx];
+        if (entry && entry.linkId) {
+          (linkGroups[entry.linkId] = linkGroups[entry.linkId] || []).push(idx);
+        }
+      });
+      const conns = [];
+      Object.entries(linkGroups).forEach(([id, arr]) => {
+        if (arr.length >= 2) {
+          const startEl = entryRefs.current[arr[0]];
+          const endEl = entryRefs.current[arr[1]];
+          if (startEl && endEl) {
+            const cRect = container.getBoundingClientRect();
+            const sRect = startEl.getBoundingClientRect();
+            const eRect = endEl.getBoundingClientRect();
+            conns.push({
+              id,
+              top: sRect.top - cRect.top + sRect.height / 2,
+              bottom: eRect.top - cRect.top + eRect.height / 2,
+            });
+          }
+        }
+      });
+      setConnections(conns);
+    };
+    updateConnections();
+    window.addEventListener('scroll', updateConnections);
+    window.addEventListener('resize', updateConnections);
+    return () => {
+      window.removeEventListener('scroll', updateConnections);
+      window.removeEventListener('resize', updateConnections);
+    };
+  });
 
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -970,22 +1004,16 @@ export default function App() {
     if (linkingIdx === null) {
       const group = entries[idx].linkId;
       if (group) {
-        // remove entire group
         setEntries(prev => prev.map(e => e.linkId === group ? { ...e, linkId: null } : e));
       } else {
         setLinkingIdx(idx);
       }
     } else {
       if (idx === linkingIdx) { setLinkingIdx(null); return; }
-      const startEntry = entries[linkingIdx];
-      const targetEntry = entries[idx];
-      const groupId = startEntry.linkId || targetEntry.linkId || `g-${Date.now()}`;
-      setEntries(prev => prev.map(e => {
-        if (e === startEntry || e === targetEntry || e.linkId === startEntry.linkId || e.linkId === targetEntry.linkId) {
-          return { ...e, linkId: groupId };
-        }
-        return e;
-      }));
+      const groupId = `g-${Date.now()}`;
+      setEntries(prev => prev.map((e, i) =>
+        (i === linkingIdx || i === idx) ? { ...e, linkId: groupId } : e
+      ));
       setLinkingIdx(null);
     }
   };
@@ -1105,7 +1133,12 @@ export default function App() {
       </div>
 
       {/* Eintragsliste */}
-      <div id="fd-table">
+      <div id="fd-table" style={{position:'relative'}}>
+        {connections.map(c => (
+          <svg key={c.id} style={{...styles.connectionSvg, top: c.top, height: c.bottom - c.top}}>
+            <path d={`M15 0 Q0 0 0 ${(c.bottom - c.top)/2} Q0 ${c.bottom - c.top} 15 ${c.bottom - c.top}`} stroke="#b22222" strokeWidth="2" fill="none" strokeDasharray="4 2" strokeLinecap="round" />
+          </svg>
+        ))}
         {dates.map(day => (
           <div key={day}>
             {collapsedDays.has(day) && !isExportingPdf ? (
@@ -1127,21 +1160,15 @@ export default function App() {
                 : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
               
               const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
-              const prev = grouped[day][j - 1]?.entry;
-              const next = grouped[day][j + 1]?.entry;
-              const hasPrev = prev && prev.linkId && prev.linkId === entry.linkId;
-              const hasNext = next && next.linkId && next.linkId === entry.linkId;
 
               return (
-                <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
+                <div ref={el => entryRefs.current[idx] = el} key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
                   <div style={styles.pinContainer}>
-                    {hasPrev && <div style={styles.pinLineTop} />}
                     <div
                       className="entry-pin"
                       onClick={(e) => { e.stopPropagation(); handlePinClick(idx); }}
                       style={styles.pin(linkingIdx === idx)}
-                    />
-                    {hasNext && <div style={styles.pinLineBottom} />}
+                    >📌</div>
                   </div>
                   {editingIdx === idx && !isExportingPdf ? (
                     <> {/* Editieransicht */}
