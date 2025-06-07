@@ -283,7 +283,12 @@ const now = () => {
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
-  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  // Force 24h format to ensure parseDateString works regardless of locale
+  const time = d.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
   return `${day}.${month}.${year} ${time}`;
 };
 
