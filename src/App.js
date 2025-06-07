@@ -660,6 +660,7 @@ export default function App() {
 
     const imgStackItemOriginalStyles = [];
     const individualImageOriginalStyles = [];
+    let prevClassName = '';
 
     try {
       const imgStackContainers = Array.from(el.querySelectorAll(".img-stack-container"));
@@ -680,13 +681,20 @@ export default function App() {
         img.style.objectFit = "contain";
       });
 
+      // Temporäres hexagonales Hintergrundmuster für den PDF-Export setzen
+      prevClassName = el.className;
+      el.classList.add('pdf-hex-bg');
+
       const canvas = await html2canvas(el, {
         scale: 2,
         windowWidth: el.scrollWidth,
         windowHeight: el.scrollHeight,
         useCORS: true,
-        backgroundColor: '#e0e0e0', // medium light grey background for PDF
+        backgroundColor: null,
       });
+
+      // Ursprüngliche Klassen wiederherstellen
+      el.className = prevClassName;
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
@@ -706,6 +714,7 @@ export default function App() {
         orig.el.style.height = orig.height;
         orig.el.style.objectFit = orig.objectFit;
       });
+      if (prevClassName) el.className = prevClassName;
       setIsExportingPdf(false);
     }
   };
