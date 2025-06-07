@@ -226,8 +226,8 @@ const styles = {
   },
   pin: (selected) => ({
     position: 'absolute',
-    top: '2px',
-    left: '2px',
+    top: '-18px',
+    left: '-13px',
     width: '16px',
     height: '16px',
     transform: 'rotate(270deg)',
@@ -242,7 +242,7 @@ const styles = {
   }),
   connectionSvg: {
     position: 'absolute',
-    left: '0px',
+    left: '-15px',
     width: '20px',
     pointerEvents: 'none',
     overflow: 'visible',
@@ -698,8 +698,8 @@ export default function App() {
             const eRect = endEl.getBoundingClientRect();
             conns.push({
               id,
-              top: sRect.top - cRect.top,
-              bottom: eRect.top - cRect.top,
+              top: sRect.top - cRect.top - 20,
+              bottom: eRect.top - cRect.top - 20,
             });
           }
         }
