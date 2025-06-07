@@ -1054,6 +1054,11 @@ export default function App() {
       }
       const baseGroupId = linkingInfoRef.current.id;
       const targetGroupId = entries[idx].linkId;
+      if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
+        // Already part of this group, nothing to do
+        cancelLinking();
+        return;
+      }
       if (targetGroupId) {
         // Ziel hat bereits eine Gruppe -> verschmelze
         setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
