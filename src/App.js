@@ -146,7 +146,7 @@ const styles = {
   }),
   rotatedIcon: {
     display: 'inline-block',
-    transform: 'rotate(270deg)', // Winkel wie vom User zuletzt bereitgestellt
+    transform: 'rotate(90deg)', // Zurück zur vorherigen Ausrichtung
   },
   actionMenu: (dark) => ({
     position: 'absolute',
@@ -226,11 +226,11 @@ const styles = {
   },
   pin: (selected) => ({
     position: 'absolute',
-    top: '50%',
-    left: '50%',
+    top: '2px',
+    left: '2px',
     width: '16px',
     height: '16px',
-    transform: 'translate(-50%, -50%) rotate(270deg)',
+    transform: 'rotate(270deg)',
     cursor: 'pointer',
     pointerEvents: 'auto',
     zIndex: 5,
@@ -698,8 +698,8 @@ export default function App() {
             const eRect = endEl.getBoundingClientRect();
             conns.push({
               id,
-              top: sRect.top - cRect.top + sRect.height / 2,
-              bottom: eRect.top - cRect.top + eRect.height / 2,
+              top: sRect.top - cRect.top,
+              bottom: eRect.top - cRect.top,
             });
           }
         }
