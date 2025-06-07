@@ -994,7 +994,7 @@ export default function App() {
             {collapsedDays.has(day) && !isExportingPdf ? (
               <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>{day}</div>
             ) : (
-              <>
+              <React.Fragment>
                 <div onClick={() => toggleDay(day)} style={styles.groupHeader}>{day}</div>
                 {grouped[day].map(({ entry, idx }) => {
               const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
@@ -1173,8 +1173,9 @@ export default function App() {
                   )}
                 </div>
               );
-              })
-              </>
+              })}
+              </React.Fragment>
+            )}
           </div>
         ))}
       </div>
