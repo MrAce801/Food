@@ -242,8 +242,9 @@ const styles = {
     position: 'absolute',
     left: '0px',
     width: '20px',
-    pointerEvents: 'none',
+    pointerEvents: 'auto',
     overflow: 'visible',
+    cursor: 'pointer',
   },
 };
 
@@ -1020,6 +1021,7 @@ export default function App() {
       // Füge weiteren Eintrag der Gruppe hinzu
       const groupId = linkingInfo.id;
       setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: groupId } : e));
+      setLinkingInfo(info => ({ ...info, baseIdx: null }));
     }
   };
 
@@ -1030,6 +1032,14 @@ export default function App() {
         setEntries(prev => prev.map(e => e.linkId === linkingInfo.id ? { ...e, linkId: null } : e));
       }
       setLinkingInfo(null);
+    }
+  };
+
+  const handleConnectionClick = (id) => {
+    if (linkingInfo && linkingInfo.id === id) {
+      cancelLinking();
+    } else {
+      setLinkingInfo({ baseIdx: null, id });
     }
   };
 
@@ -1059,7 +1069,8 @@ export default function App() {
       }
       if (linkingInfo !== null) {
           const pinClicked = e.target.closest('.entry-pin');
-          if (!pinClicked) {
+          const lineClicked = e.target.closest('.connection-line');
+          if (!pinClicked && !lineClicked) {
               cancelLinking();
           }
       }
@@ -1150,8 +1161,20 @@ export default function App() {
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
         {connections.map(c => (
-          <svg key={c.id} style={{...styles.connectionSvg, top: c.top, height: c.bottom - c.top}}>
-            <path d={`M10 0 H0 V${c.bottom - c.top} H10`} stroke="#b22222" strokeWidth="2" fill="none" strokeDasharray="4 2" strokeLinecap="round" />
+          <svg
+            key={c.id}
+            className="connection-line"
+            onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
+            style={{...styles.connectionSvg, top: c.top, height: c.bottom - c.top}}
+          >
+            <path
+              d={`M10 0 H0 V${c.bottom - c.top} H10`}
+              stroke="#b22222"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="4 2"
+              strokeLinecap="round"
+            />
           </svg>
         ))}
         {dates.map(day => (
