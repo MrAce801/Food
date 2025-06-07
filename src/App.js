@@ -441,6 +441,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             fontSize: '10px',
             fontWeight: 'bold',
             marginRight: '5px',
+            lineHeight: 1,
             flexShrink: 0,
             border: `2px solid ${getStrengthColor(displayStrength)}`,
             boxSizing: 'border-box',
@@ -1104,7 +1105,7 @@ export default function App() {
                         </button>
                       </div>
 
-                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px', color: isExportingPdf ? '#333333' : (dark ? '#cccccc' : '#444444') }}>{entry.date}</div>
+                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px', color: isExportingPdf ? '#fafafa' : (dark ? '#cccccc' : '#444444') }}>{entry.date}</div>
                       <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' }}>
                         {entry.food || (isSymptomOnlyEntry ? "Nur Symptome" : "(Kein Essen)") }
                       </div>
