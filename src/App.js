@@ -594,6 +594,21 @@ export default function App() {
     linkingInfoRef.current = linkingInfo;
   }, [linkingInfo]);
 
+  // Cancel linking when user clicks anywhere outside pins/lines
+  useEffect(() => {
+    if (!linkingInfoRef.current) return;
+    const handleDocClick = (e) => {
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+      const pinClicked = targetEl && targetEl.closest('.entry-pin');
+      const lineClicked = targetEl && targetEl.closest('.connection-line');
+      if (!pinClicked && !lineClicked) {
+        cancelLinking();
+      }
+    };
+    document.addEventListener('click', handleDocClick, true);
+    return () => document.removeEventListener('click', handleDocClick, true);
+  }, [linkingInfo]);
+
   // --- EFFECT HOOKS ---
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
