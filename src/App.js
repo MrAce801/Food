@@ -94,7 +94,7 @@ const styles = {
     textAlign: 'center',
     padding: '12px 0',
     borderRadius: 8,
-    background: dark ? '#3a3a42' : '#e0e0e0',
+    background: dark ? '#6e5847' : '#f5e6d8',
     cursor: 'pointer'
   }),
   toast: {
