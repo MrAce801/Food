@@ -685,6 +685,7 @@ export default function App() {
         windowWidth: el.scrollWidth,
         windowHeight: el.scrollHeight,
         useCORS: true,
+        backgroundColor: '#e0e0e0', // medium light grey background for PDF
       });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
