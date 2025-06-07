@@ -226,8 +226,8 @@ const styles = {
   },
   pin: (selected) => ({
     position: 'absolute',
-    top: '-5px',
-    left: '-5px',
+    top: '-2px',
+    left: '-2px',
     width: '16px',
     height: '16px',
     cursor: 'pointer',
