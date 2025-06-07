@@ -74,7 +74,7 @@ const styles = {
     cursor: "pointer"
   }),
   symptomAddButton: bg => ({
-    padding: "8px 10px",
+    padding: "3px 10px",
     fontSize: 16,
     borderRadius: 6,
     border: 0,
@@ -1201,27 +1201,29 @@ export default function App() {
                     </>
                   ) : (
                     <> {/* Anzeigeansicht */}
-                      <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', gap: '6px' }}>
-                        <button
-                          id={`note-icon-button-${idx}`}
-                          onClick={(e) => { e.stopPropagation(); toggleNote(idx); }}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
-                          title="Notiz"
-                        >🗒️</button>
-                        <button
-                          id={`action-menu-trigger-${idx}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
-                            setNoteOpenIdx(null);
-                            setColorPickerOpenForIdx(null);
-                          }}
-                          style={{...styles.glassyIconButton(dark), padding: '6px'}}
-                          title="Aktionen"
-                        >
-                          <span style={styles.rotatedIcon}>✏️</span>
-                        </button>
-                      </div>
+                      {!isExportingPdf && (
+                        <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', gap: '6px' }}>
+                          <button
+                            id={`note-icon-button-${idx}`}
+                            onClick={(e) => { e.stopPropagation(); toggleNote(idx); }}
+                            style={{...styles.glassyIconButton(dark), padding: '6px'}}
+                            title="Notiz"
+                          >🗒️</button>
+                          <button
+                            id={`action-menu-trigger-${idx}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
+                              setNoteOpenIdx(null);
+                              setColorPickerOpenForIdx(null);
+                            }}
+                            style={{...styles.glassyIconButton(dark), padding: '6px'}}
+                            title="Aktionen"
+                          >
+                            <span style={styles.rotatedIcon}>✏️</span>
+                          </button>
+                        </div>
+                      )}
 
                       <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px', color: isExportingPdf ? '#fafafa' : (dark ? '#cccccc' : '#444444') }}>{entry.date}</div>
                       <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' }}>
