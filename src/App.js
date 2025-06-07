@@ -205,18 +205,6 @@ const styles = {
 };
 
 // --- GLOBALE KONSTANTEN & FARBMAPPINGS ---
-const SYMPTOM_COLOR_MAP = {
-  Bauchschmerzen: "#D0E1F9",
-  Durchfall: "#D6EAE0",
-  Blähungen: "#E4D9F0",
-  Hautausschlag: "#F0D9D9",
-  Juckreiz: "#E1BEE7",
-  "Schwellung am Gaumen": "#FFCCBC",
-  "Schleim im Hals": "#D9F2F9",
-  Niesen: "#C8E6C9",
-  Kopfschmerzen: "#D9EAF9",
-  "Rötung Haut": "#F2D9DB"
-};
 
 const SYMPTOM_CHOICES = [
   "Bauchschmerzen","Durchfall","Blähungen","Hautausschlag",
@@ -235,11 +223,13 @@ const TAG_COLORS = {
   GREEN: 'green',
   RED: 'red',
   YELLOW: 'yellow',
+  BROWN: 'brown',
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: "Standard",
   [TAG_COLORS.RED]: "Symptome",
   [TAG_COLORS.YELLOW]: "Vorgeschichte",
+  [TAG_COLORS.BROWN]: "Stuhlgang",
 };
 
 // --- HILFSFUNKTIONEN ---
@@ -423,7 +413,7 @@ const ImgStack = ({ imgs, onDelete }) => (
 );
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
-  const tagBackgroundColor = SYMPTOM_COLOR_MAP[txt] || "#fafafa";
+  const tagBackgroundColor = "#fafafa"; // Einheitliche Farbe für alle Symptome
   const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
@@ -1172,7 +1162,7 @@ export default function App() {
                             style={styles.colorPickerPopup(dark)} 
                             onClick={e => e.stopPropagation()}
                           >
-                            {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW].map(colorValue => (
+                            {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW, TAG_COLORS.BROWN].map(colorValue => (
                               <div
                                 key={colorValue}
                                 style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
