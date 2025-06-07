@@ -87,6 +87,7 @@ const styles = {
   entryCard: (dark, isSymptomOnly = false) => ({
     position: 'relative',
     marginBottom: 16,
+    marginLeft: 20,
     padding: 12,
     borderRadius: 8,
     background: isSymptomOnly
@@ -215,6 +216,45 @@ const styles = {
     border: isActive ? (currentThemeDark ? '2px solid #FFFFFF' : '2px solid #000000') : '2px solid transparent',
     boxSizing: 'border-box',
   }),
+  pinContainer: {
+    position: 'absolute',
+    left: '-20px',
+    top: 0,
+    bottom: 0,
+    width: '20px',
+    pointerEvents: 'none',
+  },
+  pin: (selected) => ({
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    background: selected ? '#1976d2' : '#c00',
+    transform: 'translate(-50%, -50%)',
+    cursor: 'pointer',
+    pointerEvents: 'auto',
+    zIndex: 5,
+  }),
+  pinLineTop: {
+    position: 'absolute',
+    left: '50%',
+    top: 0,
+    bottom: '50%',
+    width: '2px',
+    background: '#c00',
+    transform: 'translateX(-50%)',
+  },
+  pinLineBottom: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    bottom: 0,
+    width: '2px',
+    background: '#c00',
+    transform: 'translateX(-50%)',
+  },
 };
 
 // --- GLOBALE KONSTANTEN & FARBMAPPINGS ---
@@ -521,6 +561,7 @@ export default function App() {
           food: e.food || "",
           symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
           tagColor: e.tagColor || TAG_COLORS.GREEN,
+          linkId: e.linkId || null,
         }));
       return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
     } catch { return []; }
@@ -552,6 +593,7 @@ export default function App() {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
+  const [linkingIdx, setLinkingIdx] = useState(null);
 
   // --- EFFECT HOOKS ---
   useEffect(() => {
@@ -793,6 +835,7 @@ export default function App() {
       comment: "",
       date: now(),
       tagColor: TAG_COLORS.GREEN,
+      linkId: null,
     };
     setEntries(prevEntries =>
       [...prevEntries, entry].sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
@@ -813,7 +856,8 @@ export default function App() {
         symptomInput: "",
         symptomTime: 0,
         newSymptomStrength: 1,
-        date: toDateTimePickerFormat(e.date)
+        date: toDateTimePickerFormat(e.date),
+        linkId: e.linkId || null
     });
     setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
@@ -873,7 +917,8 @@ export default function App() {
             food: editForm.food.trim(),
             imgs: editForm.imgs,
             symptoms: sortSymptomsByTime(symptomsToSave),
-            date: displayDateToSave
+            date: displayDateToSave,
+            linkId: editForm.linkId || null
           }
         : ent
       ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
@@ -921,6 +966,30 @@ export default function App() {
     setColorPickerOpenForIdx(null);
   };
 
+  const handlePinClick = (idx) => {
+    if (linkingIdx === null) {
+      const group = entries[idx].linkId;
+      if (group) {
+        // remove entire group
+        setEntries(prev => prev.map(e => e.linkId === group ? { ...e, linkId: null } : e));
+      } else {
+        setLinkingIdx(idx);
+      }
+    } else {
+      if (idx === linkingIdx) { setLinkingIdx(null); return; }
+      const startEntry = entries[linkingIdx];
+      const targetEntry = entries[idx];
+      const groupId = startEntry.linkId || targetEntry.linkId || `g-${Date.now()}`;
+      setEntries(prev => prev.map(e => {
+        if (e === startEntry || e === targetEntry || e.linkId === startEntry.linkId || e.linkId === targetEntry.linkId) {
+          return { ...e, linkId: groupId };
+        }
+        return e;
+      }));
+      setLinkingIdx(null);
+    }
+  };
+
   const handleContainerClick = (e) => {
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
@@ -943,6 +1012,12 @@ export default function App() {
           const pickerContentClicked = e.target.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
           if (!pickerTriggerClicked && !pickerContentClicked) {
               setColorPickerOpenForIdx(null);
+          }
+      }
+      if (linkingIdx !== null) {
+          const pinClicked = e.target.closest('.entry-pin');
+          if (!pinClicked) {
+              setLinkingIdx(null);
           }
       }
   };
@@ -1038,7 +1113,7 @@ export default function App() {
             ) : (
               <React.Fragment>
                 <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>{day}</div>
-                {grouped[day].map(({ entry, idx }) => {
+                {grouped[day].map(({ entry, idx }, j) => {
               const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
               const sortedAllDisplay = sortSymptomsByTime(
                 (entry.symptoms || []).map(s => ({
@@ -1052,9 +1127,22 @@ export default function App() {
                 : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
               
               const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
+              const prev = grouped[day][j - 1]?.entry;
+              const next = grouped[day][j + 1]?.entry;
+              const hasPrev = prev && prev.linkId && prev.linkId === entry.linkId;
+              const hasNext = next && next.linkId && next.linkId === entry.linkId;
 
               return (
                 <div key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
+                  <div style={styles.pinContainer}>
+                    {hasPrev && <div style={styles.pinLineTop} />}
+                    <div
+                      className="entry-pin"
+                      onClick={(e) => { e.stopPropagation(); handlePinClick(idx); }}
+                      style={styles.pin(linkingIdx === idx)}
+                    />
+                    {hasNext && <div style={styles.pinLineBottom} />}
+                  </div>
                   {editingIdx === idx && !isExportingPdf ? (
                     <> {/* Editieransicht */}
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
