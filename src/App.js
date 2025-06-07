@@ -87,6 +87,16 @@ const styles = {
     fontWeight: 600,
     margin: "24px 0 8px"
   },
+  dayCover: (dark) => ({
+    fontSize: 18,
+    fontWeight: 600,
+    margin: "24px 0 8px",
+    textAlign: 'center',
+    padding: '12px 0',
+    borderRadius: 8,
+    background: dark ? '#3a3a42' : '#e0e0e0',
+    cursor: 'pointer'
+  }),
   toast: {
     position: "fixed",
     top: 16,
@@ -290,6 +300,14 @@ const now = () => {
     hour12: false,
   });
   return `${day}.${month}.${year} ${time}`;
+};
+
+const getTodayDateString = () => {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}.${month}.${year}`;
 };
 
 const parseDateString = (dateStr) => {
@@ -519,6 +537,7 @@ export default function App() {
   const [actionMenuOpenForIdx, setActionMenuOpenForIdx] = useState(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
+  const [collapsedDays, setCollapsedDays] = useState(new Set());
 
   // --- EFFECT HOOKS ---
   useEffect(() => {
@@ -564,6 +583,20 @@ export default function App() {
     }
   }, [editingIdx, isExportingPdf]);
 
+  useEffect(() => {
+    const today = getTodayDateString();
+    setCollapsedDays(prev => {
+      const newSet = new Set(prev);
+      entries.forEach(e => {
+        const day = e.date.split(' ')[0];
+        if (day !== today && !prev.has(day)) {
+          newSet.add(day);
+        }
+      });
+      return newSet;
+    });
+  }, [entries]);
+
   // Automatisches Nachladen alter Einträge beim Scrollen
   useEffect(() => {
     const handleScroll = () => {
@@ -589,6 +622,14 @@ export default function App() {
     const id = Date.now();
     setToasts(t => [...t, { id, msg }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
+  };
+
+  const toggleDay = day => {
+    setCollapsedDays(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(day)) newSet.delete(day); else newSet.add(day);
+      return newSet;
+    });
   };
 
   const handleExportPDF = async () => {
@@ -950,8 +991,12 @@ export default function App() {
       <div id="fd-table">
         {dates.map(day => (
           <div key={day}>
-            <div style={styles.groupHeader}>{day}</div>
-            {grouped[day].map(({ entry, idx }) => {
+            {collapsedDays.has(day) && !isExportingPdf ? (
+              <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>{day}</div>
+            ) : (
+              <>
+                <div onClick={() => toggleDay(day)} style={styles.groupHeader}>{day}</div>
+                {grouped[day].map(({ entry, idx }) => {
               const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
               const sortedAllDisplay = sortSymptomsByTime(
                 (entry.symptoms || []).map(s => ({
@@ -1129,6 +1174,7 @@ export default function App() {
                 </div>
               );
             })}
+              </>
           </div>
         ))}
       </div>
