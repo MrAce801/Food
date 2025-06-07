@@ -86,6 +86,7 @@ const styles = {
     fontSize: 18,
     fontWeight: 600,
     margin: isPdf ? "32px 0 12px" : "24px 0 8px",
+    color: isPdf ? '#333' : undefined,
   }),
   dayCover: (dark) => ({
     fontSize: 18,
@@ -1103,7 +1104,7 @@ export default function App() {
                         </button>
                       </div>
 
-                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px', color: dark ? '#cccccc' : '#444444' }}>{entry.date}</div>
+                      <div style={{ fontSize:12, opacity:0.7, marginBottom:4, marginRight: '65px', color: isExportingPdf ? '#444444' : (dark ? '#cccccc' : '#444444') }}>{entry.date}</div>
                       <div style={{ fontSize:18, fontWeight:600, marginBottom:8, marginRight: '65px', overflowWrap: 'break-word', whiteSpace: 'normal' }}>
                         {entry.food || (isSymptomOnlyEntry ? "Nur Symptome" : "(Kein Essen)") }
                       </div>
