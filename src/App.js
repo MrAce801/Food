@@ -1092,7 +1092,7 @@ export default function App() {
   };
 
   const handleContainerClick = (e) => {
-      const targetEl = e.target.closest ? e.target : e.target.parentElement;
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
       if (actionMenuOpenForIdx !== null) {
           const triggerClicked = targetEl && targetEl.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
           const menuClicked = targetEl && targetEl.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
