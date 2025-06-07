@@ -73,6 +73,17 @@ const styles = {
     color: "#fff",
     cursor: "pointer"
   }),
+  symptomAddButton: bg => ({
+    padding: "8px 10px",
+    fontSize: 16,
+    borderRadius: 6,
+    border: 0,
+    background: bg,
+    color: "#fff",
+    cursor: "pointer",
+    flexShrink: 0,
+    boxSizing: 'border-box'
+  }),
   entryCard: (dark, isSymptomOnly = false) => ({
     position: 'relative',
     marginBottom: 16,
@@ -841,6 +852,19 @@ export default function App() {
     const displayDateToSave = fromDateTimePickerFormat(editForm.date);
     if (!displayDateToSave) { addToast("Ungültiges Datum/Zeit Format. Bitte prüfen."); return; }
 
+    const pendingSymptom = editForm.symptomInput.trim()
+      ? {
+          txt: editForm.symptomInput.trim(),
+          time: editForm.symptomTime,
+          strength: editForm.newSymptomStrength,
+        }
+      : null;
+
+    const symptomsToSave = [
+      ...editForm.symptoms,
+      ...(pendingSymptom ? [pendingSymptom] : [])
+    ].map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }));
+
     setEntries(prevEntries =>
       prevEntries.map((ent, j) =>
         j === editingIdx
@@ -848,9 +872,7 @@ export default function App() {
             ...ent,
             food: editForm.food.trim(),
             imgs: editForm.imgs,
-            symptoms: sortSymptomsByTime(
-                editForm.symptoms.map(s => ({...s, strength: Math.min(parseInt(s.strength) || 1, 3)}))
-            ),
+            symptoms: sortSymptomsByTime(symptomsToSave),
             date: displayDateToSave
           }
         : ent
@@ -990,14 +1012,7 @@ export default function App() {
             </select>
             <button
               onClick={addNewSymptom}
-              style={{
-                ...styles.buttonSecondary("#388e3c"),
-                flexShrink: 0,
-                fontSize: '16px', // Beibehaltung der Schriftgröße
-                padding: '8px 12px', // ANPASSUNG: Vertikales Padding reduziert
-                boxSizing: 'border-box',
-                // Höhe wird durch Padding und Schriftgröße bestimmt
-              }}
+              style={styles.symptomAddButton("#388e3c")}
             >+</button>
           </div>
         </div>
@@ -1058,13 +1073,7 @@ export default function App() {
                           </select>
                           <button
                             onClick={addEditSymptom}
-                            style={{
-                              ...styles.buttonSecondary("#388e3c"),
-                              flexShrink:0,
-                              fontSize: '16px', // Beibehaltung der Schriftgröße
-                              padding: '8px 12px', // ANPASSUNG: Vertikales Padding reduziert (konsistent)
-                              boxSizing: 'border-box'
-                            }}
+                            style={styles.symptomAddButton("#388e3c")}
                           >+</button>
                         </div>
                       </div>
