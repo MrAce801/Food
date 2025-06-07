@@ -146,7 +146,7 @@ const styles = {
   }),
   rotatedIcon: {
     display: 'inline-block',
-    transform: 'rotate(90deg)', // Winkel wie vom User zuletzt bereitgestellt
+    transform: 'rotate(270deg)', // Winkel wie vom User zuletzt bereitgestellt
   },
   actionMenu: (dark) => ({
     position: 'absolute',
@@ -230,7 +230,7 @@ const styles = {
     left: '50%',
     width: '16px',
     height: '16px',
-    transform: 'translate(-50%, -50%) rotate(90deg)',
+    transform: 'translate(-50%, -50%) rotate(270deg)',
     cursor: 'pointer',
     pointerEvents: 'auto',
     zIndex: 5,
@@ -242,8 +242,8 @@ const styles = {
   }),
   connectionSvg: {
     position: 'absolute',
-    left: '-5px',
-    width: '30px',
+    left: '0px',
+    width: '20px',
     pointerEvents: 'none',
     overflow: 'visible',
   },
@@ -1136,7 +1136,7 @@ export default function App() {
       <div id="fd-table" style={{position:'relative'}}>
         {connections.map(c => (
           <svg key={c.id} style={{...styles.connectionSvg, top: c.top, height: c.bottom - c.top}}>
-            <path d={`M15 0 Q0 0 0 ${(c.bottom - c.top)/2} Q0 ${c.bottom - c.top} 15 ${c.bottom - c.top}`} stroke="#b22222" strokeWidth="2" fill="none" strokeDasharray="4 2" strokeLinecap="round" />
+            <path d={`M10 0 H0 V${c.bottom - c.top} H10`} stroke="#b22222" strokeWidth="2" fill="none" strokeDasharray="4 2" strokeLinecap="round" />
           </svg>
         ))}
         {dates.map(day => (
