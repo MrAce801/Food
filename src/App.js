@@ -598,6 +598,7 @@ export default function App() {
     });
   }, [entries]);
 
+  // Automatically resize the note textarea when a note is opened or edited
   useEffect(() => {
     if (noteOpenIdx !== null && noteTextareaRef.current) {
       const ta = noteTextareaRef.current;
