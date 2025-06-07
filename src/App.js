@@ -713,7 +713,7 @@ export default function App() {
       window.removeEventListener('scroll', updateConnections);
       window.removeEventListener('resize', updateConnections);
     };
-  });
+  }, [entries, searchTerm, displayCount, collapsedDays]);
 
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
