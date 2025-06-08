@@ -14,16 +14,9 @@ export default {
       const element = this.$refs.pdfcontent;
       if (!element) return;
 
-      const clone = element.cloneNode(true);
-      clone.querySelectorAll('details').forEach(d => { d.open = true; });
-
-      const wrapper = document.createElement('div');
-      wrapper.style.position = 'fixed';
-      wrapper.style.left = '-9999px';
-      wrapper.style.top = '0';
-      wrapper.style.width = element.offsetWidth + 'px';
-      wrapper.appendChild(clone);
-      document.body.appendChild(wrapper);
+      const details = Array.from(element.querySelectorAll('details'));
+      const prevStates = details.map(d => d.open);
+      details.forEach(d => { d.open = true; });
 
       const opt = {
         margin: 0,
@@ -34,9 +27,11 @@ export default {
       };
 
       try {
-        await html2pdf().from(wrapper).set(opt).save();
+        await html2pdf().from(element).set(opt).save();
       } finally {
-        document.body.removeChild(wrapper);
+        setTimeout(() => {
+          details.forEach((d, i) => { d.open = prevStates[i]; });
+        });
       }
     }
   }
