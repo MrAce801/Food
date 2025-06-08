@@ -105,7 +105,7 @@ export default function EntryCard({
             style={{ ...styles.input, marginBottom: '12px', width: '100%' }}
           />
           <input
-            placeholder="Essen..."
+            placeholder="Eintrag..."
             value={editForm.food}
             onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
             onFocus={handleFocus}
