@@ -141,15 +141,17 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   }),
-  collapseButton: (dark) => ({
+  collapseButton: (dark, isPdf = false) => ({
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-    border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
+    border: isPdf
+      ? '1px solid #333'
+      : (dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)'),
     borderRadius: 6,
     padding: '4px 6px',
     cursor: 'pointer',
     fontSize: 14,
     lineHeight: 1,
-    color: dark ? '#f0f0f8' : '#333',
+    color: isPdf ? '#333' : (dark ? '#f0f0f8' : '#333'),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

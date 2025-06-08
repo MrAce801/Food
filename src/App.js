@@ -673,7 +673,7 @@ export default function App() {
                 <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
                   <button
                     onClick={e => { e.stopPropagation(); toggleDay(day); }}
-                    style={styles.collapseButton(dark)}
+                    style={styles.collapseButton(dark, isExportingPdf)}
                     aria-label="Expand day"
                   >
                     ▶
@@ -686,7 +686,7 @@ export default function App() {
                 <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>
                   <button
                     onClick={e => { e.stopPropagation(); toggleDay(day); }}
-                    style={styles.collapseButton(dark)}
+                    style={styles.collapseButton(dark, isExportingPdf)}
                     aria-label="Collapse day"
                   >
                     ▼
