@@ -18,12 +18,14 @@ const TAG_COLORS = {
   RED: 'red',
   YELLOW: 'yellow',
   BROWN: '#c19a6b', // light brown for bowel movement
+  BLUE: '#90caf9',  // light blue for supplements
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: "Standard",
   [TAG_COLORS.RED]: "Symptome",
   [TAG_COLORS.YELLOW]: "Vorgeschichte",
   [TAG_COLORS.BROWN]: "Stuhlgang",
+  [TAG_COLORS.BLUE]: "Supplemente",
 };
 
 export { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES };
