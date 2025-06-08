@@ -594,6 +594,21 @@ export default function App() {
     linkingInfoRef.current = linkingInfo;
   }, [linkingInfo]);
 
+  useEffect(() => {
+    const handleDocMouseDown = (e) => {
+      if (linkingInfoRef.current !== null) {
+        const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+        const pinClicked = targetEl && targetEl.closest('.entry-pin');
+        const lineClicked = targetEl && targetEl.closest('.connection-line');
+        if (!pinClicked && !lineClicked) {
+          cancelLinking();
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleDocMouseDown);
+    return () => document.removeEventListener('mousedown', handleDocMouseDown);
+  }, []);
+
   // --- EFFECT HOOKS ---
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
