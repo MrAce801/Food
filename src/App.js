@@ -653,14 +653,26 @@ export default function App() {
     }
   }, [editingIdx, isExportingPdf]);
 
+  const knownDaysRef = useRef(new Set());
+
   useEffect(() => {
     const today = getTodayDateString();
+    const allDays = new Set();
     setCollapsedDays(prev => {
       const newSet = new Set(prev);
+      const known = knownDaysRef.current;
       entries.forEach(e => {
         const day = e.date.split(' ')[0];
-        if (day !== today && !prev.has(day)) {
-          newSet.add(day);
+        allDays.add(day);
+        if (!known.has(day)) {
+          known.add(day);
+          if (day !== today) newSet.add(day);
+        }
+      });
+      known.forEach(d => {
+        if (!allDays.has(d)) {
+          known.delete(d);
+          newSet.delete(d);
         }
       });
       return newSet;
