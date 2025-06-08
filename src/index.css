@@ -29,10 +29,6 @@ code {
   transition: opacity 0.3s ease;
 }
 
-.pdf-hex-bg {
-  /* Simplified background for PDF export */
-  background-color: #bdbdbd;
-}
 
 @media print {
   body {

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 
-export default function useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs) {
+export default function useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, extraFlag) {
   const [connections, setConnections] = useState([]);
 
   useLayoutEffect(() => {
@@ -67,7 +67,7 @@ export default function useConnections(entries, searchTerm, displayCount, collap
       window.removeEventListener('scroll', updateConnections);
       window.removeEventListener('resize', updateConnections);
     };
-  }, [entries, searchTerm, displayCount, collapsedDays]);
+  }, [entries, searchTerm, displayCount, collapsedDays, extraFlag]);
 
   return connections;
 }
