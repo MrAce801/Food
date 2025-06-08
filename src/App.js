@@ -226,7 +226,7 @@ const styles = {
   },
   pin: (selected) => ({
     position: 'absolute',
-    top: '2px',
+    bottom: '2px',
     left: '2px',
     width: '16px',
     height: '16px',
@@ -558,6 +558,8 @@ export default function App() {
     } catch { return []; }
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const searchInputRef = useRef(null);
   const [displayCount, setDisplayCount] = useState(20);
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem("fd-form-new");
@@ -653,6 +655,12 @@ export default function App() {
     }
   }, [editingIdx, isExportingPdf]);
 
+  useEffect(() => {
+    if (showSearch) {
+      searchInputRef.current?.focus();
+    }
+  }, [showSearch]);
+
   const knownDaysRef = useRef(new Set());
 
   useEffect(() => {
@@ -734,13 +742,13 @@ export default function App() {
               const midEl = entryRefs.current[sorted[i]];
               if (midEl) {
                 const mRect = midEl.getBoundingClientRect();
-                cross.push(mRect.top - sRect.top);
+                cross.push(mRect.bottom - sRect.bottom);
               }
             }
             conns.push({
               id,
-              top: sRect.top - cRect.top + 8,
-              bottom: eRect.top - cRect.top + 8,
+              top: sRect.bottom - cRect.top - 8,
+              bottom: eRect.bottom - cRect.top - 8,
               cross,
             });
           }
@@ -1256,9 +1264,21 @@ export default function App() {
         </div>
         <button onClick={addEntry} disabled={!newForm.food.trim() && newSymptoms.length === 0} style={{ ...styles.buttonPrimary, opacity: (newForm.food.trim() || newSymptoms.length > 0) ? 1 : 0.5 }} >Eintrag hinzufügen</button>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          <input placeholder="Suche..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{...styles.smallInput, flexGrow: 1}} />
-          { !isExportingPdf && <button onClick={() => setDisplayCount(dc => dc + 20)} style={styles.buttonSecondary("#1976d2")}>Mehr laden</button> }
+        <div style={{ display: "flex", gap: 8, marginTop: 16, alignItems: 'center' }}>
+          <button
+            onClick={() => setShowSearch(s => !s)}
+            style={{...styles.glassyIconButton(dark), padding: '6px'}}
+            title="Suche"
+          >🔍</button>
+          {showSearch && (
+            <input
+              ref={searchInputRef}
+              placeholder="Suche..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{...styles.smallInput, flexGrow: 1}}
+            />
+          )}
         </div>
       </div>
 
