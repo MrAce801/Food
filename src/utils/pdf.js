@@ -52,9 +52,27 @@ export async function exportTableToPdf(el) {
     wrapper.parentNode.insertBefore(el, wrapper);
     wrapper.remove();
     wrapper = null;
+
+    // --- FIX FOR OVERFLOW --- convert canvas to image and fit it on an A4 PDF
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight);
+    const imgWidth = canvasWidth * ratio;
+    const imgHeight = canvasHeight * ratio;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
     pdf.save('FoodDiary.pdf');
     return true;
   } catch (error) {
