@@ -7,6 +7,7 @@ export async function exportTableToPdf(el) {
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
   let prevClassName = '';
+  let wrapper = null;
 
   try {
     const imgStackContainers = Array.from(el.querySelectorAll('.img-stack-container'));
@@ -30,15 +31,26 @@ export async function exportTableToPdf(el) {
     prevClassName = el.className;
     el.classList.add('pdf-hex-bg');
 
-    const canvas = await html2canvas(el, {
+    // Wrap table to include space for left-aligned connection lines
+    wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.style.marginLeft = '-15px';
+    wrapper.style.paddingLeft = '15px';
+    el.parentNode.insertBefore(wrapper, el);
+    wrapper.appendChild(el);
+
+    const canvas = await html2canvas(wrapper, {
       scale: 2,
-      windowWidth: el.scrollWidth,
-      windowHeight: el.scrollHeight,
+      windowWidth: wrapper.scrollWidth,
+      windowHeight: wrapper.scrollHeight,
       useCORS: true,
       backgroundColor: null,
     });
 
     el.className = prevClassName;
+    wrapper.parentNode.insertBefore(el, wrapper);
+    wrapper.remove();
+    wrapper = null;
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
@@ -57,6 +69,10 @@ export async function exportTableToPdf(el) {
       orig.el.style.height = orig.height;
       orig.el.style.objectFit = orig.objectFit;
     });
+    if (wrapper && wrapper.parentNode) {
+      wrapper.parentNode.insertBefore(el, wrapper);
+      wrapper.remove();
+    }
     if (prevClassName) el.className = prevClassName;
   }
 }
