@@ -6,6 +6,7 @@ export async function exportTableToPdf(el) {
 
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
+  const entryOverflowOriginals = [];
   let prevClassName = '';
   let wrapper = null;
 
@@ -30,6 +31,13 @@ export async function exportTableToPdf(el) {
 
     prevClassName = el.className;
     el.classList.add('pdf-hex-bg');
+
+    // Temporarily allow entry boxes to overflow so connection lines aren't clipped
+    const entryBoxes = Array.from(el.querySelectorAll('[id^="entry-card-"]'));
+    entryBoxes.forEach(box => {
+      entryOverflowOriginals.push({ el: box, overflow: box.style.overflow });
+      box.style.overflow = 'visible';
+    });
 
     // Wrap table to include extra room for connection lines
     wrapper = document.createElement('div');
@@ -87,6 +95,9 @@ export async function exportTableToPdf(el) {
       orig.el.style.width = orig.width;
       orig.el.style.height = orig.height;
       orig.el.style.objectFit = orig.objectFit;
+    });
+    entryOverflowOriginals.forEach(orig => {
+      orig.el.style.overflow = orig.overflow;
     });
     if (wrapper && wrapper.parentNode) {
       wrapper.parentNode.insertBefore(el, wrapper);
