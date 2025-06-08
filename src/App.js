@@ -1099,11 +1099,25 @@ export default function App() {
   };
 
   const cancelLinking = () => {
+    // Check if there is an active linking process.
     if (linkingInfoRef.current) {
-      const count = entries.filter(e => e.linkId === linkingInfoRef.current.id).length;
-      if (count <= 1) {
-        setEntries(prev => prev.map(e => e.linkId === linkingInfoRef.current.id ? { ...e, linkId: null } : e));
+      const { baseIdx, id } = linkingInfoRef.current;
+
+      // A non-null 'baseIdx' indicates that the linking process was started
+      // by clicking a specific pin to create a *new* chain.
+      // This is the scenario that needs cleaning up on cancellation.
+      if (baseIdx !== null) {
+        // We know this link was temporary. Remove the linkId from any entry
+        // that has it. Using the functional update form `setEntries(prev => ...)`
+        // guarantees this logic runs on the latest state, resolving the race condition.
+        setEntries(prev =>
+          prev.map(e => (e.linkId === id ? { ...e, linkId: null } : e))
+        );
       }
+
+      // For all cancellation scenarios (whether from a new link or from
+      // deselecting an existing one), we must reset the linking state to exit
+      // "linking mode".
       linkingInfoRef.current = null;
       setLinkingInfo(null);
     }
