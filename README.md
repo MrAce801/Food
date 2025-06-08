@@ -19,6 +19,44 @@ You may also see any lint errors in the console.
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
+
+## Folder Layout
+
+```
+public/             Static assets served by the dev server
+src/
+  components/       React components (create this folder for new components)
+  utils.js          Reusable helper functions
+  constants.js      App wide constants
+  App.js            Main application component
+  index.js          Entry point that renders `<App />`
+```
+
+The helper and constants files are optional but recommended for keeping logic and values organized.
+
+### Running tests
+
+Use `npm test` to execute the test suite once in CI environments:
+
+```bash
+CI=true npm test --silent
+```
+
+### Building the project
+
+Create an optimized production build with:
+
+```bash
+npm run build
+```
+
+The compiled output will appear in the `build/` directory (ignored in git).
+
+### Adding new components
+
+Place component files under `src/components/` and export them as a default export.
+Then import the component wherever it is needed, for example in `App.js`.
+
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\
