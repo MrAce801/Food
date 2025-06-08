@@ -8,6 +8,7 @@ import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime } from "./utils";
 import PdfButton from "./components/PdfButton";
+import PrintButton from "./components/PrintButton";
 import InsightsButton from "./components/InsightsButton";
 import BackButton from "./components/BackButton";
 import CameraButton from "./components/CameraButton";
@@ -243,6 +244,10 @@ export default function App() {
     if (ok) addToast("PDF erfolgreich exportiert!");
     else addToast("Fehler beim PDF-Export.");
     setIsExportingPdf(false);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleNewFile = async e => {
@@ -591,7 +596,12 @@ export default function App() {
     return (
       <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
         {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
-        <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
+        <div style={styles.topBar} className="top-bar">
+          <BackButton onClick={() => setView("diary")} />{" "}
+          <div>
+            <PrintButton onClick={handlePrint} />
+          </div>
+        </div>
         <Insights entries={entries} />
       </div>
     );
@@ -600,12 +610,13 @@ export default function App() {
   return (
     <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
-      <div style={styles.topBar}>
+      <div style={styles.topBar} className="top-bar">
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
           <PdfButton onClick={handleExportPDF} />{" "}
+          <PrintButton onClick={handlePrint} />{" "}
           <InsightsButton onClick={() => setView("insights")} />
         </div>
       </div>

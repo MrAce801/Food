@@ -27,7 +27,7 @@ export default function NewEntryForm({
   styles
 }) {
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div className="new-entry-form" style={{ marginBottom: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <input
           placeholder="Eintrag..."

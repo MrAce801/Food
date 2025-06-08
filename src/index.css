@@ -33,3 +33,18 @@ code {
   /* Simplified background for PDF export */
   background-color: #bdbdbd;
 }
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+  }
+  .top-bar,
+  .toast-fade,
+  .new-entry-form,
+  button {
+    display: none !important;
+  }
+  #fd-table {
+    page-break-inside: avoid;
+  }
+}
