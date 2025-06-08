@@ -247,10 +247,15 @@ export default function App() {
     setIsExportingPdf(false);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const finish = () => setIsPrinting(false);
+    const before = () => {
+      window.dispatchEvent(new Event('resize'));
+    };
     setIsPrinting(true);
+    window.addEventListener('beforeprint', before, { once: true });
     window.addEventListener('afterprint', finish, { once: true });
+    await new Promise(resolve => setTimeout(resolve, 100));
     window.print();
   };
 
