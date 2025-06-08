@@ -88,6 +88,8 @@ const styles = {
       ? (dark ? "#3c3c46" : "#f0f0f5")
       : (dark ? "#2a2a32" : "#fff"),
     boxShadow: "0 1px 4px #0002",
+    pageBreakInside: 'avoid',
+    breakInside: 'avoid'
   }),
   groupHeader: (isPdf) => ({
     fontSize: 18,

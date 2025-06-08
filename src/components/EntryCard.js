@@ -7,6 +7,7 @@ export default function EntryCard({
   dark,
   isMobile,
   isExportingPdf,
+  isPrinting,
   editingIdx,
   editForm,
   setEditForm,
@@ -317,7 +318,7 @@ export default function EntryCard({
               </button>
             </div>
           )}
-          {entry.comment && noteOpenIdx !== idx && !isExportingPdf && (
+          {entry.comment && noteOpenIdx !== idx && (!isExportingPdf || isPrinting) && (
             <div
               id={`displayed-note-text-${idx}`}
               onClick={e => {

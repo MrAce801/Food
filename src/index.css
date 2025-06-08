@@ -43,4 +43,8 @@ code {
   #fd-table {
     page-break-inside: avoid;
   }
+  [id^="entry-card-"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
