@@ -69,6 +69,7 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
@@ -135,10 +136,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (editingIdx !== null && !isExportingPdf) {
+    if (editingIdx !== null && !(isExportingPdf || isPrinting)) {
       document.getElementById(`entry-card-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [editingIdx, isExportingPdf]);
+  }, [editingIdx, isExportingPdf, isPrinting]);
 
   useEffect(() => {
     if (showSearch) {
@@ -210,7 +211,7 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  const connections = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs);
+  const connections = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExportingPdf || isPrinting);
 
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -247,6 +248,9 @@ export default function App() {
   };
 
   const handlePrint = () => {
+    const finish = () => setIsPrinting(false);
+    setIsPrinting(true);
+    window.addEventListener('afterprint', finish, { once: true });
     window.print();
   };
 
@@ -580,7 +584,7 @@ export default function App() {
       (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-  const entriesToRenderForUiOrPdf = isExportingPdf ? filteredWithIdx : filteredWithIdx.slice(0, displayCount);
+  const entriesToRenderForUiOrPdf = (isExportingPdf || isPrinting) ? filteredWithIdx : filteredWithIdx.slice(0, displayCount);
 
   const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
     const day = entry.date.split(" ")[0];
@@ -679,7 +683,7 @@ export default function App() {
         })}
         {dates.map(day => (
           <div key={day}>
-            {collapsedDays.has(day) && !isExportingPdf ? (
+            {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
               <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
                   <button
@@ -712,7 +716,7 @@ export default function App() {
             idx={idx}
             dark={dark}
             isMobile={isMobile}
-            isExportingPdf={isExportingPdf}
+            isExportingPdf={isExportingPdf || isPrinting}
             editingIdx={editingIdx}
             editForm={editForm}
             setEditForm={setEditForm}

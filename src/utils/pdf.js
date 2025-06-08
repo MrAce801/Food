@@ -5,7 +5,7 @@ export async function exportTableToPdf(el) {
 
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
-  let prevClassName = '';
+  let prevBackground = '';
 
   try {
     const imgStackContainers = Array.from(el.querySelectorAll('.img-stack-container'));
@@ -26,16 +26,17 @@ export async function exportTableToPdf(el) {
       img.style.objectFit = 'contain';
     });
 
-    prevClassName = el.className;
-    el.classList.add('pdf-hex-bg');
+    prevBackground = el.style.backgroundColor;
+    const bodyBg = getComputedStyle(document.body).backgroundColor;
+    el.style.backgroundColor = bodyBg;
 
     await html2pdf().from(el).set({
       margin: 10,
       filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: null },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
       jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
     }).save();
-    el.className = prevClassName;
+    el.style.backgroundColor = prevBackground;
     return true;
   } catch (error) {
     console.error('Fehler beim Erstellen des PDFs:', error);
@@ -50,6 +51,6 @@ export async function exportTableToPdf(el) {
       orig.el.style.height = orig.height;
       orig.el.style.objectFit = orig.objectFit;
     });
-    if (prevClassName) el.className = prevClassName;
+    if (prevBackground) el.style.backgroundColor = prevBackground;
   }
 }
