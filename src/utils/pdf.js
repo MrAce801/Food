@@ -33,11 +33,6 @@ export async function exportTableToPdf(el) {
     const originalPaddingLeft = el.style.paddingLeft;
     el.style.paddingLeft = '30px';
 
-    const zoomFactor = 0.75;
-    const originalTransform = el.style.transform;
-    const originalTransformOrigin = el.style.transformOrigin;
-    el.style.transform = `scale(${zoomFactor})`;
-    el.style.transformOrigin = 'top left';
 
     const canvas = await html2canvas(el, {
       scale: 2,
@@ -47,8 +42,6 @@ export async function exportTableToPdf(el) {
       backgroundColor: null,
     });
 
-    el.style.transform = originalTransform;
-    el.style.transformOrigin = originalTransformOrigin;
 
     el.style.paddingLeft = originalPaddingLeft;
 
