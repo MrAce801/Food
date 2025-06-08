@@ -1,5 +1,4 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 
 export async function exportTableToPdf(el) {
   if (!el) return;
@@ -30,19 +29,13 @@ export async function exportTableToPdf(el) {
     prevClassName = el.className;
     el.classList.add('pdf-hex-bg');
 
-    const canvas = await html2canvas(el, {
-      scale: 2,
-      windowWidth: el.scrollWidth,
-      windowHeight: el.scrollHeight,
-      useCORS: true,
-      backgroundColor: null,
-    });
-
+    await html2pdf().from(el).set({
+      margin: 10,
+      filename: 'FoodDiary.pdf',
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: null },
+      jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
+    }).save();
     el.className = prevClassName;
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-    pdf.save('FoodDiary.pdf');
     return true;
   } catch (error) {
     console.error('Fehler beim Erstellen des PDFs:', error);
