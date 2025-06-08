@@ -144,35 +144,16 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   }),
-  rotatedIcon: {
-    display: 'inline-block',
-    transform: 'rotate(90deg)', // Zurück zur vorherigen Ausrichtung
-  },
-  actionMenu: (dark) => ({
+  deleteIcon: {
     position: 'absolute',
-    right: '12px',
-    top: '44px',
-    background: dark ? '#383840' : '#ffffff',
-    borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-    padding: '8px',
-    zIndex: 20,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    minWidth: '120px',
-  }),
-  actionMenuItem: (dark, isDestructive = false) => ({
-    background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff',
+    bottom: '8px',
+    right: '8px',
+    background: 'transparent',
     border: 'none',
-    padding: '8px 12px',
-    borderRadius: 4,
+    color: '#d32f2f',
+    fontSize: '20px',
     cursor: 'pointer',
-    textAlign: 'left',
-    width: '100%',
-    fontSize: '14px',
-  }),
+  },
   tagMarkerBase: {
     position: 'absolute',
     bottom: 0,
@@ -582,12 +563,12 @@ export default function App() {
   const fileRefEdit = useRef();
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
-  const [actionMenuOpenForIdx, setActionMenuOpenForIdx] = useState(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
   const linkingInfoRef = useRef(null);
+  const containerRef = useRef(null);
   const entryRefs = useRef([]);
   const [connections, setConnections] = useState([]);
 
@@ -660,6 +641,16 @@ export default function App() {
       searchInputRef.current?.focus();
     }
   }, [showSearch]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (editingIdx !== null && containerRef.current && !containerRef.current.contains(e.target)) {
+        cancelEdit();
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [editingIdx]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -804,7 +795,6 @@ export default function App() {
     const el = document.getElementById("fd-table");
     if (!el) return;
 
-    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
 
@@ -961,14 +951,12 @@ export default function App() {
         date: toDateTimePickerFormat(e.date),
         linkId: e.linkId || null
     });
-    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null);
   };
 
   const addEditSymptom = () => {
@@ -1032,7 +1020,6 @@ export default function App() {
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
-    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
     addToast("Eintrag gelöscht");
@@ -1045,7 +1032,6 @@ export default function App() {
             return null;
         } else {
             setNoteDraft(entries[idx].comment || "");
-            setActionMenuOpenForIdx(null);
             setColorPickerOpenForIdx(null);
             return idx;
         }
@@ -1163,13 +1149,6 @@ export default function App() {
           }
       }
 
-      if (actionMenuOpenForIdx !== null) {
-          const triggerClicked = targetEl && targetEl.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
-          const menuClicked = targetEl && targetEl.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
-          if (!triggerClicked && !menuClicked) {
-              setActionMenuOpenForIdx(null);
-          }
-      }
       if (noteOpenIdx !== null) {
           const noteTextareaClicked = targetEl && targetEl.closest(`#note-textarea-${noteOpenIdx}`);
           const noteSaveButtonClicked = targetEl && targetEl.closest(`#note-save-button-${noteOpenIdx}`);
@@ -1184,6 +1163,13 @@ export default function App() {
           const pickerContentClicked = targetEl && targetEl.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
           if (!pickerTriggerClicked && !pickerContentClicked) {
               setColorPickerOpenForIdx(null);
+          }
+      }
+
+      if (editingIdx !== null) {
+          const cardEl = document.getElementById(`entry-card-${editingIdx}`);
+          if (!cardEl || !cardEl.contains(targetEl)) {
+              cancelEdit();
           }
       }
   };
@@ -1210,7 +1196,7 @@ export default function App() {
   // --- JSX RENDERING LOGIK ---
   if (view === "insights") {
     return (
-      <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
+      <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
         {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
         <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
         <Insights entries={entries} />
@@ -1219,7 +1205,7 @@ export default function App() {
   }
 
   return (
-    <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
+    <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar}>
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
@@ -1332,7 +1318,21 @@ export default function App() {
               const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
 
               return (
-                <div ref={el => entryRefs.current[idx] = el} key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
+                <div
+                  ref={el => entryRefs.current[idx] = el}
+                  key={idx}
+                  id={`entry-card-${idx}`}
+                  style={styles.entryCard(dark, isSymptomOnlyEntry)}
+                  onClick={(e) => {
+                    if (isExportingPdf) return;
+                    e.stopPropagation();
+                    if (editingIdx === null) {
+                      startEdit(idx);
+                    } else if (editingIdx !== idx) {
+                      cancelEdit();
+                    }
+                  }}
+                >
                   <div style={styles.pinContainer}>
                     <div
                       className="entry-pin"
@@ -1370,6 +1370,11 @@ export default function App() {
                   </div>
                   {editingIdx === idx && !isExportingPdf ? (
                     <> {/* Editieransicht */}
+                      <button
+                        onClick={() => { if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) deleteEntry(idx); }}
+                        style={styles.deleteIcon}
+                        title="Eintrag löschen"
+                      >×</button>
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, width: '100%', marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
@@ -1434,19 +1439,7 @@ export default function App() {
                             style={{...styles.glassyIconButton(dark), padding: '6px'}}
                             title="Notiz"
                           >🗒️</button>
-                          <button
-                            id={`action-menu-trigger-${idx}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
-                              setNoteOpenIdx(null);
-                              setColorPickerOpenForIdx(null);
-                            }}
-                            style={{...styles.glassyIconButton(dark), padding: '6px'}}
-                            title="Aktionen"
-                          >
-                            <span style={styles.rotatedIcon}>✏️</span>
-                          </button>
+                          
                         </div>
                       )}
 
@@ -1462,12 +1455,6 @@ export default function App() {
                         ))}
                       </div>
 
-                      {actionMenuOpenForIdx === idx && !isExportingPdf && (
-                        <div id={`action-menu-content-${idx}`} style={styles.actionMenu(dark)} onClick={e => e.stopPropagation()}>
-                            <button onClick={() => { startEdit(idx); }} style={styles.actionMenuItem(dark)} > Bearbeiten </button>
-                            <button onClick={() => { if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) { deleteEntry(idx); } else { setActionMenuOpenForIdx(null); } }} style={styles.actionMenuItem(dark, true)} > Löschen </button>
-                        </div>
-                      )}
 
                       {noteOpenIdx === idx && !isExportingPdf && (
                         <div onClick={e => e.stopPropagation()} style={{marginTop: '8px', zIndex: 15 }}>
@@ -1505,7 +1492,6 @@ export default function App() {
                             if (isExportingPdf) return;
                             e.stopPropagation();
                             setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                            setActionMenuOpenForIdx(null);
                             setNoteOpenIdx(null);
                           }}
                           title={!isExportingPdf ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.` : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`}
