@@ -18,7 +18,7 @@ const TAG_COLORS = {
   RED: 'red',
   YELLOW: 'yellow',
   BROWN: '#c19a6b', // light brown for bowel movement
-  BLUE: '#90caf9',  // light blue for supplements
+  BLUE: '#64b5f6',  // light blue for supplements
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: "Standard",
