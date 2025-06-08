@@ -661,16 +661,18 @@ export default function App() {
           const height = c.bottom - c.top;
           const leftSpace = Math.max(-offset, 0);
           const width = 10 + leftSpace;
-          let d = `M${10 + leftSpace} 0 H${leftSpace} V${height} H${10 + leftSpace}`;
+          const startX = 10 + leftSpace;
+          const vertX = offset + leftSpace;
+          let d = `M${startX} 0 H${vertX} V${height} H${startX}`;
           c.cross.forEach(y => {
-            d += ` M${10 + leftSpace} ${y} H${leftSpace}`;
+            d += ` M${startX} ${y} H${vertX}`;
           });
           return (
             <svg
               key={c.id}
               className="connection-line"
               onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
-              style={{...styles.connectionSvg, top: c.top, height, width}}
+              style={{...styles.connectionSvg, top: c.top, height, width, left: -leftSpace}}
             >
               <path
                 d={d}
