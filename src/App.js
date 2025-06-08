@@ -144,10 +144,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   }),
-  rotatedIcon: {
-    display: 'inline-block',
-    transform: 'rotate(90deg)', // Zurück zur vorherigen Ausrichtung
-  },
   actionMenu: (dark) => ({
     position: 'absolute',
     right: '12px',
@@ -1332,7 +1328,19 @@ export default function App() {
               const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
 
               return (
-                <div ref={el => entryRefs.current[idx] = el} key={idx} id={`entry-card-${idx}`} style={styles.entryCard(dark, isSymptomOnlyEntry)}>
+                <div
+                  ref={el => entryRefs.current[idx] = el}
+                  key={idx}
+                  id={`entry-card-${idx}`}
+                  style={styles.entryCard(dark, isSymptomOnlyEntry)}
+                  onClick={(e) => {
+                    if (isExportingPdf) return;
+                    e.stopPropagation();
+                    setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
+                    setNoteOpenIdx(null);
+                    setColorPickerOpenForIdx(null);
+                  }}
+                >
                   <div style={styles.pinContainer}>
                     <div
                       className="entry-pin"
@@ -1434,19 +1442,7 @@ export default function App() {
                             style={{...styles.glassyIconButton(dark), padding: '6px'}}
                             title="Notiz"
                           >🗒️</button>
-                          <button
-                            id={`action-menu-trigger-${idx}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
-                              setNoteOpenIdx(null);
-                              setColorPickerOpenForIdx(null);
-                            }}
-                            style={{...styles.glassyIconButton(dark), padding: '6px'}}
-                            title="Aktionen"
-                          >
-                            <span style={styles.rotatedIcon}>✏️</span>
-                          </button>
+                          
                         </div>
                       )}
 
