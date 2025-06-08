@@ -1,11 +1,12 @@
 // --- IMPORTS ---
-import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import React, { useState, useRef, useEffect } from "react";
+
+import useConnections from "./hooks/useConnections";
+import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
-import { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime } from "./utils";
+import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime } from "./utils";
 import PdfButton from "./components/PdfButton";
 import InsightsButton from "./components/InsightsButton";
 import BackButton from "./components/BackButton";
@@ -66,7 +67,6 @@ export default function App() {
   const linkingInfoRef = useRef(null);
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
-  const [connections, setConnections] = useState([]);
 
   // keep ref in sync so event handlers see latest state immediately
   useEffect(() => {
@@ -202,73 +202,7 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  useLayoutEffect(() => {
-    const updateConnections = () => {
-      const container = document.getElementById('fd-table');
-      if (!container) return;
-      const linkGroups = {};
-      const rendered = Array.from(entryRefs.current.keys());
-      rendered.forEach(idx => {
-        const entry = entries[idx];
-        if (entry && entry.linkId) {
-          (linkGroups[entry.linkId] = linkGroups[entry.linkId] || []).push(idx);
-        }
-      });
-      const conns = [];
-      Object.entries(linkGroups).forEach(([id, arr]) => {
-        if (arr.length >= 2) {
-          const sorted = arr.slice().sort((a, b) => a - b);
-          const startEl = entryRefs.current[sorted[0]];
-          const endEl = entryRefs.current[sorted[sorted.length - 1]];
-          if (startEl && endEl) {
-            const cRect = container.getBoundingClientRect();
-            const sRect = startEl.getBoundingClientRect();
-            const eRect = endEl.getBoundingClientRect();
-            const cross = [];
-            for (let i = 1; i < sorted.length - 1; i++) {
-              const midEl = entryRefs.current[sorted[i]];
-              if (midEl) {
-                const mRect = midEl.getBoundingClientRect();
-                cross.push(mRect.bottom - sRect.bottom);
-              }
-            }
-            conns.push({
-              id,
-              top: sRect.bottom - cRect.top - 8,
-              bottom: eRect.bottom - cRect.top - 8,
-              cross,
-            });
-          }
-        }
-      });
-
-      // Offset overlapping lines
-      // sort by length so that shorter connections use inner lanes
-      const sortedConns = conns
-        .slice()
-        .sort((a, b) => {
-          const lenDiff = (a.bottom - a.top) - (b.bottom - b.top);
-          return lenDiff !== 0 ? lenDiff : a.top - b.top;
-        });
-      const active = [];
-      sortedConns.forEach((c) => {
-        let lane = 0;
-        while (active.some((a) => a.lane === lane && !(c.bottom < a.top || c.top > a.bottom))) {
-          lane++;
-        }
-        c.lane = lane;
-        active.push(c);
-      });
-      setConnections(sortedConns);
-    };
-    updateConnections();
-    window.addEventListener('scroll', updateConnections);
-    window.addEventListener('resize', updateConnections);
-    return () => {
-      window.removeEventListener('scroll', updateConnections);
-      window.removeEventListener('resize', updateConnections);
-    };
-  }, [entries, searchTerm, displayCount, collapsedDays]);
+  const connections = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs);
 
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -296,68 +230,12 @@ export default function App() {
 
     addToast("PDF Export wird vorbereitet...");
     setIsExportingPdf(true);
-
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    const imgStackItemOriginalStyles = [];
-    const individualImageOriginalStyles = [];
-    let prevClassName = '';
-
-    try {
-      const imgStackContainers = Array.from(el.querySelectorAll(".img-stack-container"));
-      imgStackContainers.forEach(stackContainer => {
-        const childrenItems = Array.from(stackContainer.children).filter(child => child.classList.contains("img-stack-item"));
-        childrenItems.forEach((item, index) => {
-          imgStackItemOriginalStyles.push({ el: item, marginLeft: item.style.marginLeft, zIndex: item.style.zIndex });
-          item.style.marginLeft = index > 0 ? "4px" : "0px";
-          item.style.zIndex = "auto";
-        });
-      });
-
-      const allImagesInTable = Array.from(el.querySelectorAll("#fd-table img"));
-      allImagesInTable.forEach(img => {
-        individualImageOriginalStyles.push({ el: img, width: img.style.width, height: img.style.height, objectFit: img.style.objectFit });
-        img.style.width = "120px";
-        img.style.height = "120px";
-        img.style.objectFit = "contain";
-      });
-
-      // Temporäres hexagonales Hintergrundmuster für den PDF-Export setzen
-      prevClassName = el.className;
-      el.classList.add('pdf-hex-bg');
-
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        windowWidth: el.scrollWidth,
-        windowHeight: el.scrollHeight,
-        useCORS: true,
-        backgroundColor: null,
-      });
-
-      // Ursprüngliche Klassen wiederherstellen
-      el.className = prevClassName;
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ unit: "px", format: [canvas.width, canvas.height] });
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-      pdf.save("FoodDiary.pdf");
-      addToast("PDF erfolgreich exportiert!");
-
-    } catch (error) {
-      console.error("Fehler beim Erstellen des PDFs:", error);
-      addToast("Fehler beim PDF-Export.");
-    } finally {
-      imgStackItemOriginalStyles.forEach(orig => {
-        orig.el.style.marginLeft = orig.marginLeft;
-        orig.el.style.zIndex = orig.zIndex;
-      });
-      individualImageOriginalStyles.forEach(orig => {
-        orig.el.style.width = orig.width;
-        orig.el.style.height = orig.height;
-        orig.el.style.objectFit = orig.objectFit;
-      });
-      if (prevClassName) el.className = prevClassName;
-      setIsExportingPdf(false);
-    }
+    const ok = await exportTableToPdf(el);
+    if (ok) addToast("PDF erfolgreich exportiert!");
+    else addToast("Fehler beim PDF-Export.");
+    setIsExportingPdf(false);
   };
 
   const handleNewFile = async e => {
