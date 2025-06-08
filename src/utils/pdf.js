@@ -36,6 +36,8 @@ export async function exportTableToPdf(el) {
     wrapper.style.position = 'relative';
     wrapper.style.marginLeft = '-15px';
     wrapper.style.paddingLeft = '15px';
+    wrapper.style.overflow = 'visible';
+    wrapper.classList.add('pdf-hex-bg');
     el.parentNode.insertBefore(wrapper, el);
     wrapper.appendChild(el);
 
