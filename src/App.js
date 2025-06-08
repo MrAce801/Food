@@ -776,11 +776,10 @@ export default function App() {
             ) : (
               <React.Fragment>
                 <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>{day}</div>
-              </React.Fragment>
-        {grouped[day].map(({ entry, idx }) => (
-          <EntryCard
-            key={idx}
-            refCallback={el => (entryRefs.current[idx] = el)}
+                {grouped[day].map(({ entry, idx }) => (
+                  <EntryCard
+                    key={idx}
+                    refCallback={el => (entryRefs.current[idx] = el)}
             entry={entry}
             idx={idx}
             dark={dark}
@@ -815,12 +814,12 @@ export default function App() {
             TAG_COLORS={TAG_COLORS}
             TAG_COLOR_NAMES={TAG_COLOR_NAMES}
             handleFocus={handleFocus}
-            ImgStack={ImgStack}
-            CameraButton={CameraButton}
-            SymTag={SymTag}
-            styles={styles}
-          />
-        ))}
+                    ImgStack={ImgStack}
+                    CameraButton={CameraButton}
+                    SymTag={SymTag}
+                    styles={styles}
+                  />
+                ))}
               </React.Fragment>
             )}
           </div>
