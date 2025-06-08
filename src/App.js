@@ -146,7 +146,7 @@ const styles = {
   }),
   deleteIcon: {
     position: 'absolute',
-    top: '8px',
+    bottom: '8px',
     right: '8px',
     background: 'transparent',
     border: 'none',
@@ -568,6 +568,7 @@ export default function App() {
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
   const linkingInfoRef = useRef(null);
+  const containerRef = useRef(null);
   const entryRefs = useRef([]);
   const [connections, setConnections] = useState([]);
 
@@ -640,6 +641,16 @@ export default function App() {
       searchInputRef.current?.focus();
     }
   }, [showSearch]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (editingIdx !== null && containerRef.current && !containerRef.current.contains(e.target)) {
+        cancelEdit();
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [editingIdx]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -1154,6 +1165,13 @@ export default function App() {
               setColorPickerOpenForIdx(null);
           }
       }
+
+      if (editingIdx !== null) {
+          const cardEl = document.getElementById(`entry-card-${editingIdx}`);
+          if (!cardEl || !cardEl.contains(targetEl)) {
+              cancelEdit();
+          }
+      }
   };
 
   // --- DATENVORBEREITUNG FÜR DIE ANZEIGE ---
@@ -1178,7 +1196,7 @@ export default function App() {
   // --- JSX RENDERING LOGIK ---
   if (view === "insights") {
     return (
-      <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
+      <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
         {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
         <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
         <Insights entries={entries} />
@@ -1187,7 +1205,7 @@ export default function App() {
   }
 
   return (
-    <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
+    <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar}>
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
@@ -1308,7 +1326,11 @@ export default function App() {
                   onClick={(e) => {
                     if (isExportingPdf) return;
                     e.stopPropagation();
-                    startEdit(idx);
+                    if (editingIdx === null) {
+                      startEdit(idx);
+                    } else if (editingIdx !== idx) {
+                      cancelEdit();
+                    }
                   }}
                 >
                   <div style={styles.pinContainer}>
