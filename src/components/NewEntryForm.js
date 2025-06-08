@@ -30,7 +30,7 @@ export default function NewEntryForm({
     <div style={{ marginBottom: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <input
-          placeholder="Essen..."
+          placeholder="Eintrag..."
           value={newForm.food}
           onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
           onFocus={handleFocus}
