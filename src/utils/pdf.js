@@ -33,6 +33,12 @@ export async function exportTableToPdf(el) {
     const originalPaddingLeft = el.style.paddingLeft;
     el.style.paddingLeft = '30px';
 
+    const zoomFactor = 0.75;
+    const originalTransform = el.style.transform;
+    const originalTransformOrigin = el.style.transformOrigin;
+    el.style.transform = `scale(${zoomFactor})`;
+    el.style.transformOrigin = 'top left';
+
     const canvas = await html2canvas(el, {
       scale: 2,
       windowWidth: el.scrollWidth,
@@ -41,13 +47,15 @@ export async function exportTableToPdf(el) {
       backgroundColor: null,
     });
 
+    el.style.transform = originalTransform;
+    el.style.transformOrigin = originalTransformOrigin;
+
     el.style.paddingLeft = originalPaddingLeft;
 
     el.className = prevClassName;
-    const zoomFactor = 0.75;
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ unit: 'px', format: [canvas.width * zoomFactor, canvas.height * zoomFactor] });
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width * zoomFactor, canvas.height * zoomFactor);
+    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
     pdf.save('FoodDiary.pdf');
     return true;
   } catch (error) {
