@@ -669,10 +669,30 @@ export default function App() {
         {dates.map(day => (
           <div key={day}>
             {collapsedDays.has(day) && !isExportingPdf ? (
-              <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>{day}</div>
+              <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                  <button
+                    onClick={e => { e.stopPropagation(); toggleDay(day); }}
+                    style={styles.collapseButton(dark)}
+                    aria-label="Expand day"
+                  >
+                    ▶
+                  </button>
+                  {day}
+                </div>
+              </div>
             ) : (
               <React.Fragment>
-                <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>{day}</div>
+                <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>
+                  <button
+                    onClick={e => { e.stopPropagation(); toggleDay(day); }}
+                    style={styles.collapseButton(dark)}
+                    aria-label="Collapse day"
+                  >
+                    ▼
+                  </button>
+                  {day}
+                </div>
                 {grouped[day].map(({ entry, idx }) => (
                   <EntryCard
                     key={idx}
