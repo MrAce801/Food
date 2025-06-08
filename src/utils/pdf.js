@@ -43,6 +43,7 @@ export async function exportTableToPdf(el) {
     wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
     wrapper.style.paddingLeft = '20px';
+    wrapper.style.marginLeft = '-20px'; // extend bounding box to the left
     wrapper.style.overflow = 'visible';
     wrapper.classList.add('pdf-hex-bg');
     el.parentNode.insertBefore(wrapper, el);
