@@ -16,6 +16,12 @@ import SymTag from "./components/SymTag";
 import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
+
+const sortEntries = (a, b) => {
+  const dateDiff = parseDateString(b.date) - parseDateString(a.date);
+  if (dateDiff !== 0) return dateDiff;
+  return (b.createdAt || 0) - (a.createdAt || 0);
+};
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
   // --- STATE VARIABLEN ---
@@ -24,15 +30,16 @@ export default function App() {
   const [entries, setEntries] = useState(() => {
     try {
       const loadedEntries = JSON.parse(localStorage.getItem("fd-entries") || "[]")
-        .map(e => ({
+        .map((e, i) => ({
           ...e,
           comment: e.comment || "",
           food: e.food || "",
           symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
           tagColor: e.tagColor || TAG_COLORS.GREEN,
           linkId: e.linkId || null,
+          createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
         }));
-      return loadedEntries.sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
+      return loadedEntries.sort(sortEntries);
     } catch { return []; }
   });
   const [searchTerm, setSearchTerm] = useState("");
@@ -293,19 +300,29 @@ export default function App() {
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
   const addEntry = () => {
-    if (!newForm.food.trim() && newSymptoms.length === 0) return;
+    const pendingSymptom = newForm.symptomInput.trim()
+      ? {
+          txt: newForm.symptomInput.trim(),
+          time: newForm.symptomTime,
+          strength: newForm.symptomStrength,
+        }
+      : null;
+    const allSymptoms = sortSymptomsByTime([
+      ...newSymptoms,
+      ...(pendingSymptom ? [pendingSymptom] : []),
+    ]);
+    if (!newForm.food.trim() && allSymptoms.length === 0) return;
     const entry = {
       food: newForm.food.trim(),
       imgs: newForm.imgs,
-      symptoms: sortSymptomsByTime(newSymptoms),
+      symptoms: allSymptoms,
       comment: "",
       date: now(),
       tagColor: TAG_COLORS.GREEN,
       linkId: null,
+      createdAt: Date.now(),
     };
-    setEntries(prevEntries =>
-      [...prevEntries, entry].sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
-    );
+    setEntries(prevEntries => [...prevEntries, entry].sort(sortEntries));
     setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0, symptomStrength: 1 });
     setNewSymptoms([]);
     addToast("Eintrag gespeichert");
@@ -374,18 +391,20 @@ export default function App() {
     ].map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }));
 
     setEntries(prevEntries =>
-      prevEntries.map((ent, j) =>
-        j === editingIdx
-        ? {
-            ...ent,
-            food: editForm.food.trim(),
-            imgs: editForm.imgs,
-            symptoms: sortSymptomsByTime(symptomsToSave),
-            date: displayDateToSave,
-            linkId: editForm.linkId || null
-          }
-        : ent
-      ).sort((a, b) => parseDateString(b.date) - parseDateString(a.date))
+      prevEntries
+        .map((ent, j) =>
+          j === editingIdx
+            ? {
+                ...ent,
+                food: editForm.food.trim(),
+                imgs: editForm.imgs,
+                symptoms: sortSymptomsByTime(symptomsToSave),
+                date: displayDateToSave,
+                linkId: editForm.linkId || null,
+              }
+            : ent
+        )
+        .sort(sortEntries)
     );
     cancelEdit();
     addToast("Eintrag aktualisiert");
