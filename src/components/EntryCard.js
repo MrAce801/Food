@@ -317,7 +317,7 @@ export default function EntryCard({
               </button>
             </div>
           )}
-          {entry.comment && noteOpenIdx !== idx && !isExportingPdf && (
+          {entry.comment && noteOpenIdx !== idx && (
             <div
               id={`displayed-note-text-${idx}`}
               onClick={e => {

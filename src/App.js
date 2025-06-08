@@ -659,16 +659,18 @@ export default function App() {
         {connections.map(c => {
           const offset = -c.lane * 5;
           const height = c.bottom - c.top;
-          let d = `M10 0 H${offset} V${height} H10`;
+          const leftSpace = Math.max(-offset, 0);
+          const width = 10 + leftSpace;
+          let d = `M${10 + leftSpace} 0 H${leftSpace} V${height} H${10 + leftSpace}`;
           c.cross.forEach(y => {
-            d += ` M10 ${y} H${offset}`;
+            d += ` M${10 + leftSpace} ${y} H${leftSpace}`;
           });
           return (
             <svg
               key={c.id}
               className="connection-line"
               onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
-              style={{...styles.connectionSvg, top: c.top, height}}
+              style={{...styles.connectionSvg, top: c.top, height, width}}
             >
               <path
                 d={d}
