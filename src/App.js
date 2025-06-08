@@ -594,6 +594,21 @@ export default function App() {
     linkingInfoRef.current = linkingInfo;
   }, [linkingInfo]);
 
+  useEffect(() => {
+    const handleDocMouseDown = (e) => {
+      if (linkingInfoRef.current !== null) {
+        const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+        const pinClicked = targetEl && targetEl.closest('.entry-pin');
+        const lineClicked = targetEl && targetEl.closest('.connection-line');
+        if (!pinClicked && !lineClicked) {
+          cancelLinking();
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleDocMouseDown);
+    return () => document.removeEventListener('mousedown', handleDocMouseDown);
+  }, []);
+
   // --- EFFECT HOOKS ---
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
@@ -638,14 +653,26 @@ export default function App() {
     }
   }, [editingIdx, isExportingPdf]);
 
+  const knownDaysRef = useRef(new Set());
+
   useEffect(() => {
     const today = getTodayDateString();
+    const allDays = new Set();
     setCollapsedDays(prev => {
       const newSet = new Set(prev);
+      const known = knownDaysRef.current;
       entries.forEach(e => {
         const day = e.date.split(' ')[0];
-        if (day !== today && !prev.has(day)) {
-          newSet.add(day);
+        allDays.add(day);
+        if (!known.has(day)) {
+          known.add(day);
+          if (day !== today) newSet.add(day);
+        }
+      });
+      known.forEach(d => {
+        if (!allDays.has(d)) {
+          known.delete(d);
+          newSet.delete(d);
         }
       });
       return newSet;
@@ -1054,6 +1081,11 @@ export default function App() {
       }
       const baseGroupId = linkingInfoRef.current.id;
       const targetGroupId = entries[idx].linkId;
+      if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
+        // Already part of this group, nothing to do
+        cancelLinking();
+        return;
+      }
       if (targetGroupId) {
         // Ziel hat bereits eine Gruppe -> verschmelze
         setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
@@ -1067,11 +1099,25 @@ export default function App() {
   };
 
   const cancelLinking = () => {
+    // Check if there is an active linking process.
     if (linkingInfoRef.current) {
-      const count = entries.filter(e => e.linkId === linkingInfoRef.current.id).length;
-      if (count <= 1) {
-        setEntries(prev => prev.map(e => e.linkId === linkingInfoRef.current.id ? { ...e, linkId: null } : e));
+      const { baseIdx, id } = linkingInfoRef.current;
+
+      // A non-null 'baseIdx' indicates that the linking process was started
+      // by clicking a specific pin to create a *new* chain.
+      // This is the scenario that needs cleaning up on cancellation.
+      if (baseIdx !== null) {
+        // We know this link was temporary. Remove the linkId from any entry
+        // that has it. Using the functional update form `setEntries(prev => ...)`
+        // guarantees this logic runs on the latest state, resolving the race condition.
+        setEntries(prev =>
+          prev.map(e => (e.linkId === id ? { ...e, linkId: null } : e))
+        );
       }
+
+      // For all cancellation scenarios (whether from a new link or from
+      // deselecting an existing one), we must reset the linking state to exit
+      // "linking mode".
       linkingInfoRef.current = null;
       setLinkingInfo(null);
     }
@@ -1086,35 +1132,50 @@ export default function App() {
     }
   };
 
+  const handleRootMouseDown = (e) => {
+    if (linkingInfoRef.current !== null) {
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+      const pinClicked = targetEl && targetEl.closest('.entry-pin');
+      const lineClicked = targetEl && targetEl.closest('.connection-line');
+      if (!pinClicked && !lineClicked) {
+        cancelLinking();
+      }
+    }
+  };
+
   const handleContainerClick = (e) => {
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+
+      if (linkingInfoRef.current !== null) {
+          const pinClicked = targetEl && targetEl.closest('.entry-pin');
+          const lineClicked = targetEl && targetEl.closest('.connection-line');
+          if (!pinClicked && !lineClicked) {
+              cancelLinking();
+              return;
+          }
+      }
+
       if (actionMenuOpenForIdx !== null) {
-          const triggerClicked = e.target.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
-          const menuClicked = e.target.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
+          const triggerClicked = targetEl && targetEl.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
+          const menuClicked = targetEl && targetEl.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
           if (!triggerClicked && !menuClicked) {
               setActionMenuOpenForIdx(null);
           }
       }
       if (noteOpenIdx !== null) {
-          const noteTextareaClicked = e.target.closest(`#note-textarea-${noteOpenIdx}`);
-          const noteSaveButtonClicked = e.target.closest(`#note-save-button-${noteOpenIdx}`);
-          const noteIconButtonClicked = e.target.closest(`#note-icon-button-${noteOpenIdx}`);
-          const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && e.target.closest(`#displayed-note-text-${noteOpenIdx}`);
+          const noteTextareaClicked = targetEl && targetEl.closest(`#note-textarea-${noteOpenIdx}`);
+          const noteSaveButtonClicked = targetEl && targetEl.closest(`#note-save-button-${noteOpenIdx}`);
+          const noteIconButtonClicked = targetEl && targetEl.closest(`#note-icon-button-${noteOpenIdx}`);
+          const displayedNoteTextTrigger = entries[noteOpenIdx]?.comment && targetEl && targetEl.closest(`#displayed-note-text-${noteOpenIdx}`);
           if (!noteTextareaClicked && !noteSaveButtonClicked && !noteIconButtonClicked && !displayedNoteTextTrigger) {
               setNoteOpenIdx(null);
           }
       }
       if (colorPickerOpenForIdx !== null) {
-          const pickerTriggerClicked = e.target.closest(`#tag-marker-${colorPickerOpenForIdx}`);
-          const pickerContentClicked = e.target.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
+          const pickerTriggerClicked = targetEl && targetEl.closest(`#tag-marker-${colorPickerOpenForIdx}`);
+          const pickerContentClicked = targetEl && targetEl.closest(`#color-picker-popup-${colorPickerOpenForIdx}`);
           if (!pickerTriggerClicked && !pickerContentClicked) {
               setColorPickerOpenForIdx(null);
-          }
-      }
-      if (linkingInfoRef.current !== null) {
-          const pinClicked = e.target.closest('.entry-pin');
-          const lineClicked = e.target.closest('.connection-line');
-          if (!pinClicked && !lineClicked) {
-              cancelLinking();
           }
       }
   };
@@ -1141,7 +1202,7 @@ export default function App() {
   // --- JSX RENDERING LOGIK ---
   if (view === "insights") {
     return (
-      <div style={styles.container(isMobile)} onClick={handleContainerClick}>
+      <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
         {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
         <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
         <Insights entries={entries} />
@@ -1150,7 +1211,7 @@ export default function App() {
   }
 
   return (
-    <div style={styles.container(isMobile)} onClick={handleContainerClick}>
+    <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar}>
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
