@@ -594,21 +594,6 @@ export default function App() {
     linkingInfoRef.current = linkingInfo;
   }, [linkingInfo]);
 
-  // Cancel linking when user clicks anywhere outside pins/lines
-  useEffect(() => {
-    if (!linkingInfoRef.current) return;
-    const handleDocClick = (e) => {
-      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
-      const pinClicked = targetEl && targetEl.closest('.entry-pin');
-      const lineClicked = targetEl && targetEl.closest('.connection-line');
-      if (!pinClicked && !lineClicked) {
-        cancelLinking();
-      }
-    };
-    document.addEventListener('click', handleDocClick, true);
-    return () => document.removeEventListener('click', handleDocClick, true);
-  }, [linkingInfo]);
-
   // --- EFFECT HOOKS ---
   useEffect(() => {
     const saved = localStorage.getItem("fd-theme");
@@ -1118,6 +1103,17 @@ export default function App() {
     }
   };
 
+  const handleRootMouseDown = (e) => {
+    if (linkingInfoRef.current !== null) {
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+      const pinClicked = targetEl && targetEl.closest('.entry-pin');
+      const lineClicked = targetEl && targetEl.closest('.connection-line');
+      if (!pinClicked && !lineClicked) {
+        cancelLinking();
+      }
+    }
+  };
+
   const handleContainerClick = (e) => {
       const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
 
@@ -1177,7 +1173,7 @@ export default function App() {
   // --- JSX RENDERING LOGIK ---
   if (view === "insights") {
     return (
-      <div style={styles.container(isMobile)} onClick={handleContainerClick}>
+      <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
         {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
         <div style={styles.topBar}><BackButton onClick={() => setView("diary")} /></div>
         <Insights entries={entries} />
@@ -1186,7 +1182,7 @@ export default function App() {
   }
 
   return (
-    <div style={styles.container(isMobile)} onClick={handleContainerClick}>
+    <div style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar}>
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
