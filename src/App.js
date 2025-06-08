@@ -144,31 +144,16 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   }),
-  actionMenu: (dark) => ({
+  deleteIcon: {
     position: 'absolute',
-    right: '12px',
-    top: '44px',
-    background: dark ? '#383840' : '#ffffff',
-    borderRadius: 8,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-    padding: '8px',
-    zIndex: 20,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    minWidth: '120px',
-  }),
-  actionMenuItem: (dark, isDestructive = false) => ({
-    background: isDestructive ? (dark? '#8B0000' : '#d32f2f') : (dark ? '#4a4a52' : '#efefef'),
-    color: '#fff',
+    top: '8px',
+    right: '8px',
+    background: 'transparent',
     border: 'none',
-    padding: '8px 12px',
-    borderRadius: 4,
+    color: '#d32f2f',
+    fontSize: '20px',
     cursor: 'pointer',
-    textAlign: 'left',
-    width: '100%',
-    fontSize: '14px',
-  }),
+  },
   tagMarkerBase: {
     position: 'absolute',
     bottom: 0,
@@ -578,7 +563,6 @@ export default function App() {
   const fileRefEdit = useRef();
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
-  const [actionMenuOpenForIdx, setActionMenuOpenForIdx] = useState(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
@@ -800,7 +784,6 @@ export default function App() {
     const el = document.getElementById("fd-table");
     if (!el) return;
 
-    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
 
@@ -957,14 +940,12 @@ export default function App() {
         date: toDateTimePickerFormat(e.date),
         linkId: e.linkId || null
     });
-    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
-    setActionMenuOpenForIdx(null);
   };
 
   const addEditSymptom = () => {
@@ -1028,7 +1009,6 @@ export default function App() {
   const deleteEntry = i => {
     setEntries(e => e.filter((_, j) => j !== i));
     if (editingIdx === i) cancelEdit();
-    setActionMenuOpenForIdx(null);
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
     addToast("Eintrag gelöscht");
@@ -1041,7 +1021,6 @@ export default function App() {
             return null;
         } else {
             setNoteDraft(entries[idx].comment || "");
-            setActionMenuOpenForIdx(null);
             setColorPickerOpenForIdx(null);
             return idx;
         }
@@ -1159,13 +1138,6 @@ export default function App() {
           }
       }
 
-      if (actionMenuOpenForIdx !== null) {
-          const triggerClicked = targetEl && targetEl.closest(`#action-menu-trigger-${actionMenuOpenForIdx}`);
-          const menuClicked = targetEl && targetEl.closest(`#action-menu-content-${actionMenuOpenForIdx}`);
-          if (!triggerClicked && !menuClicked) {
-              setActionMenuOpenForIdx(null);
-          }
-      }
       if (noteOpenIdx !== null) {
           const noteTextareaClicked = targetEl && targetEl.closest(`#note-textarea-${noteOpenIdx}`);
           const noteSaveButtonClicked = targetEl && targetEl.closest(`#note-save-button-${noteOpenIdx}`);
@@ -1336,9 +1308,7 @@ export default function App() {
                   onClick={(e) => {
                     if (isExportingPdf) return;
                     e.stopPropagation();
-                    setActionMenuOpenForIdx(actionMenuOpenForIdx === idx ? null : idx);
-                    setNoteOpenIdx(null);
-                    setColorPickerOpenForIdx(null);
+                    startEdit(idx);
                   }}
                 >
                   <div style={styles.pinContainer}>
@@ -1378,6 +1348,11 @@ export default function App() {
                   </div>
                   {editingIdx === idx && !isExportingPdf ? (
                     <> {/* Editieransicht */}
+                      <button
+                        onClick={() => { if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) deleteEntry(idx); }}
+                        style={styles.deleteIcon}
+                        title="Eintrag löschen"
+                      >×</button>
                       <input type="datetime-local" value={editForm.date} onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))} style={{...styles.input, marginBottom: '12px', width: '100%'}} />
                       <input placeholder="Essen..." value={editForm.food} onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))} onFocus={handleFocus} style={{...styles.input, width: '100%', marginBottom: '8px'}} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 0" }}> <CameraButton onClick={() => fileRefEdit.current?.click()} /> <input ref={fileRefEdit} type="file" accept="image/*" multiple capture={isMobile ? "environment" : undefined} onChange={handleEditFile} style={{ display: "none" }} /> {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />} </div>
@@ -1458,12 +1433,6 @@ export default function App() {
                         ))}
                       </div>
 
-                      {actionMenuOpenForIdx === idx && !isExportingPdf && (
-                        <div id={`action-menu-content-${idx}`} style={styles.actionMenu(dark)} onClick={e => e.stopPropagation()}>
-                            <button onClick={() => { startEdit(idx); }} style={styles.actionMenuItem(dark)} > Bearbeiten </button>
-                            <button onClick={() => { if (window.confirm("Möchten Sie diesen Eintrag wirklich löschen?")) { deleteEntry(idx); } else { setActionMenuOpenForIdx(null); } }} style={styles.actionMenuItem(dark, true)} > Löschen </button>
-                        </div>
-                      )}
 
                       {noteOpenIdx === idx && !isExportingPdf && (
                         <div onClick={e => e.stopPropagation()} style={{marginTop: '8px', zIndex: 15 }}>
@@ -1501,7 +1470,6 @@ export default function App() {
                             if (isExportingPdf) return;
                             e.stopPropagation();
                             setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                            setActionMenuOpenForIdx(null);
                             setNoteOpenIdx(null);
                           }}
                           title={!isExportingPdf ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.` : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`}
