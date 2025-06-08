@@ -6,11 +6,10 @@ import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
-import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime } from "./utils";
+import { now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime } from "./utils";
 import PdfButton from "./components/PdfButton";
 import InsightsButton from "./components/InsightsButton";
 import BackButton from "./components/BackButton";
-import CameraButton from "./components/CameraButton";
 import ImgStack from "./components/ImgStack";
 import SymTag from "./components/SymTag";
 import Insights from "./components/Insights";
@@ -59,12 +58,10 @@ export default function App() {
     return initialForm;
   });
   const [newSymptoms, setNewSymptoms] = useState([]);
-  const fileRefNew = useRef();
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [noteOpenIdx, setNoteOpenIdx] = useState(null);
   const [noteDraft, setNoteDraft] = useState("");
-  const fileRefEdit = useRef();
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -245,44 +242,6 @@ export default function App() {
     setIsExportingPdf(false);
   };
 
-  const handleNewFile = async e => {
-    for (let file of Array.from(e.target.files || [])) {
-      try {
-        if (file.size > 5 * 1024 * 1024) throw new Error("Datei zu groß (max 5MB)");
-        const smallB64 = await resizeToJpeg(file, 800);
-        setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
-        addToast("Foto hinzugefügt (verkleinert)");
-      } catch (err) {
-        console.error("Fehler beim Hinzufügen des Bildes (neuer Eintrag):", err);
-        addToast(err.message || "Ungültiges oder zu großes Bild");
-      }
-    }
-    if (e.target) e.target.value = "";
-  };
-  const removeNewImg = idx => {
-    setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
-    addToast("Foto gelöscht");
-  };
-
-  const handleEditFile = async e => {
-    if (!editForm) return;
-    for (let file of Array.from(e.target.files || [])) {
-      try {
-        if (file.size > 5 * 1024 * 1024) throw new Error("Datei zu groß (max 5MB)");
-        const smallB64 = await resizeToJpeg(file, 800);
-        setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
-        addToast("Foto hinzugefügt (verkleinert)");
-      } catch (err) {
-        console.error("Fehler beim Hinzufügen des Bildes (Eintrag bearbeiten):", err);
-        addToast(err.message || "Ungültiges oder zu großes Bild");
-      }
-    }
-    if (e.target) e.target.value = "";
-  };
-  const removeEditImg = idx => {
-    setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
-    addToast("Foto gelöscht");
-  };
 
   const addNewSymptom = () => {
     if (!newForm.symptomInput.trim()) return;
@@ -620,14 +579,11 @@ export default function App() {
         addNewSymptom={addNewSymptom}
         removeNewSymptom={removeNewSymptom}
         addEntry={addEntry}
-        handleNewFile={handleNewFile}
-        removeNewImg={removeNewImg}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         showSearch={showSearch}
         setShowSearch={setShowSearch}
         searchInputRef={searchInputRef}
-        fileRefNew={fileRefNew}
         dark={dark}
         isMobile={isMobile}
         handleFocus={handleFocus}
@@ -635,8 +591,6 @@ export default function App() {
         TIME_CHOICES={TIME_CHOICES}
         sortSymptomsByTime={sortSymptomsByTime}
         SymTag={SymTag}
-        ImgStack={ImgStack}
-        CameraButton={CameraButton}
         styles={styles}
       />
       {/* Eintragsliste */}
@@ -711,9 +665,6 @@ export default function App() {
             deleteEntry={deleteEntry}
             addEditSymptom={addEditSymptom}
             removeEditSymptom={removeEditSymptom}
-            handleEditFile={handleEditFile}
-            fileRefEdit={fileRefEdit}
-            removeEditImg={removeEditImg}
             handlePinClick={handlePinClick}
             linkingInfo={linkingInfo}
             colorPickerOpenForIdx={colorPickerOpenForIdx}
@@ -731,10 +682,9 @@ export default function App() {
             TAG_COLORS={TAG_COLORS}
             TAG_COLOR_NAMES={TAG_COLOR_NAMES}
             handleFocus={handleFocus}
-                    ImgStack={ImgStack}
-                    CameraButton={CameraButton}
-                    SymTag={SymTag}
-                    styles={styles}
+            ImgStack={ImgStack}
+            SymTag={SymTag}
+            styles={styles}
                   />
                 ))}
               </React.Fragment>

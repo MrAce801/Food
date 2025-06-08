@@ -7,14 +7,12 @@ export default function NewEntryForm({
   addNewSymptom,
   removeNewSymptom,
   addEntry,
-  handleNewFile,
-  removeNewImg,
+  
   searchTerm,
   setSearchTerm,
   showSearch,
   setShowSearch,
   searchInputRef,
-  fileRefNew,
   dark,
   isMobile,
   handleFocus,
@@ -22,8 +20,6 @@ export default function NewEntryForm({
   TIME_CHOICES,
   sortSymptomsByTime,
   SymTag,
-  ImgStack,
-  CameraButton,
   styles
 }) {
   return (
@@ -36,20 +32,10 @@ export default function NewEntryForm({
           onFocus={handleFocus}
           style={styles.input}
         />
-        <CameraButton onClick={() => fileRefNew.current?.click()} />
-        <input
-          ref={fileRefNew}
-          type="file"
-          accept="image/*"
-          multiple
-          capture={isMobile ? 'environment' : undefined}
-          onChange={handleNewFile}
-          style={{ display: 'none' }}
-        />
       </div>
-      {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
-      <div style={{ marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
+
+      <div style={{ marginBottom: 8 }}>
         <input
           list="symptom-list"
           placeholder="Symptom..."

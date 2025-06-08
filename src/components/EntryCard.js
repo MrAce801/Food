@@ -16,9 +16,6 @@ export default function EntryCard({
   deleteEntry,
   addEditSymptom,
   removeEditSymptom,
-  handleEditFile,
-  fileRefEdit,
-  removeEditImg,
   handlePinClick,
   linkingInfo,
   colorPickerOpenForIdx,
@@ -37,7 +34,6 @@ export default function EntryCard({
   TAG_COLOR_NAMES,
   handleFocus,
   ImgStack,
-  CameraButton,
   SymTag,
   styles
 }) {
@@ -112,17 +108,7 @@ export default function EntryCard({
             style={{ ...styles.input, width: '100%', marginBottom: '8px' }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
-            <CameraButton onClick={() => fileRefEdit.current?.click()} />
-            <input
-              ref={fileRefEdit}
-              type="file"
-              accept="image/*"
-              multiple
-              capture={isMobile ? 'environment' : undefined}
-              onChange={handleEditFile}
-              style={{ display: 'none' }}
-            />
-            {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
+            {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} />}
           </div>
 
           <div style={{ marginBottom: 12 }}>
