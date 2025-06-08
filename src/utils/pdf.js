@@ -31,11 +31,10 @@ export async function exportTableToPdf(el) {
     prevClassName = el.className;
     el.classList.add('pdf-hex-bg');
 
-    // Wrap table to include space for left-aligned connection lines
+    // Wrap table to include extra room for connection lines
     wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
-    wrapper.style.marginLeft = '-15px';
-    wrapper.style.paddingLeft = '15px';
+    wrapper.style.paddingLeft = '20px';
     wrapper.style.overflow = 'visible';
     wrapper.classList.add('pdf-hex-bg');
     el.parentNode.insertBefore(wrapper, el);
