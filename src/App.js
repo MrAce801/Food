@@ -717,6 +717,7 @@ export default function App() {
             dark={dark}
             isMobile={isMobile}
             isExportingPdf={isExportingPdf || isPrinting}
+            isPrinting={isPrinting}
             editingIdx={editingIdx}
             editForm={editForm}
             setEditForm={setEditForm}
