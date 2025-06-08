@@ -96,7 +96,8 @@ const styles = {
     color: isPdf ? '#333' : undefined,
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '8px',
+    marginLeft: 5
   }),
   dayCover: (dark) => ({
     fontSize: 18,
@@ -148,6 +149,7 @@ const styles = {
       : (dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)'),
     borderRadius: 6,
     padding: '4px 6px',
+    marginLeft: 5,
     cursor: 'pointer',
     fontSize: 14,
     lineHeight: 1,
@@ -231,14 +233,14 @@ const styles = {
     justifyContent: 'center',
     fontSize: '14px',
   }),
-  connectionSvg: {
+  connectionSvg: (isPdf = false) => ({
     position: 'absolute',
-    left: '0px',
-    width: '20px',
+    left: isPdf ? '-10px' : '0px',
+    width: isPdf ? '30px' : '20px',
     pointerEvents: 'auto',
     overflow: 'visible',
     cursor: 'pointer',
-  },
+  }),
 };
 
 export default styles;

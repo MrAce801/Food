@@ -40,7 +40,7 @@ export async function exportTableToPdf(el) {
 
     el.className = prevClassName;
     const imgData = canvas.toDataURL('image/png');
-    const margin = 10;
+    const margin = 20;
     const pdfWidth = canvas.width - margin;
     const pdfHeight = canvas.height - margin;
     const pdf = new jsPDF({ unit: 'px', format: [pdfWidth, pdfHeight] });

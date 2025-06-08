@@ -642,18 +642,19 @@ export default function App() {
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
         {connections.map(c => {
-          const offset = -c.lane * 5;
+          const startX = isExportingPdf ? 20 : 10;
+          const offset = isExportingPdf ? startX - 10 - c.lane * 5 : -c.lane * 5;
           const height = c.bottom - c.top;
-          let d = `M10 0 H${offset} V${height} H10`;
+          let d = `M${startX} 0 H${offset} V${height} H${startX}`;
           c.cross.forEach(y => {
-            d += ` M10 ${y} H${offset}`;
+            d += ` M${startX} ${y} H${offset}`;
           });
           return (
             <svg
               key={c.id}
               className="connection-line"
               onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
-              style={{...styles.connectionSvg, top: c.top, height}}
+              style={{...styles.connectionSvg(isExportingPdf), top: c.top, height}}
             >
               <path
                 d={d}
