@@ -277,6 +277,16 @@ export default function App() {
     if (noteOpenIdx !== null) {
       const ta = document.getElementById(`note-textarea-${noteOpenIdx}`);
       if (ta) {
+        ta.focus();
+        ta.selectionStart = ta.selectionEnd = ta.value.length;
+      }
+    }
+  }, [noteOpenIdx]);
+
+  useEffect(() => {
+    if (noteOpenIdx !== null) {
+      const ta = document.getElementById(`note-textarea-${noteOpenIdx}`);
+      if (ta) {
         ta.style.height = 'auto';
         ta.style.height = `${ta.scrollHeight}px`;
       }
