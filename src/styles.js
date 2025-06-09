@@ -100,7 +100,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   }),
-  dayCover: (dark, bandCount = 0, bandSpacing = 40, bandOffset = 0) => ({
+  dayCover: (dark, bandCount = 0, bandSpacing = 30, bandOffset = 0) => ({
     fontSize: 18,
     fontWeight: 600,
     margin: "24px 0 8px",
