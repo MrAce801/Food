@@ -6,7 +6,7 @@ import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
-import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime } from "./utils";
+import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import PdfButton from "./components/PdfButton";
 import PrintButton from "./components/PrintButton";
 import InsightsButton from "./components/InsightsButton";
@@ -38,15 +38,26 @@ export default function App() {
   const [entries, setEntries] = useState(() => {
     try {
       const loadedEntries = JSON.parse(localStorage.getItem("fd-entries") || "[]")
-        .map((e, i) => ({
-          ...e,
-          comment: e.comment || "",
-          food: e.food || "",
-          symptoms: (e.symptoms || []).map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) })),
-          tagColor: e.tagColor || TAG_COLORS.GREEN,
-          linkId: e.linkId || null,
-          createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
-        }));
+        .map((e, i) => {
+          const symptoms = (e.symptoms || []).map(s => ({
+            ...s,
+            strength: Math.min(parseInt(s.strength) || 1, 3),
+          }));
+          const base = {
+            ...e,
+            comment: e.comment || "",
+            food: e.food || "",
+            symptoms,
+            tagColor: e.tagColor || TAG_COLORS.GREEN,
+            tagColorManual: e.tagColorManual || false,
+            linkId: e.linkId || null,
+            createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
+          };
+          if (!base.tagColorManual) {
+            base.tagColor = determineTagColor(base.food, base.symptoms);
+          }
+          return base;
+        });
       return loadedEntries.sort(sortEntries);
     } catch { return []; }
   });
@@ -388,7 +399,8 @@ export default function App() {
       symptoms: allSymptoms,
       comment: "",
       date: now(),
-      tagColor: TAG_COLORS.GREEN,
+      tagColor: determineTagColor(newForm.food.trim(), allSymptoms),
+      tagColorManual: false,
       linkId: null,
       createdAt: Date.now(),
     };
@@ -426,26 +438,37 @@ export default function App() {
 
   const addEditSymptom = () => {
     if (!editForm || !editForm.symptomInput.trim()) return;
+    const updated = sortSymptomsByTime([
+      ...editForm.symptoms,
+      {
+        txt: editForm.symptomInput.trim(),
+        time: editForm.symptomTime,
+        strength: editForm.newSymptomStrength,
+      },
+    ]);
     setEditForm(fm => ({
-        ...fm,
-        symptoms: sortSymptomsByTime([
-            ...fm.symptoms,
-            {
-                txt: fm.symptomInput.trim(),
-                time: fm.symptomTime,
-                strength: fm.newSymptomStrength
-            }
-        ]),
-        symptomInput: "",
-        symptomTime: 0,
-        newSymptomStrength: 1
+      ...fm,
+      symptoms: updated,
+      symptomInput: "",
+      symptomTime: 0,
+      newSymptomStrength: 1,
     }));
+    if (editingIdx !== null && !entries[editingIdx].tagColorManual) {
+      const newColor = determineTagColor(editForm.food.trim(), updated);
+      setEntries(prev => prev.map((e,i) => i === editingIdx ? { ...e, tagColor: newColor } : e));
+    }
     setShowEditSymptomQuick(false);
   };
-  const removeEditSymptom = idx => setEditForm(fm => ({
-      ...fm,
-      symptoms: fm.symptoms.filter((_, i) => i !== idx)
-  }));
+  const removeEditSymptom = idx => {
+    setEditForm(fm => {
+      const updated = fm.symptoms.filter((_, i) => i !== idx);
+      if (editingIdx !== null && !entries[editingIdx].tagColorManual) {
+        const newColor = determineTagColor(fm.food.trim(), updated);
+        setEntries(prev => prev.map((e,i) => i === editingIdx ? { ...e, tagColor: newColor } : e));
+      }
+      return { ...fm, symptoms: updated };
+    });
+  };
 
   const toggleFavoriteFood = (food) => {
     setFavoriteFoods(favs => {
@@ -479,6 +502,10 @@ export default function App() {
       ...(pendingSymptom ? [pendingSymptom] : [])
     ].map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }));
 
+    const manual = entries[editingIdx]?.tagColorManual;
+    const newColor = manual
+      ? entries[editingIdx].tagColor
+      : determineTagColor(editForm.food.trim(), symptomsToSave);
     setEntries(prevEntries =>
       prevEntries
         .map((ent, j) =>
@@ -490,6 +517,7 @@ export default function App() {
                 symptoms: sortSymptomsByTime(symptomsToSave),
                 date: displayDateToSave,
                 linkId: editForm.linkId || null,
+                tagColor: newColor,
               }
             : ent
         )
@@ -528,7 +556,7 @@ export default function App() {
   const handleTagColorChange = (entryIdx, newColor) => {
     setEntries(prevEntries =>
         prevEntries.map((entry, i) =>
-            i === entryIdx ? { ...entry, tagColor: newColor } : entry
+            i === entryIdx ? { ...entry, tagColor: newColor, tagColorManual: true } : entry
         )
     );
     const colorName = TAG_COLOR_NAMES[newColor] || newColor;

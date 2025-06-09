@@ -1,4 +1,5 @@
 // --- HILFSFUNKTIONEN ---
+import { TAG_COLORS } from "./constants";
 function resizeToJpeg(file, maxWidth = 800) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -123,6 +124,12 @@ const sortSymptomsByTime = (symptoms) => {
         return tA - tB;
     });
 };
+const determineTagColor = (food = "", symptoms = []) => {
+  const trimmed = String(food).trim().toLowerCase();
+  if (trimmed.startsWith("stuhl:")) return TAG_COLORS.BROWN;
+  if (symptoms.length > 0) return TAG_COLORS.RED;
+  return TAG_COLORS.GREEN;
+};
 
 
-export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime };
+export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor };
