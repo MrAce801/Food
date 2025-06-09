@@ -18,9 +18,11 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
 
-const DAY_BAND_SPACING = 25; // further reduce spacing between indicator bars
-const DAY_BAND_WIDTH = 11;
-const DAY_BAND_OFFSET = 40;
+// spacing and sizing for collapsed day indicators
+const DAY_MARK_SPACING = 25;
+const DAY_MARK_SIZE = 11;
+const DAY_MARK_OFFSET = 40;
+const DAY_MARK_TOP = 24;
 
 const sortEntries = (a, b) => {
   const dateDiff = parseDateString(b.date) - parseDateString(a.date);
@@ -706,7 +708,7 @@ export default function App() {
               {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
                 <div
                   onClick={() => toggleDay(day)}
-                  style={styles.dayCover(dark, orderedColors.length, DAY_BAND_SPACING, DAY_BAND_OFFSET)}
+                  style={styles.dayCover(dark, orderedColors.length, DAY_MARK_SPACING, DAY_MARK_OFFSET)}
                 >
                   <div style={styles.dayCoverText}>
                     <button
@@ -721,7 +723,12 @@ export default function App() {
                   {orderedColors.map((color, i) => (
                     <div
                       key={color}
-                      style={styles.dayCoverBand(color, i * DAY_BAND_SPACING + DAY_BAND_OFFSET, DAY_BAND_WIDTH)}
+                      style={styles.dayCoverCircle(
+                        color,
+                        i * DAY_MARK_SPACING + DAY_MARK_OFFSET,
+                        DAY_MARK_SIZE,
+                        DAY_MARK_TOP
+                      )}
                     />
                   ))}
                 </div>
