@@ -18,8 +18,8 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
 
-const DAY_BAND_SPACING = 30;
-const DAY_BAND_WIDTH = 12;
+const DAY_BAND_SPACING = 35;
+const DAY_BAND_WIDTH = 22;
 const DAY_BAND_OFFSET = 40;
 
 const sortEntries = (a, b) => {
