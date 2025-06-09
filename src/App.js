@@ -20,6 +20,7 @@ import EntryCard from "./components/EntryCard";
 
 const DAY_BAND_SPACING = 30;
 const DAY_BAND_WIDTH = 12;
+const DAY_BAND_OFFSET = 40;
 
 const sortEntries = (a, b) => {
   const dateDiff = parseDateString(b.date) - parseDateString(a.date);
@@ -705,7 +706,7 @@ export default function App() {
               {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
                 <div
                   onClick={() => toggleDay(day)}
-                  style={styles.dayCover(dark, orderedColors.length, DAY_BAND_SPACING)}
+                  style={styles.dayCover(dark, orderedColors.length, DAY_BAND_SPACING, DAY_BAND_OFFSET)}
                 >
                   <div style={styles.dayCoverText}>
                     <button
@@ -720,7 +721,7 @@ export default function App() {
                   {orderedColors.map((color, i) => (
                     <div
                       key={color}
-                      style={styles.dayCoverBand(color, i * DAY_BAND_SPACING, DAY_BAND_WIDTH)}
+                      style={styles.dayCoverBand(color, i * DAY_BAND_SPACING + DAY_BAND_OFFSET, DAY_BAND_WIDTH)}
                     />
                   ))}
                 </div>

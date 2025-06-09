@@ -100,18 +100,19 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   }),
-  dayCover: (dark, bandCount = 0, bandSpacing = 30) => ({
+  dayCover: (dark, bandCount = 0, bandSpacing = 30, bandOffset = 0) => ({
     fontSize: 18,
     fontWeight: 600,
     margin: "24px 0 8px",
     padding: '12px 8px',
-    paddingRight: `${bandCount * bandSpacing + 16}px`,
+    paddingRight: `${bandCount * bandSpacing + bandOffset + 16}px`,
     borderRadius: 8,
     background: dark ? '#3a3a42' : '#e0e0e0',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     position: 'relative',
+    overflow: 'hidden',
   }),
   dayCoverText: {
     display: 'flex',
@@ -120,8 +121,8 @@ const styles = {
   },
   dayCoverBand: (color, offset = 0, width = 12) => ({
     position: 'absolute',
-    top: '-4px',
-    bottom: '-4px',
+    top: '0',
+    bottom: '0',
     right: `${offset}px`,
     width: `${width}px`,
     background: color,
