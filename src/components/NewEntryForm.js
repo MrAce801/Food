@@ -34,13 +34,13 @@ export default function NewEntryForm({
 }) {
   return (
     <div className="new-entry-form" style={{ marginBottom: 24 }}>
-      <div id="food-input-container" style={{ position: 'relative', marginBottom: 8 }}>
+      <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
         <input
           placeholder="Eintrag..."
           value={newForm.food}
           onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
           onFocus={handleFocus}
-          style={{ ...styles.input, width: '100%', paddingRight: '32px' }}
+          style={{ ...styles.input, flexGrow: 1, paddingRight: '32px' }}
         />
         <button
           className="quick-arrow"
@@ -49,7 +49,7 @@ export default function NewEntryForm({
             ...styles.glassyIconButton(dark),
             padding: '4px',
             position: 'absolute',
-            top: 'calc(50% - 15px)',
+            top: 'calc(50% - 18px)',
             right: '6px',
             transform: 'translateY(-50%)',
             color: '#333'

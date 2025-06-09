@@ -121,7 +121,7 @@ export default function EntryCard({
                 value={editForm.food}
                 onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
                 onFocus={handleFocus}
-                style={{ ...styles.input, width: '100%', paddingRight: '30px' }}
+                style={{ ...styles.input, flexGrow: 1, paddingRight: '30px' }}
               />
               <button
                 className="quick-arrow"
@@ -130,7 +130,7 @@ export default function EntryCard({
                   ...styles.glassyIconButton(dark),
                   padding: '4px',
                   position: 'absolute',
-                  top: 'calc(50% - 5px)',
+                  top: 'calc(50% - 2px)',
                   right: '6px',
                   transform: 'translateY(-50%)',
                   color: '#333'
@@ -157,8 +157,6 @@ export default function EntryCard({
             >
               ★
             </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
             <CameraButton onClick={() => fileRefEdit.current?.click()} />
             <input
               ref={fileRefEdit}
