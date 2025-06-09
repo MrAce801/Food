@@ -100,7 +100,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   }),
-  dayCover: (dark, bandCount = 0, bandSpacing = 40, bandOffset = 0) => ({
+  dayCover: (dark, bandCount = 0, bandSpacing = 25, bandOffset = 0) => ({
     fontSize: 18,
     fontWeight: 600,
     margin: "24px 0 8px",
@@ -119,14 +119,15 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
-  dayCoverBand: (color, offset = 0, width = 19) => ({
+  dayCoverBand: (color, offset = 0, width = 11) => ({
     position: 'absolute',
     top: '0',
     bottom: '0',
     right: `${offset}px`,
     width: `${width}px`,
     background: color,
-    transform: 'skewX(-45deg)',
+    /* Use straight indicator bars for collapsed days */
+    transform: 'none',
     zIndex: 5,
     pointerEvents: 'none',
   }),
