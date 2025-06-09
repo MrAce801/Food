@@ -44,7 +44,10 @@ export default function EntryCard({
   ImgStack,
   CameraButton,
   SymTag,
-  styles
+  styles,
+  QuickMenu,
+  showEditSymptomQuick,
+  setShowEditSymptomQuick
 }) {
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
@@ -140,14 +143,41 @@ export default function EntryCard({
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <input
-              list="symptom-list-edit"
-              placeholder="Symptom hinzufügen..."
-              value={editForm.symptomInput}
-              onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-              onFocus={handleFocus}
-              style={{ ...styles.smallInput, width: '100%', marginBottom: '8px' }}
-            />
+            <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
+              <input
+                list="symptom-list-edit"
+                placeholder="Symptom hinzufügen..."
+                value={editForm.symptomInput}
+                onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                onFocus={handleFocus}
+                style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
+              />
+              <button
+                className="quick-arrow"
+                onClick={() => setShowEditSymptomQuick(s => !s)}
+                style={{
+                  ...styles.glassyIconButton(dark),
+                  padding: '4px',
+                  position: 'absolute',
+                  top: '50%',
+                  right: '6px',
+                  transform: 'translateY(-50%)'
+                }}
+                title="Favoriten"
+              >
+                ▼
+              </button>
+              {showEditSymptomQuick && (
+                <QuickMenu
+                  items={favoriteSymptoms}
+                  onSelect={sym => {
+                    setEditForm(fm => ({ ...fm, symptomInput: sym }));
+                    setShowEditSymptomQuick(false);
+                  }}
+                  style={{ top: '32px', left: 0 }}
+                />
+              )}
+            </div>
             <datalist id="symptom-list-edit">
               {SYMPTOM_CHOICES.map(s => (
                 <option key={s} value={s} />

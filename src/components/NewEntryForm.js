@@ -34,15 +34,16 @@ export default function NewEntryForm({
 }) {
   return (
     <div className="new-entry-form" style={{ marginBottom: 24 }}>
-      <div style={{ position: 'relative', marginBottom: 8 }}>
+      <div id="food-input-container" style={{ position: 'relative', marginBottom: 8 }}>
         <input
           placeholder="Eintrag..."
           value={newForm.food}
           onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
           onFocus={handleFocus}
-          style={{ ...styles.input, paddingRight: '32px' }}
+          style={{ ...styles.input, width: '100%', paddingRight: '32px' }}
         />
         <button
+          className="quick-arrow"
           onClick={() => setShowFoodQuick(s => !s)}
           style={{
             ...styles.glassyIconButton(dark),
@@ -80,26 +81,27 @@ export default function NewEntryForm({
       {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
       <div style={{ marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
-        <div style={{ position: 'relative', marginBottom: '8px' }}>
-          <input
-            placeholder="Symptom..."
-            value={newForm.symptomInput}
-            onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-            onFocus={handleFocus}
-            style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
-          />
-          <button
-            onClick={() => setShowSymptomQuick(s => !s)}
-            style={{
-              ...styles.glassyIconButton(dark),
-              padding: '4px',
-              position: 'absolute',
-              top: '50%',
-              right: '6px',
-              transform: 'translateY(-50%)'
-            }}
-            title="Favoriten"
-          >
+      <div id="symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
+        <input
+          placeholder="Symptom..."
+          value={newForm.symptomInput}
+          onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+          onFocus={handleFocus}
+          style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
+        />
+        <button
+          className="quick-arrow"
+          onClick={() => setShowSymptomQuick(s => !s)}
+          style={{
+            ...styles.glassyIconButton(dark),
+            padding: '4px',
+            position: 'absolute',
+            top: '50%',
+            right: '6px',
+            transform: 'translateY(-50%)'
+          }}
+          title="Favoriten"
+        >
             ▼
           </button>
           {showSymptomQuick && (

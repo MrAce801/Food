@@ -99,6 +99,7 @@ export default function App() {
   });
   const [showFoodQuick, setShowFoodQuick] = useState(false);
   const [showSymptomQuick, setShowSymptomQuick] = useState(false);
+  const [showEditSymptomQuick, setShowEditSymptomQuick] = useState(false);
 
   // keep ref in sync so event handlers see latest state immediately
   useEffect(() => {
@@ -187,6 +188,25 @@ export default function App() {
     document.addEventListener('click', handleOutsideClick);
     return () => document.removeEventListener('click', handleOutsideClick);
   }, [editingIdx]);
+
+  useEffect(() => {
+    const handleQuickClose = (e) => {
+      if (showFoodQuick) {
+        const area = document.getElementById('food-input-container');
+        if (area && !area.contains(e.target)) setShowFoodQuick(false);
+      }
+      if (showSymptomQuick) {
+        const area = document.getElementById('symptom-input-container');
+        if (area && !area.contains(e.target)) setShowSymptomQuick(false);
+      }
+      if (showEditSymptomQuick) {
+        const area = document.getElementById('edit-symptom-input-container');
+        if (area && !area.contains(e.target)) setShowEditSymptomQuick(false);
+      }
+    };
+    document.addEventListener('mousedown', handleQuickClose);
+    return () => document.removeEventListener('mousedown', handleQuickClose);
+  }, [showFoodQuick, showSymptomQuick, showEditSymptomQuick]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -389,10 +409,12 @@ export default function App() {
     });
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
+    setShowEditSymptomQuick(false);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
+    setShowEditSymptomQuick(false);
   };
 
   const addEditSymptom = () => {
@@ -411,6 +433,7 @@ export default function App() {
         symptomTime: 0,
         newSymptomStrength: 1
     }));
+    setShowEditSymptomQuick(false);
   };
   const removeEditSymptom = idx => setEditForm(fm => ({
       ...fm,
@@ -832,10 +855,13 @@ export default function App() {
             TAG_COLORS={TAG_COLORS}
             TAG_COLOR_NAMES={TAG_COLOR_NAMES}
             handleFocus={handleFocus}
-                    ImgStack={ImgStack}
-                    CameraButton={CameraButton}
-                    SymTag={SymTag}
-                    styles={styles}
+            ImgStack={ImgStack}
+            CameraButton={CameraButton}
+            SymTag={SymTag}
+            styles={styles}
+            QuickMenu={QuickMenu}
+            showEditSymptomQuick={showEditSymptomQuick}
+            setShowEditSymptomQuick={setShowEditSymptomQuick}
                   />
                 ))}
               </React.Fragment>
