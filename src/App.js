@@ -18,6 +18,9 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
 
+const DAY_BAND_SPACING = 30;
+const DAY_BAND_WIDTH = 12;
+
 const sortEntries = (a, b) => {
   const dateDiff = parseDateString(b.date) - parseDateString(a.date);
   if (dateDiff !== 0) return dateDiff;
@@ -700,7 +703,10 @@ export default function App() {
           return (
             <div key={day}>
               {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
-                <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>
+                <div
+                  onClick={() => toggleDay(day)}
+                  style={styles.dayCover(dark, orderedColors.length, DAY_BAND_SPACING)}
+                >
                   <div style={styles.dayCoverText}>
                     <button
                       onClick={e => { e.stopPropagation(); toggleDay(day); }}
@@ -712,10 +718,10 @@ export default function App() {
                     {day}
                   </div>
                   {orderedColors.map((color, i) => (
-                    <React.Fragment key={color}>
-                      <div style={styles.dayCoverBandOuter(color, i * 15)} />
-                      <div style={styles.dayCoverBandInner(dark ? '#3a3a42' : '#e0e0e0', i * 15)} />
-                    </React.Fragment>
+                    <div
+                      key={color}
+                      style={styles.dayCoverBand(color, i * DAY_BAND_SPACING, DAY_BAND_WIDTH)}
+                    />
                   ))}
                 </div>
               ) : (

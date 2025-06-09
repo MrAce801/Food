@@ -100,11 +100,12 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   }),
-  dayCover: (dark) => ({
+  dayCover: (dark, bandCount = 0, bandSpacing = 30) => ({
     fontSize: 18,
     fontWeight: 600,
     margin: "24px 0 8px",
     padding: '12px 8px',
+    paddingRight: `${bandCount * bandSpacing + 16}px`,
     borderRadius: 8,
     background: dark ? '#3a3a42' : '#e0e0e0',
     cursor: 'pointer',
@@ -117,28 +118,15 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
-  dayCoverBandOuter: (color, offset = 0) => ({
+  dayCoverBand: (color, offset = 0, width = 12) => ({
     position: 'absolute',
-    bottom: 0,
+    top: '-4px',
+    bottom: '-4px',
     right: `${offset}px`,
-    width: 0,
-    height: 0,
-    borderStyle: 'solid',
-    borderWidth: '0 0 28px 28px',
-    borderColor: `transparent transparent ${color} transparent`,
+    width: `${width}px`,
+    background: color,
+    transform: 'skewX(-45deg)',
     zIndex: 5,
-    pointerEvents: 'none',
-  }),
-  dayCoverBandInner: (bgColor, offset = 0) => ({
-    position: 'absolute',
-    bottom: 0,
-    right: `${offset + 12}px`,
-    width: 0,
-    height: 0,
-    borderStyle: 'solid',
-    borderWidth: '0 0 16px 16px',
-    borderColor: `transparent transparent ${bgColor} transparent`,
-    zIndex: 6,
     pointerEvents: 'none',
   }),
   toast: {
