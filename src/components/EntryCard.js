@@ -99,6 +99,15 @@ export default function EntryCard({
       </div>
       {editingIdx === idx && !isExportingPdf ? (
         <>
+          <button
+            onClick={() => {
+              if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) deleteEntry(idx);
+            }}
+            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 8 }}
+            title="Eintrag löschen"
+          >
+            ×
+          </button>
           <input
             type="datetime-local"
             value={editForm.date}
@@ -321,15 +330,6 @@ export default function EntryCard({
             >
               🗒️
             </button>
-            <button
-              onClick={() => {
-                if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) deleteEntry(idx);
-              }}
-              style={styles.buttonSecondary('#d32f2f')}
-              title="Eintrag löschen"
-            >
-              ×
-            </button>
           </div>
 
           {noteOpenIdx === idx && !isExportingPdf && (
@@ -394,6 +394,29 @@ export default function EntryCard({
               <SymTag key={j} txt={s.txt} time={s.time} strength={s.strength} dark={dark} />
             ))}
           </div>
+
+          {noteOpenIdx === idx && !isExportingPdf && (
+            <div onClick={e => e.stopPropagation()} style={{ marginTop: '8px', zIndex: 15 }}>
+              <textarea
+                id={`note-textarea-${idx}`}
+                value={noteDraft}
+                onChange={e => {
+                  setNoteDraft(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                placeholder="Notiz..."
+                style={{ ...styles.textarea, fontSize: '16px' }}
+              />
+              <button
+                id={`note-save-button-${idx}`}
+                onClick={() => saveNote(idx)}
+                style={{ ...styles.buttonSecondary(dark ? '#555' : '#FBC02D'), color: dark ? '#fff' : '#333', marginTop: 8 }}
+              >
+                Notiz speichern
+              </button>
+            </div>
+          )}
 
           {entry.comment && noteOpenIdx !== idx && (!isExportingPdf || isPrinting) && (
             <div
