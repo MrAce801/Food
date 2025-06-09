@@ -119,15 +119,15 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
-  dayCoverBand: (color, offset = 0, width = 11) => ({
+  dayCoverCircle: (color, offset = 0, size = 11) => ({
     position: 'absolute',
-    top: '0',
-    bottom: '0',
+    top: '50%',
     right: `${offset}px`,
-    width: `${width}px`,
+    width: `${size}px`,
+    height: `${size}px`,
     background: color,
-    /* Use straight indicator bars for collapsed days */
-    transform: 'none',
+    borderRadius: '50%',
+    transform: 'translateY(-50%)',
     zIndex: 5,
     pointerEvents: 'none',
   }),
