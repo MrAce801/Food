@@ -18,6 +18,10 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
 
+const DAY_BAND_SPACING = 40;
+const DAY_BAND_WIDTH = 19;
+const DAY_BAND_OFFSET = 40;
+
 const sortEntries = (a, b) => {
   const dateDiff = parseDateString(b.date) - parseDateString(a.date);
   if (dateDiff !== 0) return dateDiff;
@@ -686,22 +690,42 @@ export default function App() {
             </svg>
           );
         })}
-        {dates.map(day => (
-          <div key={day}>
-            {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
-              <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                  <button
-                    onClick={e => { e.stopPropagation(); toggleDay(day); }}
-                    style={styles.collapseButton(dark)}
-                    aria-label="Expand day"
-                  >
-                    ▶
-                  </button>
-                  {day}
+        {dates.map(day => {
+          const colorsInDay = new Set(
+            grouped[day].map(({ entry }) => entry.tagColor || TAG_COLORS.GREEN)
+          );
+          const orderedColors = [
+            TAG_COLORS.GREEN,
+            TAG_COLORS.RED,
+            TAG_COLORS.BLUE,
+            TAG_COLORS.BROWN,
+            TAG_COLORS.YELLOW,
+          ].filter(c => colorsInDay.has(c));
+          return (
+            <div key={day}>
+              {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
+                <div
+                  onClick={() => toggleDay(day)}
+                  style={styles.dayCover(dark, orderedColors.length, DAY_BAND_SPACING, DAY_BAND_OFFSET)}
+                >
+                  <div style={styles.dayCoverText}>
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleDay(day); }}
+                      style={styles.collapseButton(dark)}
+                      aria-label="Expand day"
+                    >
+                      ▶
+                    </button>
+                    {day}
+                  </div>
+                  {orderedColors.map((color, i) => (
+                    <div
+                      key={color}
+                      style={styles.dayCoverBand(color, i * DAY_BAND_SPACING + DAY_BAND_OFFSET, DAY_BAND_WIDTH)}
+                    />
+                  ))}
                 </div>
-              </div>
-            ) : (
+              ) : (
               <React.Fragment>
                 <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>
                   <button
@@ -760,8 +784,9 @@ export default function App() {
                 ))}
               </React.Fragment>
             )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

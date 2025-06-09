@@ -100,15 +100,35 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   }),
-  dayCover: (dark) => ({
+  dayCover: (dark, bandCount = 0, bandSpacing = 40, bandOffset = 0) => ({
     fontSize: 18,
     fontWeight: 600,
     margin: "24px 0 8px",
-    textAlign: 'center',
-    padding: '12px 0',
+    padding: '12px 8px',
+    paddingRight: `${bandCount * bandSpacing + bandOffset + 16}px`,
     borderRadius: 8,
     background: dark ? '#3a3a42' : '#e0e0e0',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  }),
+  dayCoverText: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  dayCoverBand: (color, offset = 0, width = 19) => ({
+    position: 'absolute',
+    top: '0',
+    bottom: '0',
+    right: `${offset}px`,
+    width: `${width}px`,
+    background: color,
+    transform: 'skewX(-45deg)',
+    zIndex: 5,
+    pointerEvents: 'none',
   }),
   toast: {
     position: "fixed",
