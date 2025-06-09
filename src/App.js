@@ -20,9 +20,9 @@ import EntryCard from "./components/EntryCard";
 import QuickMenu from "./components/QuickMenu";
 
 // spacing and sizing for collapsed day indicators
-// increased to allow displaying entry counts inside the circles
-const DAY_MARK_SPACING = 30;
-const DAY_MARK_SIZE = 24;
+// slightly smaller rings but still large enough to show counts
+const DAY_MARK_SPACING = 26;
+const DAY_MARK_SIZE = 20;
 const DAY_MARK_OFFSET = 40;
 const DAY_MARK_TOP = 24;
 
@@ -833,7 +833,8 @@ export default function App() {
                         color,
                         i * DAY_MARK_SPACING + DAY_MARK_OFFSET,
                         DAY_MARK_SIZE,
-                        DAY_MARK_TOP
+                        DAY_MARK_TOP,
+                        dark
                       )}
                     >
                       {colorCounts[color]}
