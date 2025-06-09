@@ -686,22 +686,39 @@ export default function App() {
             </svg>
           );
         })}
-        {dates.map(day => (
-          <div key={day}>
-            {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
-              <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                  <button
-                    onClick={e => { e.stopPropagation(); toggleDay(day); }}
-                    style={styles.collapseButton(dark)}
-                    aria-label="Expand day"
-                  >
-                    ▶
-                  </button>
-                  {day}
+        {dates.map(day => {
+          const colorsInDay = new Set(
+            grouped[day].map(({ entry }) => entry.tagColor || TAG_COLORS.GREEN)
+          );
+          const orderedColors = [
+            TAG_COLORS.GREEN,
+            TAG_COLORS.RED,
+            TAG_COLORS.BLUE,
+            TAG_COLORS.BROWN,
+            TAG_COLORS.YELLOW,
+          ].filter(c => colorsInDay.has(c));
+          return (
+            <div key={day}>
+              {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
+                <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>
+                  <div style={styles.dayCoverText}>
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleDay(day); }}
+                      style={styles.collapseButton(dark)}
+                      aria-label="Expand day"
+                    >
+                      ▶
+                    </button>
+                    {day}
+                  </div>
+                  {orderedColors.map((color, i) => (
+                    <React.Fragment key={color}>
+                      <div style={styles.dayCoverBandOuter(color, i * 15)} />
+                      <div style={styles.dayCoverBandInner(dark ? '#3a3a42' : '#e0e0e0', i * 15)} />
+                    </React.Fragment>
+                  ))}
                 </div>
-              </div>
-            ) : (
+              ) : (
               <React.Fragment>
                 <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>
                   <button
