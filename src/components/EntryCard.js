@@ -99,15 +99,6 @@ export default function EntryCard({
       </div>
       {editingIdx === idx && !isExportingPdf ? (
         <>
-          <button
-            onClick={() => {
-              if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) deleteEntry(idx);
-            }}
-            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 8 }}
-            title="Eintrag löschen"
-          >
-            ×
-          </button>
           <input
             type="datetime-local"
             value={editForm.date}
@@ -312,32 +303,60 @@ export default function EntryCard({
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 5, marginTop: '16px' }}>
+          <div style={{ display: 'flex', gap: 5, marginTop: '16px', alignItems: 'center' }}>
             <button onClick={saveEdit} style={styles.buttonSecondary('#1976d2')}>
               Speichern
             </button>
             <button onClick={cancelEdit} style={styles.buttonSecondary('#888')}>
               Abbrechen
             </button>
+            <button
+              id={`note-icon-button-${idx}`}
+              onClick={e => {
+                e.stopPropagation();
+                toggleNote(idx);
+              }}
+              style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
+              title="Notiz"
+            >
+              🗒️
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) deleteEntry(idx);
+              }}
+              style={styles.buttonSecondary('#d32f2f')}
+              title="Eintrag löschen"
+            >
+              ×
+            </button>
           </div>
-        </>
-      ) : (
-        <>
-          {!isExportingPdf && (
-            <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, display: 'flex', gap: '6px' }}>
-              <button
-                id={`note-icon-button-${idx}`}
-                onClick={e => {
-                  e.stopPropagation();
-                  toggleNote(idx);
+
+          {noteOpenIdx === idx && !isExportingPdf && (
+            <div onClick={e => e.stopPropagation()} style={{ marginTop: '8px', zIndex: 15 }}>
+              <textarea
+                id={`note-textarea-${idx}`}
+                value={noteDraft}
+                onChange={e => {
+                  setNoteDraft(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
                 }}
-                style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
-                title="Notiz"
+                placeholder="Notiz..."
+                style={{ ...styles.textarea, fontSize: '16px' }}
+              />
+              <button
+                id={`note-save-button-${idx}`}
+                onClick={() => saveNote(idx)}
+                style={{ ...styles.buttonSecondary(dark ? '#555' : '#FBC02D'), color: dark ? '#fff' : '#333', marginTop: 8 }}
               >
-                🗒️
+                Notiz speichern
               </button>
             </div>
           )}
+        </>
+      ) : (
+        <>
 
           <div
             style={{
@@ -376,28 +395,6 @@ export default function EntryCard({
             ))}
           </div>
 
-          {noteOpenIdx === idx && !isExportingPdf && (
-            <div onClick={e => e.stopPropagation()} style={{ marginTop: '8px', zIndex: 15 }}>
-              <textarea
-                id={`note-textarea-${idx}`}
-                value={noteDraft}
-                onChange={e => {
-                  setNoteDraft(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = `${e.target.scrollHeight}px`;
-                }}
-                placeholder="Notiz..."
-                style={{ ...styles.textarea, fontSize: '16px' }}
-              />
-              <button
-                id={`note-save-button-${idx}`}
-                onClick={() => saveNote(idx)}
-                style={{ ...styles.buttonSecondary(dark ? '#555' : '#FBC02D'), color: dark ? '#fff' : '#333', marginTop: 8 }}
-              >
-                Notiz speichern
-              </button>
-            </div>
-          )}
           {entry.comment && noteOpenIdx !== idx && (!isExportingPdf || isPrinting) && (
             <div
               id={`displayed-note-text-${idx}`}
