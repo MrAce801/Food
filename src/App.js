@@ -17,6 +17,7 @@ import SymTag from "./components/SymTag";
 import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
+import QuickMenu from "./components/QuickMenu";
 
 // spacing and sizing for collapsed day indicators
 const DAY_MARK_SPACING = 25;
@@ -82,6 +83,24 @@ export default function App() {
   const linkingInfoRef = useRef(null);
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
+  const [favoriteFoods, setFavoriteFoods] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('fd-fav-foods') || '[]');
+    } catch { return []; }
+  });
+  const [favoriteSymptoms, setFavoriteSymptoms] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('fd-fav-symptoms'));
+      if (stored && Array.isArray(stored) && stored.length > 0) return stored;
+      return SYMPTOM_CHOICES.slice();
+    } catch {
+      return SYMPTOM_CHOICES.slice();
+    }
+  });
+  const [showFoodQuick, setShowFoodQuick] = useState(false);
+  const [showSymptomQuick, setShowSymptomQuick] = useState(false);
+  const [showEditFoodQuick, setShowEditFoodQuick] = useState(false);
+  const [showEditSymptomQuick, setShowEditSymptomQuick] = useState(false);
 
   // keep ref in sync so event handlers see latest state immediately
   useEffect(() => {
@@ -130,6 +149,14 @@ export default function App() {
   }, [newForm]);
 
   useEffect(() => {
+    localStorage.setItem('fd-fav-foods', JSON.stringify(favoriteFoods));
+  }, [favoriteFoods]);
+
+  useEffect(() => {
+    localStorage.setItem('fd-fav-symptoms', JSON.stringify(favoriteSymptoms));
+  }, [favoriteSymptoms]);
+
+  useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
     document.body.style.color = dark ? "#f0f0f8" : "#111";
     localStorage.setItem("fd-theme", dark ? "dark" : "light");
@@ -162,6 +189,29 @@ export default function App() {
     document.addEventListener('click', handleOutsideClick);
     return () => document.removeEventListener('click', handleOutsideClick);
   }, [editingIdx]);
+
+  useEffect(() => {
+    const handleQuickClose = (e) => {
+      if (showFoodQuick) {
+        const area = document.getElementById('food-input-container');
+        if (area && !area.contains(e.target)) setShowFoodQuick(false);
+      }
+      if (showSymptomQuick) {
+        const area = document.getElementById('symptom-input-container');
+        if (area && !area.contains(e.target)) setShowSymptomQuick(false);
+      }
+      if (showEditFoodQuick) {
+        const area = document.getElementById('edit-food-input-container');
+        if (area && !area.contains(e.target)) setShowEditFoodQuick(false);
+      }
+      if (showEditSymptomQuick) {
+        const area = document.getElementById('edit-symptom-input-container');
+        if (area && !area.contains(e.target)) setShowEditSymptomQuick(false);
+      }
+    };
+    document.addEventListener('mousedown', handleQuickClose);
+    return () => document.removeEventListener('mousedown', handleQuickClose);
+  }, [showFoodQuick, showSymptomQuick, showEditFoodQuick, showEditSymptomQuick]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -364,10 +414,14 @@ export default function App() {
     });
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
+    setShowEditFoodQuick(false);
+    setShowEditSymptomQuick(false);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
+    setShowEditFoodQuick(false);
+    setShowEditSymptomQuick(false);
   };
 
   const addEditSymptom = () => {
@@ -386,11 +440,26 @@ export default function App() {
         symptomTime: 0,
         newSymptomStrength: 1
     }));
+    setShowEditSymptomQuick(false);
   };
   const removeEditSymptom = idx => setEditForm(fm => ({
       ...fm,
       symptoms: fm.symptoms.filter((_, i) => i !== idx)
   }));
+
+  const toggleFavoriteFood = (food) => {
+    setFavoriteFoods(favs => {
+      const newSet = favs.includes(food) ? favs.filter(f => f !== food) : [...favs, food];
+      return newSet;
+    });
+  };
+
+  const toggleFavoriteSymptom = (sym) => {
+    setFavoriteSymptoms(favs => {
+      const newSet = favs.includes(sym) ? favs.filter(s => s !== sym) : [...favs, sym];
+      return newSet;
+    });
+  };
 
   const saveEdit = () => {
     if (!editForm) return;
@@ -657,13 +726,19 @@ export default function App() {
         dark={dark}
         isMobile={isMobile}
         handleFocus={handleFocus}
-        SYMPTOM_CHOICES={SYMPTOM_CHOICES}
         TIME_CHOICES={TIME_CHOICES}
         sortSymptomsByTime={sortSymptomsByTime}
         SymTag={SymTag}
         ImgStack={ImgStack}
         CameraButton={CameraButton}
         styles={styles}
+        favoriteFoods={favoriteFoods}
+        favoriteSymptoms={favoriteSymptoms}
+        showFoodQuick={showFoodQuick}
+        setShowFoodQuick={setShowFoodQuick}
+        showSymptomQuick={showSymptomQuick}
+        setShowSymptomQuick={setShowSymptomQuick}
+        QuickMenu={QuickMenu}
       />
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
@@ -777,16 +852,25 @@ export default function App() {
             noteDraft={noteDraft}
             setNoteDraft={setNoteDraft}
             saveNote={saveNote}
+            favoriteFoods={favoriteFoods}
+            favoriteSymptoms={favoriteSymptoms}
+            toggleFavoriteFood={toggleFavoriteFood}
+            toggleFavoriteSymptom={toggleFavoriteSymptom}
             SYMPTOM_CHOICES={SYMPTOM_CHOICES}
             TIME_CHOICES={TIME_CHOICES}
             sortSymptomsByTime={sortSymptomsByTime}
             TAG_COLORS={TAG_COLORS}
             TAG_COLOR_NAMES={TAG_COLOR_NAMES}
             handleFocus={handleFocus}
-                    ImgStack={ImgStack}
-                    CameraButton={CameraButton}
-                    SymTag={SymTag}
-                    styles={styles}
+            ImgStack={ImgStack}
+            CameraButton={CameraButton}
+            SymTag={SymTag}
+            styles={styles}
+            QuickMenu={QuickMenu}
+            showEditFoodQuick={showEditFoodQuick}
+            setShowEditFoodQuick={setShowEditFoodQuick}
+            showEditSymptomQuick={showEditSymptomQuick}
+            setShowEditSymptomQuick={setShowEditSymptomQuick}
                   />
                 ))}
               </React.Fragment>

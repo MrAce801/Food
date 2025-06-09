@@ -31,6 +31,10 @@ export default function EntryCard({
   noteDraft,
   setNoteDraft,
   saveNote,
+  favoriteFoods,
+  favoriteSymptoms,
+  toggleFavoriteFood,
+  toggleFavoriteSymptom,
   SYMPTOM_CHOICES,
   TIME_CHOICES,
   sortSymptomsByTime,
@@ -40,7 +44,12 @@ export default function EntryCard({
   ImgStack,
   CameraButton,
   SymTag,
-  styles
+  styles,
+  QuickMenu,
+  showEditFoodQuick,
+  setShowEditFoodQuick,
+  showEditSymptomQuick,
+  setShowEditSymptomQuick
 }) {
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
@@ -94,7 +103,7 @@ export default function EntryCard({
             onClick={() => {
               if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) deleteEntry(idx);
             }}
-            style={styles.deleteIcon}
+            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 8 }}
             title="Eintrag löschen"
           >
             ×
@@ -105,14 +114,49 @@ export default function EntryCard({
             onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
             style={{ ...styles.input, marginBottom: '12px', width: '100%' }}
           />
-          <input
-            placeholder="Eintrag..."
-            value={editForm.food}
-            onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
-            onFocus={handleFocus}
-            style={{ ...styles.input, width: '100%', marginBottom: '8px' }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
+            <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
+              <input
+                placeholder="Eintrag..."
+                value={editForm.food}
+                onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                onFocus={handleFocus}
+                style={{ ...styles.input, flexGrow: 1, width: '100%', paddingRight: '30px' }}
+              />
+              <button
+                className="quick-arrow"
+                onClick={() => setShowEditFoodQuick(s => !s)}
+                style={{
+                  ...styles.glassyIconButton(dark),
+                  padding: '4px',
+                  position: 'absolute',
+                  top: 'calc(50% - 2px)',
+                  right: '6px',
+                  transform: 'translateY(-50%)',
+                  color: '#333'
+                }}
+                title="Favoriten"
+              >
+                ▼
+              </button>
+              {showEditFoodQuick && (
+                <QuickMenu
+                  items={favoriteFoods}
+                  onSelect={f => {
+                    setEditForm(fm => ({ ...fm, food: f }));
+                    setShowEditFoodQuick(false);
+                  }}
+                  style={{ top: '32px', left: 0 }}
+                />
+              )}
+            </div>
+            <button
+              onClick={() => toggleFavoriteFood(editForm.food.trim())}
+              title="Favorit"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, color: favoriteFoods.includes(editForm.food.trim()) ? '#FBC02D' : '#aaa' }}
+            >
+              ★
+            </button>
             <CameraButton onClick={() => fileRefEdit.current?.click()} />
             <input
               ref={fileRefEdit}
@@ -127,19 +171,42 @@ export default function EntryCard({
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <input
-              list="symptom-list-edit"
-              placeholder="Symptom hinzufügen..."
-              value={editForm.symptomInput}
-              onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
-              onFocus={handleFocus}
-              style={{ ...styles.smallInput, width: '100%', marginBottom: '8px' }}
-            />
-            <datalist id="symptom-list-edit">
-              {SYMPTOM_CHOICES.map(s => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
+            <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
+              <input
+                className="hide-datalist-arrow"
+                placeholder="Symptom hinzufügen..."
+                value={editForm.symptomInput}
+                onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                onFocus={handleFocus}
+                style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
+              />
+              <button
+                className="quick-arrow"
+                onClick={() => setShowEditSymptomQuick(s => !s)}
+                style={{
+                  ...styles.glassyIconButton(dark),
+                  padding: '4px',
+                  position: 'absolute',
+                  top: '50%',
+                  right: '6px',
+                  transform: 'translateY(-50%)',
+                  color: '#333'
+                }}
+                title="Favoriten"
+              >
+                ▼
+              </button>
+              {showEditSymptomQuick && (
+                <QuickMenu
+                  items={favoriteSymptoms}
+                  onSelect={sym => {
+                    setEditForm(fm => ({ ...fm, symptomInput: sym }));
+                    setShowEditSymptomQuick(false);
+                  }}
+                  style={{ top: '32px', left: 0 }}
+                />
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap' }}>
               <select
                 value={editForm.symptomTime}
@@ -172,14 +239,14 @@ export default function EntryCard({
           </div>
 
           <div style={{ marginBottom: 8 }}>
-            {sortSymptomsByTime(editForm.symptoms).map((s, j) => (
+              {sortSymptomsByTime(editForm.symptoms).map((s, j) => (
               <div
                 key={j}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}
               >
                 <input
                   type="text"
-                  list="symptom-list-edit"
+                  className="hide-datalist-arrow"
                   value={s.txt}
                   onChange={e_text =>
                     setEditForm(fm => ({
@@ -192,6 +259,13 @@ export default function EntryCard({
                   onFocus={handleFocus}
                   style={{ ...styles.smallInput, flexGrow: 1, marginRight: '6px' }}
                 />
+                <button
+                  onClick={() => toggleFavoriteSymptom(s.txt)}
+                  title="Favorit"
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
+                >
+                  ★
+                </button>
                 <select
                   value={s.time}
                   onChange={e_select =>
@@ -202,7 +276,7 @@ export default function EntryCard({
                       return { ...fm, symptoms: sortSymptomsByTime(updated) };
                     })
                   }
-                  style={{ ...styles.smallInput, width: '37px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '22px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {TIME_CHOICES.map(t => (
                     <option key={t.value} value={t.value}>
@@ -220,7 +294,7 @@ export default function EntryCard({
                       )
                     }))
                   }
-                  style={{ ...styles.smallInput, width: '25px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '15px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {[1, 2, 3].map(n => (
                     <option key={n} value={n}>
@@ -231,7 +305,7 @@ export default function EntryCard({
                 <button
                   onClick={() => removeEditSymptom(j)}
                   title="Symptom löschen"
-                  style={{ ...styles.buttonSecondary('#d32f2f'), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }}
+                  style={{ ...styles.deleteIcon, position: 'static', fontSize: '20px' }}
                 >
                   ×
                 </button>
