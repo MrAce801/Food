@@ -1,5 +1,6 @@
 // --- IMPORTS ---
 import React, { useState, useRef, useEffect } from "react";
+import { flushSync } from 'react-dom';
 
 import useConnections from "./hooks/useConnections";
 import { exportTableToPdf } from "./utils/pdf";
@@ -330,11 +331,14 @@ export default function App() {
   };
 
   const handlePrint = async () => {
-    const finish = () => setIsPrinting(false);
-    const before = () => {
+    const finish = () => {
+      flushSync(() => setIsPrinting(false));
       window.dispatchEvent(new Event('resize'));
     };
-    setIsPrinting(true);
+    const before = () => {
+      flushSync(() => setIsPrinting(true));
+      window.dispatchEvent(new Event('resize'));
+    };
     window.addEventListener('beforeprint', before, { once: true });
     window.addEventListener('afterprint', finish, { once: true });
     await new Promise(resolve => setTimeout(resolve, 100));
