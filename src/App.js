@@ -17,6 +17,7 @@ import SymTag from "./components/SymTag";
 import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
+import QuickMenu from "./components/QuickMenu";
 
 // spacing and sizing for collapsed day indicators
 const DAY_MARK_SPACING = 25;
@@ -82,6 +83,18 @@ export default function App() {
   const linkingInfoRef = useRef(null);
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
+  const [favoriteFoods, setFavoriteFoods] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('fd-fav-foods') || '[]');
+    } catch { return []; }
+  });
+  const [favoriteSymptoms, setFavoriteSymptoms] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('fd-fav-symptoms') || '[]');
+    } catch { return []; }
+  });
+  const [showFoodQuick, setShowFoodQuick] = useState(false);
+  const [showSymptomQuick, setShowSymptomQuick] = useState(false);
 
   // keep ref in sync so event handlers see latest state immediately
   useEffect(() => {
@@ -128,6 +141,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("fd-form-new", JSON.stringify(newForm));
   }, [newForm]);
+
+  useEffect(() => {
+    localStorage.setItem('fd-fav-foods', JSON.stringify(favoriteFoods));
+  }, [favoriteFoods]);
+
+  useEffect(() => {
+    localStorage.setItem('fd-fav-symptoms', JSON.stringify(favoriteSymptoms));
+  }, [favoriteSymptoms]);
 
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
@@ -391,6 +412,20 @@ export default function App() {
       ...fm,
       symptoms: fm.symptoms.filter((_, i) => i !== idx)
   }));
+
+  const toggleFavoriteFood = (food) => {
+    setFavoriteFoods(favs => {
+      const newSet = favs.includes(food) ? favs.filter(f => f !== food) : [...favs, food];
+      return newSet;
+    });
+  };
+
+  const toggleFavoriteSymptom = (sym) => {
+    setFavoriteSymptoms(favs => {
+      const newSet = favs.includes(sym) ? favs.filter(s => s !== sym) : [...favs, sym];
+      return newSet;
+    });
+  };
 
   const saveEdit = () => {
     if (!editForm) return;
@@ -664,6 +699,13 @@ export default function App() {
         ImgStack={ImgStack}
         CameraButton={CameraButton}
         styles={styles}
+        favoriteFoods={favoriteFoods}
+        favoriteSymptoms={favoriteSymptoms}
+        showFoodQuick={showFoodQuick}
+        setShowFoodQuick={setShowFoodQuick}
+        showSymptomQuick={showSymptomQuick}
+        setShowSymptomQuick={setShowSymptomQuick}
+        QuickMenu={QuickMenu}
       />
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
@@ -777,6 +819,10 @@ export default function App() {
             noteDraft={noteDraft}
             setNoteDraft={setNoteDraft}
             saveNote={saveNote}
+            favoriteFoods={favoriteFoods}
+            favoriteSymptoms={favoriteSymptoms}
+            toggleFavoriteFood={toggleFavoriteFood}
+            toggleFavoriteSymptom={toggleFavoriteSymptom}
             SYMPTOM_CHOICES={SYMPTOM_CHOICES}
             TIME_CHOICES={TIME_CHOICES}
             sortSymptomsByTime={sortSymptomsByTime}

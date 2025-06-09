@@ -31,6 +31,10 @@ export default function EntryCard({
   noteDraft,
   setNoteDraft,
   saveNote,
+  favoriteFoods,
+  favoriteSymptoms,
+  toggleFavoriteFood,
+  toggleFavoriteSymptom,
   SYMPTOM_CHOICES,
   TIME_CHOICES,
   sortSymptomsByTime,
@@ -94,7 +98,7 @@ export default function EntryCard({
             onClick={() => {
               if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) deleteEntry(idx);
             }}
-            style={styles.deleteIcon}
+            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 8 }}
             title="Eintrag löschen"
           >
             ×
@@ -105,13 +109,22 @@ export default function EntryCard({
             onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
             style={{ ...styles.input, marginBottom: '12px', width: '100%' }}
           />
-          <input
-            placeholder="Eintrag..."
-            value={editForm.food}
-            onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
-            onFocus={handleFocus}
-            style={{ ...styles.input, width: '100%', marginBottom: '8px' }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            <input
+              placeholder="Eintrag..."
+              value={editForm.food}
+              onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+              onFocus={handleFocus}
+              style={{ ...styles.input, flexGrow: 1 }}
+            />
+            <button
+              onClick={() => toggleFavoriteFood(editForm.food.trim())}
+              title="Favorit"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, color: favoriteFoods.includes(editForm.food.trim()) ? '#FBC02D' : '#aaa' }}
+            >
+              ★
+            </button>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
             <CameraButton onClick={() => fileRefEdit.current?.click()} />
             <input
@@ -202,7 +215,7 @@ export default function EntryCard({
                       return { ...fm, symptoms: sortSymptomsByTime(updated) };
                     })
                   }
-                  style={{ ...styles.smallInput, width: '37px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '22px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {TIME_CHOICES.map(t => (
                     <option key={t.value} value={t.value}>
@@ -220,7 +233,7 @@ export default function EntryCard({
                       )
                     }))
                   }
-                  style={{ ...styles.smallInput, width: '25px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '15px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {[1, 2, 3].map(n => (
                     <option key={n} value={n}>
@@ -231,9 +244,16 @@ export default function EntryCard({
                 <button
                   onClick={() => removeEditSymptom(j)}
                   title="Symptom löschen"
-                  style={{ ...styles.buttonSecondary('#d32f2f'), padding: '6px 10px', fontSize: 14, flexShrink: 0, lineHeight: '1.2' }}
+                  style={{ ...styles.deleteIcon, position: 'static', fontSize: '20px' }}
                 >
                   ×
+                </button>
+                <button
+                  onClick={() => toggleFavoriteSymptom(s.txt)}
+                  title="Favorit"
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
+                >
+                  ★
                 </button>
               </div>
             ))}
