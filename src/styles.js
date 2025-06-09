@@ -126,7 +126,8 @@ const styles = {
     right: `${offset}px`,
     width: `${width}px`,
     background: color,
-    transform: 'skewX(-45deg)',
+    /* Use straight indicator bars for collapsed days */
+    transform: 'none',
     zIndex: 5,
     pointerEvents: 'none',
   }),
