@@ -46,6 +46,8 @@ export default function EntryCard({
   SymTag,
   styles,
   QuickMenu,
+  showEditFoodQuick,
+  setShowEditFoodQuick,
   showEditSymptomQuick,
   setShowEditSymptomQuick
 }) {
@@ -113,13 +115,41 @@ export default function EntryCard({
             style={{ ...styles.input, marginBottom: '12px', width: '100%' }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-            <input
-              placeholder="Eintrag..."
-              value={editForm.food}
-              onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
-              onFocus={handleFocus}
-              style={{ ...styles.input, flexGrow: 1 }}
-            />
+            <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
+              <input
+                placeholder="Eintrag..."
+                value={editForm.food}
+                onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                onFocus={handleFocus}
+                style={{ ...styles.input, width: '100%', paddingRight: '30px' }}
+              />
+              <button
+                className="quick-arrow"
+                onClick={() => setShowEditFoodQuick(s => !s)}
+                style={{
+                  ...styles.glassyIconButton(dark),
+                  padding: '4px',
+                  position: 'absolute',
+                  top: 'calc(50% - 10px)',
+                  right: '6px',
+                  transform: 'translateY(-50%)',
+                  color: '#333'
+                }}
+                title="Favoriten"
+              >
+                ▼
+              </button>
+              {showEditFoodQuick && (
+                <QuickMenu
+                  items={favoriteFoods}
+                  onSelect={f => {
+                    setEditForm(fm => ({ ...fm, food: f }));
+                    setShowEditFoodQuick(false);
+                  }}
+                  style={{ top: '32px', left: 0 }}
+                />
+              )}
+            </div>
             <button
               onClick={() => toggleFavoriteFood(editForm.food.trim())}
               title="Favorit"
@@ -225,6 +255,7 @@ export default function EntryCard({
                 <input
                   type="text"
                   list="symptom-list-edit"
+                  className="hide-datalist-arrow"
                   value={s.txt}
                   onChange={e_text =>
                     setEditForm(fm => ({

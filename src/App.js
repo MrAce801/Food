@@ -99,6 +99,7 @@ export default function App() {
   });
   const [showFoodQuick, setShowFoodQuick] = useState(false);
   const [showSymptomQuick, setShowSymptomQuick] = useState(false);
+  const [showEditFoodQuick, setShowEditFoodQuick] = useState(false);
   const [showEditSymptomQuick, setShowEditSymptomQuick] = useState(false);
 
   // keep ref in sync so event handlers see latest state immediately
@@ -199,6 +200,10 @@ export default function App() {
         const area = document.getElementById('symptom-input-container');
         if (area && !area.contains(e.target)) setShowSymptomQuick(false);
       }
+      if (showEditFoodQuick) {
+        const area = document.getElementById('edit-food-input-container');
+        if (area && !area.contains(e.target)) setShowEditFoodQuick(false);
+      }
       if (showEditSymptomQuick) {
         const area = document.getElementById('edit-symptom-input-container');
         if (area && !area.contains(e.target)) setShowEditSymptomQuick(false);
@@ -206,7 +211,7 @@ export default function App() {
     };
     document.addEventListener('mousedown', handleQuickClose);
     return () => document.removeEventListener('mousedown', handleQuickClose);
-  }, [showFoodQuick, showSymptomQuick, showEditSymptomQuick]);
+  }, [showFoodQuick, showSymptomQuick, showEditFoodQuick, showEditSymptomQuick]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -409,11 +414,13 @@ export default function App() {
     });
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
+    setShowEditFoodQuick(false);
     setShowEditSymptomQuick(false);
   };
   const cancelEdit = () => {
     setEditingIdx(null);
     setEditForm(null);
+    setShowEditFoodQuick(false);
     setShowEditSymptomQuick(false);
   };
 
@@ -860,6 +867,8 @@ export default function App() {
             SymTag={SymTag}
             styles={styles}
             QuickMenu={QuickMenu}
+            showEditFoodQuick={showEditFoodQuick}
+            setShowEditFoodQuick={setShowEditFoodQuick}
             showEditSymptomQuick={showEditSymptomQuick}
             setShowEditSymptomQuick={setShowEditSymptomQuick}
                   />

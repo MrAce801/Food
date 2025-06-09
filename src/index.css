@@ -20,6 +20,9 @@ input.hide-datalist-arrow {
 input.hide-datalist-arrow::-webkit-calendar-picker-indicator {
   display: none;
 }
+input.hide-datalist-arrow::-webkit-list-button {
+  display: none;
+}
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
