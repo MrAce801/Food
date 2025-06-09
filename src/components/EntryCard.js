@@ -345,7 +345,13 @@ export default function EntryCard({
               opacity: 0.7,
               marginBottom: 4,
               marginRight: '65px',
-              color: isExportingPdf ? '#fafafa' : dark ? '#cccccc' : '#444444'
+              color: isExportingPdf
+                ? dark
+                  ? '#ffffff'
+                  : '#444444'
+                : dark
+                ? '#cccccc'
+                : '#444444'
             }}
           >
             {(entry.date && entry.date.split(' ')[1]) || entry.date}

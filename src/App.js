@@ -97,16 +97,20 @@ export default function App() {
   const entryRefs = useRef([]);
   const [favoriteFoods, setFavoriteFoods] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('fd-fav-foods') || '[]');
+      return JSON.parse(localStorage.getItem('fd-fav-foods') || '[]')
+        .sort((a, b) => a.localeCompare(b));
     } catch { return []; }
   });
   const [favoriteSymptoms, setFavoriteSymptoms] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem('fd-fav-symptoms'));
-      if (stored && Array.isArray(stored) && stored.length > 0) return stored;
-      return SYMPTOM_CHOICES.slice();
+      const arr =
+        stored && Array.isArray(stored) && stored.length > 0
+          ? stored
+          : SYMPTOM_CHOICES.slice();
+      return arr.sort((a, b) => a.localeCompare(b));
     } catch {
-      return SYMPTOM_CHOICES.slice();
+      return SYMPTOM_CHOICES.slice().sort((a, b) => a.localeCompare(b));
     }
   });
   const [showFoodQuick, setShowFoodQuick] = useState(false);
@@ -474,14 +478,14 @@ export default function App() {
   const toggleFavoriteFood = (food) => {
     setFavoriteFoods(favs => {
       const newSet = favs.includes(food) ? favs.filter(f => f !== food) : [...favs, food];
-      return newSet;
+      return newSet.sort((a, b) => a.localeCompare(b));
     });
   };
 
   const toggleFavoriteSymptom = (sym) => {
     setFavoriteSymptoms(favs => {
       const newSet = favs.includes(sym) ? favs.filter(s => s !== sym) : [...favs, sym];
-      return newSet;
+      return newSet.sort((a, b) => a.localeCompare(b));
     });
   };
 
