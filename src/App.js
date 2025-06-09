@@ -22,6 +22,7 @@ import EntryCard from "./components/EntryCard";
 const DAY_MARK_SPACING = 25;
 const DAY_MARK_SIZE = 11;
 const DAY_MARK_OFFSET = 40;
+const DAY_MARK_TOP = 24;
 
 const sortEntries = (a, b) => {
   const dateDiff = parseDateString(b.date) - parseDateString(a.date);
@@ -722,7 +723,12 @@ export default function App() {
                   {orderedColors.map((color, i) => (
                     <div
                       key={color}
-                      style={styles.dayCoverCircle(color, i * DAY_MARK_SPACING + DAY_MARK_OFFSET, DAY_MARK_SIZE)}
+                      style={styles.dayCoverCircle(
+                        color,
+                        i * DAY_MARK_SPACING + DAY_MARK_OFFSET,
+                        DAY_MARK_SIZE,
+                        DAY_MARK_TOP
+                      )}
                     />
                   ))}
                 </div>

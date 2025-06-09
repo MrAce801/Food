@@ -119,9 +119,9 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
-  dayCoverCircle: (color, offset = 0, size = 11) => ({
+  dayCoverCircle: (color, offset = 0, size = 11, top = 24) => ({
     position: 'absolute',
-    top: '50%',
+    top: `${top}px`,
     right: `${offset}px`,
     width: `${size}px`,
     height: `${size}px`,
