@@ -51,7 +51,8 @@ export default function NewEntryForm({
             position: 'absolute',
             top: '50%',
             right: '6px',
-            transform: 'translateY(-50%)'
+            transform: 'translateY(-50%)',
+            color: '#333'
           }}
           title="Favoriten"
         >
@@ -98,12 +99,13 @@ export default function NewEntryForm({
             position: 'absolute',
             top: '50%',
             right: '6px',
-            transform: 'translateY(-50%)'
+            transform: 'translateY(-50%)',
+            color: '#333'
           }}
           title="Favoriten"
         >
-            ▼
-          </button>
+          ▼
+        </button>
           {showSymptomQuick && (
             <QuickMenu
               items={favoriteSymptoms}

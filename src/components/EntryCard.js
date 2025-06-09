@@ -146,6 +146,7 @@ export default function EntryCard({
             <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
               <input
                 list="symptom-list-edit"
+                className="hide-datalist-arrow"
                 placeholder="Symptom hinzufügen..."
                 value={editForm.symptomInput}
                 onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
@@ -161,7 +162,8 @@ export default function EntryCard({
                   position: 'absolute',
                   top: '50%',
                   right: '6px',
-                  transform: 'translateY(-50%)'
+                  transform: 'translateY(-50%)',
+                  color: '#333'
                 }}
                 title="Favoriten"
               >
