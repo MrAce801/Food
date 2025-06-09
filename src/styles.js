@@ -119,7 +119,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
-  dayCoverBand: (color, offset = 0, width = 19) => ({
+  dayCoverBand: (color, offset = 0, width = 11) => ({
     position: 'absolute',
     top: '0',
     bottom: '0',
