@@ -348,7 +348,7 @@ export default function EntryCard({
               color: isExportingPdf ? '#fafafa' : dark ? '#cccccc' : '#444444'
             }}
           >
-            {entry.date}
+            {(entry.date && entry.date.split(' ')[1]) || entry.date}
           </div>
           <div
             style={{
