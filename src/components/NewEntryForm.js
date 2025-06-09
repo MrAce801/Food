@@ -49,7 +49,7 @@ export default function NewEntryForm({
             ...styles.glassyIconButton(dark),
             padding: '4px',
             position: 'absolute',
-            top: 'calc(50% - 10px)',
+            top: 'calc(50% - 15px)',
             right: '6px',
             transform: 'translateY(-50%)',
             color: '#333'

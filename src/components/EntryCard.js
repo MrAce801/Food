@@ -130,7 +130,7 @@ export default function EntryCard({
                   ...styles.glassyIconButton(dark),
                   padding: '4px',
                   position: 'absolute',
-                  top: 'calc(50% - 10px)',
+                  top: 'calc(50% - 5px)',
                   right: '6px',
                   transform: 'translateY(-50%)',
                   color: '#333'
@@ -175,7 +175,6 @@ export default function EntryCard({
           <div style={{ marginBottom: 12 }}>
             <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
               <input
-                list="symptom-list-edit"
                 className="hide-datalist-arrow"
                 placeholder="Symptom hinzufügen..."
                 value={editForm.symptomInput}
@@ -210,11 +209,6 @@ export default function EntryCard({
                 />
               )}
             </div>
-            <datalist id="symptom-list-edit">
-              {SYMPTOM_CHOICES.map(s => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap' }}>
               <select
                 value={editForm.symptomTime}
@@ -254,7 +248,6 @@ export default function EntryCard({
               >
                 <input
                   type="text"
-                  list="symptom-list-edit"
                   className="hide-datalist-arrow"
                   value={s.txt}
                   onChange={e_text =>
