@@ -18,7 +18,7 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
 
-const DAY_BAND_SPACING = 30; // reduced spacing between indicator bars
+const DAY_BAND_SPACING = 25; // further reduce spacing between indicator bars
 const DAY_BAND_WIDTH = 11;
 const DAY_BAND_OFFSET = 40;
 
