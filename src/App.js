@@ -20,8 +20,9 @@ import EntryCard from "./components/EntryCard";
 import QuickMenu from "./components/QuickMenu";
 
 // spacing and sizing for collapsed day indicators
-const DAY_MARK_SPACING = 25;
-const DAY_MARK_SIZE = 11;
+// increased to allow displaying entry counts inside the circles
+const DAY_MARK_SPACING = 30;
+const DAY_MARK_SIZE = 24;
 const DAY_MARK_OFFSET = 40;
 const DAY_MARK_TOP = 24;
 
@@ -796,16 +797,18 @@ export default function App() {
           );
         })}
         {dates.map(day => {
-          const colorsInDay = new Set(
-            grouped[day].map(({ entry }) => entry.tagColor || TAG_COLORS.GREEN)
-          );
+          const colorCounts = grouped[day].reduce((acc, { entry }) => {
+            const color = entry.tagColor || TAG_COLORS.GREEN;
+            acc[color] = (acc[color] || 0) + 1;
+            return acc;
+          }, {});
           const orderedColors = [
             TAG_COLORS.GREEN,
             TAG_COLORS.RED,
             TAG_COLORS.BLUE,
             TAG_COLORS.BROWN,
             TAG_COLORS.YELLOW,
-          ].filter(c => colorsInDay.has(c));
+          ].filter(c => colorCounts[c]);
           return (
             <div key={day}>
               {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
@@ -832,7 +835,9 @@ export default function App() {
                         DAY_MARK_SIZE,
                         DAY_MARK_TOP
                       )}
-                    />
+                    >
+                      {colorCounts[color]}
+                    </div>
                   ))}
                 </div>
               ) : (

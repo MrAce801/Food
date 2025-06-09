@@ -130,6 +130,12 @@ const styles = {
     transform: 'translateY(-50%)',
     zIndex: 5,
     pointerEvents: 'none',
+    color: '#fff',
+    fontSize: `${Math.round(size * 0.55)}px`,
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }),
   toast: {
     position: "fixed",
