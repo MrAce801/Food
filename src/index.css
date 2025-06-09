@@ -64,4 +64,8 @@ code {
     break-inside: avoid;
     page-break-inside: avoid;
   }
+  .connection-line {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
