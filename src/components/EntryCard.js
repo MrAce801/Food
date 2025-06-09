@@ -114,14 +114,14 @@ export default function EntryCard({
             onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
             style={{ ...styles.input, marginBottom: '12px', width: '100%' }}
           />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
               <input
                 placeholder="Eintrag..."
                 value={editForm.food}
                 onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
                 onFocus={handleFocus}
-                style={{ ...styles.input, flexGrow: 1, paddingRight: '30px' }}
+                style={{ ...styles.input, flexGrow: 1, width: '100%', paddingRight: '30px' }}
               />
               <button
                 className="quick-arrow"
