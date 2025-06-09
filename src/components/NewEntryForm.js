@@ -18,7 +18,6 @@ export default function NewEntryForm({
   dark,
   isMobile,
   handleFocus,
-  SYMPTOM_CHOICES,
   TIME_CHOICES,
   sortSymptomsByTime,
   SymTag,
@@ -35,21 +34,35 @@ export default function NewEntryForm({
 }) {
   return (
     <div className="new-entry-form" style={{ marginBottom: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, position: 'relative' }}>
+      <div style={{ position: 'relative', marginBottom: 8 }}>
         <input
           placeholder="Eintrag..."
           value={newForm.food}
           onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
           onFocus={handleFocus}
-          style={styles.input}
+          style={{ ...styles.input, paddingRight: '32px' }}
         />
-        <button onClick={() => setShowFoodQuick(s => !s)} style={{ ...styles.glassyIconButton(dark), padding: '6px' }} title="Favoriten">
+        <button
+          onClick={() => setShowFoodQuick(s => !s)}
+          style={{
+            ...styles.glassyIconButton(dark),
+            padding: '4px',
+            position: 'absolute',
+            top: '50%',
+            right: '6px',
+            transform: 'translateY(-50%)'
+          }}
+          title="Favoriten"
+        >
           ▼
         </button>
         {showFoodQuick && (
           <QuickMenu
             items={favoriteFoods}
-            onSelect={item => { setNewForm(fm => ({ ...fm, food: item })); setShowFoodQuick(false); }}
+            onSelect={item => {
+              setNewForm(fm => ({ ...fm, food: item }));
+              setShowFoodQuick(false);
+            }}
             style={{ top: '40px', left: 0 }}
           />
         )}
@@ -69,27 +82,37 @@ export default function NewEntryForm({
       <div style={{ marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
         <div style={{ position: 'relative', marginBottom: '8px' }}>
           <input
-            list="symptom-list"
             placeholder="Symptom..."
             value={newForm.symptomInput}
             onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
             onFocus={handleFocus}
-            style={{ ...styles.smallInput, width: '100%' }}
+            style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
           />
-          <button onClick={() => setShowSymptomQuick(s => !s)} style={{ ...styles.glassyIconButton(dark), padding: '4px', position: 'absolute', right: '-30px', top: 0 }} title="Favoriten">▼</button>
+          <button
+            onClick={() => setShowSymptomQuick(s => !s)}
+            style={{
+              ...styles.glassyIconButton(dark),
+              padding: '4px',
+              position: 'absolute',
+              top: '50%',
+              right: '6px',
+              transform: 'translateY(-50%)'
+            }}
+            title="Favoriten"
+          >
+            ▼
+          </button>
           {showSymptomQuick && (
             <QuickMenu
               items={favoriteSymptoms}
-              onSelect={sym => { setNewForm(fm => ({ ...fm, symptomInput: sym })); setShowSymptomQuick(false); }}
+              onSelect={sym => {
+                setNewForm(fm => ({ ...fm, symptomInput: sym }));
+                setShowSymptomQuick(false);
+              }}
               style={{ top: '32px', left: 0 }}
             />
           )}
         </div>
-        <datalist id="symptom-list">
-          {SYMPTOM_CHOICES.map(s => (
-            <option key={s} value={s} />
-          ))}
-        </datalist>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap' }}>
           <select
             value={newForm.symptomTime}

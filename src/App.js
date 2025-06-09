@@ -90,8 +90,12 @@ export default function App() {
   });
   const [favoriteSymptoms, setFavoriteSymptoms] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('fd-fav-symptoms') || '[]');
-    } catch { return []; }
+      const stored = JSON.parse(localStorage.getItem('fd-fav-symptoms'));
+      if (stored && Array.isArray(stored) && stored.length > 0) return stored;
+      return SYMPTOM_CHOICES.slice();
+    } catch {
+      return SYMPTOM_CHOICES.slice();
+    }
   });
   const [showFoodQuick, setShowFoodQuick] = useState(false);
   const [showSymptomQuick, setShowSymptomQuick] = useState(false);
@@ -692,7 +696,6 @@ export default function App() {
         dark={dark}
         isMobile={isMobile}
         handleFocus={handleFocus}
-        SYMPTOM_CHOICES={SYMPTOM_CHOICES}
         TIME_CHOICES={TIME_CHOICES}
         sortSymptomsByTime={sortSymptomsByTime}
         SymTag={SymTag}

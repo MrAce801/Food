@@ -185,7 +185,7 @@ export default function EntryCard({
           </div>
 
           <div style={{ marginBottom: 8 }}>
-            {sortSymptomsByTime(editForm.symptoms).map((s, j) => (
+              {sortSymptomsByTime(editForm.symptoms).map((s, j) => (
               <div
                 key={j}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'nowrap' }}
@@ -205,6 +205,13 @@ export default function EntryCard({
                   onFocus={handleFocus}
                   style={{ ...styles.smallInput, flexGrow: 1, marginRight: '6px' }}
                 />
+                <button
+                  onClick={() => toggleFavoriteSymptom(s.txt)}
+                  title="Favorit"
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
+                >
+                  ★
+                </button>
                 <select
                   value={s.time}
                   onChange={e_select =>
@@ -247,13 +254,6 @@ export default function EntryCard({
                   style={{ ...styles.deleteIcon, position: 'static', fontSize: '20px' }}
                 >
                   ×
-                </button>
-                <button
-                  onClick={() => toggleFavoriteSymptom(s.txt)}
-                  title="Favorit"
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
-                >
-                  ★
                 </button>
               </div>
             ))}
