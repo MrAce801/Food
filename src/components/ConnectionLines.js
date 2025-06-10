@@ -16,39 +16,40 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
           >
             <div
               style={{
-                marginLeft: offset,
-                height: height,
+                position: 'absolute',
+                left: offset,
+                top: 0,
+                bottom: 0,
                 borderLeft: '2px dashed #b22222',
-                boxSizing: 'border-box',
-                position: 'relative',
               }}
             />
             <div
               style={{
-                marginLeft: offset,
+                position: 'absolute',
+                left: offset,
+                top: 0,
                 width: horizWidth,
                 borderTop: '2px dashed #b22222',
-                boxSizing: 'border-box',
               }}
             />
             <div
               style={{
-                marginLeft: offset,
-                transform: `translateY(${height}px)`,
+                position: 'absolute',
+                left: offset,
+                bottom: 0,
                 width: horizWidth,
                 borderTop: '2px dashed #b22222',
-                boxSizing: 'border-box',
               }}
             />
             {c.cross.map(y => (
               <div
                 key={y}
                 style={{
-                  marginLeft: offset,
-                  transform: `translateY(${y}px)`,
+                  position: 'absolute',
+                  left: offset,
+                  top: y,
                   width: horizWidth,
                   borderTop: '2px dashed #b22222',
-                  boxSizing: 'border-box',
                 }}
               />
             ))}

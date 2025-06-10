@@ -2,6 +2,7 @@ import { useLayoutEffect, useState } from 'react';
 
 export default function useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, extraFlag) {
   const [connections, setConnections] = useState([]);
+  const [maxLane, setMaxLane] = useState(0);
 
   useLayoutEffect(() => {
     const updateConnections = () => {
@@ -59,6 +60,7 @@ export default function useConnections(entries, searchTerm, displayCount, collap
         active.push(c);
       });
       setConnections(sortedConns);
+      setMaxLane(sortedConns.reduce((m, c) => Math.max(m, c.lane), 0));
     };
     updateConnections();
     window.addEventListener('scroll', updateConnections);
@@ -69,5 +71,5 @@ export default function useConnections(entries, searchTerm, displayCount, collap
     };
   }, [entries, searchTerm, displayCount, collapsedDays, extraFlag]);
 
-  return connections;
+  return { connections, maxLane };
 }
