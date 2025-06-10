@@ -7,6 +7,17 @@ export default function useConnections(entries, searchTerm, displayCount, collap
     const updateConnections = () => {
       const container = document.getElementById('fd-table');
       if (!container) return;
+      const containerRects = Array.from(container.getClientRects());
+      const rectFor = rect => {
+        let cTop = containerRects[0].top;
+        for (const cr of containerRects) {
+          if (rect.bottom <= cr.bottom && rect.top >= cr.top) {
+            cTop = cr.top;
+            break;
+          }
+        }
+        return rect.bottom - cTop;
+      };
       const linkGroups = {};
       const rendered = Array.from(entryRefs.current.keys());
       rendered.forEach(idx => {
@@ -22,21 +33,23 @@ export default function useConnections(entries, searchTerm, displayCount, collap
           const startEl = entryRefs.current[sorted[0]];
           const endEl = entryRefs.current[sorted[sorted.length - 1]];
           if (startEl && endEl) {
-            const cRect = container.getBoundingClientRect();
             const sRect = startEl.getBoundingClientRect();
             const eRect = endEl.getBoundingClientRect();
+            const startB = rectFor(sRect);
+            const endB = rectFor(eRect);
             const cross = [];
             for (let i = 1; i < sorted.length - 1; i++) {
               const midEl = entryRefs.current[sorted[i]];
               if (midEl) {
                 const mRect = midEl.getBoundingClientRect();
-                cross.push(mRect.bottom - sRect.bottom);
+                const midB = rectFor(mRect);
+                cross.push(midB - startB);
               }
             }
             conns.push({
               id,
-              top: sRect.bottom - cRect.top - 8,
-              bottom: eRect.bottom - cRect.top - 8,
+              top: startB - 8,
+              bottom: endB - 8,
               cross,
             });
           }
@@ -63,9 +76,13 @@ export default function useConnections(entries, searchTerm, displayCount, collap
     updateConnections();
     window.addEventListener('scroll', updateConnections);
     window.addEventListener('resize', updateConnections);
+    window.addEventListener('beforeprint', updateConnections);
+    window.addEventListener('afterprint', updateConnections);
     return () => {
       window.removeEventListener('scroll', updateConnections);
       window.removeEventListener('resize', updateConnections);
+      window.removeEventListener('beforeprint', updateConnections);
+      window.removeEventListener('afterprint', updateConnections);
     };
   }, [entries, searchTerm, displayCount, collapsedDays, extraFlag]);
 

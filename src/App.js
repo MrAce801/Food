@@ -332,12 +332,14 @@ export default function App() {
   const handlePrint = async () => {
     const finish = () => setIsPrinting(false);
     const before = () => {
-      window.dispatchEvent(new Event('resize'));
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
     };
     setIsPrinting(true);
     window.addEventListener('beforeprint', before, { once: true });
     window.addEventListener('afterprint', finish, { once: true });
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 500));
     window.print();
   };
 
