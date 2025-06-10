@@ -338,17 +338,21 @@ export default function App() {
   };
 
   const handlePrint = async () => {
+    const finish = () => setIsPrinting(false);
+    const before = () => {
+      window.dispatchEvent(new Event('resize'));
+    };
+
     // 1. Druck-Modus aktivieren
     setIsPrinting(true);
+    window.addEventListener('beforeprint', before, { once: true });
+    window.addEventListener('afterprint', finish, { once: true });
 
     // 2. WICHTIG: Auch hier die kurze Pause erzwingen
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // 3. Jetzt das Druckfenster öffnen
     window.print();
-
-    // Dein 'afterprint' Event-Listener wird setIsPrinting(false)
-    // nach dem Drucken aufrufen, was perfekt ist.
   };
 
   const handleEditFile = async e => {
