@@ -62,14 +62,26 @@ export default function useConnections(entries, searchTerm, displayCount, collap
       setConnections(sortedConns);
       setMaxLane(sortedConns.reduce((m, c) => Math.max(m, c.lane), 0));
     };
-    updateConnections();
-    window.addEventListener('scroll', updateConnections);
-    window.addEventListener('resize', updateConnections);
-    return () => {
-      window.removeEventListener('scroll', updateConnections);
-      window.removeEventListener('resize', updateConnections);
-    };
-  }, [entries, searchTerm, displayCount, collapsedDays, extraFlag]);
+
+    // --- THIS IS THE MODIFIED LOGIC ---
+    if (extraFlag) {
+      // IN EXPORT MODE:
+      // We wait for the next animation frame. This gives the browser time to complete
+      // its layout calculations for all the newly rendered entries before we measure.
+      const animationFrameId = requestAnimationFrame(updateConnections);
+      return () => cancelAnimationFrame(animationFrameId);
+    } else {
+      // IN LIVE MODE:
+      // The original behavior is fine for scrolling and resizing.
+      updateConnections(); // Initial update
+      window.addEventListener('scroll', updateConnections);
+      window.addEventListener('resize', updateConnections);
+      return () => {
+        window.removeEventListener('scroll', updateConnections);
+        window.removeEventListener('resize', updateConnections);
+      };
+    }
+  }, [entries, searchTerm, displayCount, collapsedDays, entryRefs, extraFlag, setConnections, setMaxLane]);
 
   return { connections, maxLane };
 }
