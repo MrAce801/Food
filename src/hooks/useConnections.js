@@ -23,21 +23,21 @@ export default function useConnections(entries, searchTerm, displayCount, collap
           const startEl = entryRefs.current[sorted[0]];
           const endEl = entryRefs.current[sorted[sorted.length - 1]];
           if (startEl && endEl) {
-            const cRect = container.getBoundingClientRect();
-            const sRect = startEl.getBoundingClientRect();
-            const eRect = endEl.getBoundingClientRect();
+            const cTop = container.offsetTop;
+            const sBottom = startEl.offsetTop + startEl.offsetHeight;
+            const eBottom = endEl.offsetTop + endEl.offsetHeight;
             const cross = [];
             for (let i = 1; i < sorted.length - 1; i++) {
               const midEl = entryRefs.current[sorted[i]];
               if (midEl) {
-                const mRect = midEl.getBoundingClientRect();
-                cross.push(mRect.bottom - sRect.bottom);
+                const mBottom = midEl.offsetTop + midEl.offsetHeight;
+                cross.push(mBottom - sBottom);
               }
             }
             conns.push({
               id,
-              top: sRect.bottom - cRect.top - 8,
-              bottom: eRect.bottom - cRect.top - 8,
+              top: sBottom - cTop - 8,
+              bottom: eBottom - cTop - 8,
               cross,
             });
           }
