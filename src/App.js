@@ -80,6 +80,7 @@ export default function App() {
   const linkingInfoRef = useRef(null);
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
+  const exportContainerRef = useRef(null);
   const [favoriteFoods, setFavoriteFoods] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('fd-fav-foods') || '[]')
@@ -313,7 +314,7 @@ export default function App() {
   };
 
   const handleExportPDF = async () => {
-    const el = document.getElementById("fd-table");
+    const el = exportContainerRef.current;
     if (!el) return;
 
     setColorPickerOpenForIdx(null);
@@ -742,12 +743,27 @@ export default function App() {
         setSortMode={setSortMode}
       />
       {/* Eintragsliste */}
-      <div id="fd-table" style={{position:'relative'}}>
-        <ConnectionLines
-          connections={connections}
-          styles={styles}
-          handleConnectionClick={handleConnectionClick}
-        />
+      <div id="export-container" ref={exportContainerRef}>
+
+        <div 
+          id="fd-table" 
+          style={{
+            position: 'relative',
+            ...( (isExportingPdf || isPrinting) && {
+              marginLeft: '60px',
+            })
+          }}>
+          <ConnectionLines
+            connections={connections}
+            styles={{
+              ...styles,
+              connectionSvg: {
+                ...styles.connectionSvg,
+                ...((isExportingPdf || isPrinting) && { zIndex: 2147483647 }),
+              },
+            }}
+            handleConnectionClick={handleConnectionClick}
+          />
         {dates.map(day => (
           <DayGroup
             key={day}
@@ -815,6 +831,7 @@ export default function App() {
             dayMarkTop={DAY_MARK_TOP}
           />
         ))}
+        </div>
       </div>
     </div>
   );
