@@ -46,6 +46,23 @@ code {
   transition: opacity 0.3s ease;
 }
 
+.export-mode .connection-group {
+  position: relative;
+  padding-left: 20px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.export-mode .connection-group::before {
+  content: '';
+  position: absolute;
+  background-color: #d32f2f;
+  width: 2px;
+  left: 5px;
+  top: 30px;
+  bottom: 30px;
+}
+
 
 @media print {
   body {

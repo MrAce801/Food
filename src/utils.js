@@ -152,5 +152,32 @@ const sortEntriesByCategory = (a, b) => {
   return sortEntries(a, b);
 };
 
+// Gruppiert Tageinträge nach ihrer Link-ID, sortiert nach Index
+// und gibt eine Liste von Gruppen zurück. Einzelne Einträge werden
+// als Gruppe mit einem Element behandelt.
+function groupEntriesByLink(dayEntries) {
+  if (!dayEntries || dayEntries.length === 0) return [];
 
-export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory };
+  const linkGroups = new Map();
+  const singleEntries = [];
+
+  for (const entry of dayEntries) {
+    if (entry.entry.linkId) {
+      if (!linkGroups.has(entry.entry.linkId)) {
+        linkGroups.set(entry.entry.linkId, []);
+      }
+      linkGroups.get(entry.entry.linkId).push(entry);
+    } else {
+      singleEntries.push([entry]);
+    }
+  }
+
+  const linked = Array.from(linkGroups.values());
+  const allGroups = [...singleEntries, ...linked];
+  allGroups.sort((a, b) => a[0].idx - b[0].idx);
+
+  return allGroups;
+}
+
+
+export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory, groupEntriesByLink };

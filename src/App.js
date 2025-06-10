@@ -316,16 +316,24 @@ export default function App() {
     const el = document.getElementById("fd-table");
     if (!el) return;
 
-    setColorPickerOpenForIdx(null);
-    setNoteOpenIdx(null);
-
     addToast("PDF Export wird vorbereitet...");
-    setIsExportingPdf(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
 
+    // 1. Export-Modus aktivieren
+    // Dies sorgt dafür, dass alle Einträge gerendert werden.
+    setIsExportingPdf(true);
+
+    // 2. WICHTIG: Kurze Pause erzwingen
+    // Gib dem Browser und React einen Moment Zeit, das Layout neu zu zeichnen
+    // und die Linienpositionen im useConnections-Hook mit den neuen,
+    // korrekten Koordinaten zu aktualisieren.
+    await new Promise(resolve => setTimeout(resolve, 100)); // 100ms ist ein sicherer Wert
+
+    // 3. Jetzt, wo alles an der richtigen Position ist, den Export starten
     const ok = await exportTableToPdf(el);
     if (ok) addToast("PDF erfolgreich exportiert!");
     else addToast("Fehler beim PDF-Export.");
+
+    // 4. Aufräumen und den Export-Modus beenden
     setIsExportingPdf(false);
   };
 
@@ -334,10 +342,16 @@ export default function App() {
     const before = () => {
       window.dispatchEvent(new Event('resize'));
     };
+
+    // 1. Druck-Modus aktivieren
     setIsPrinting(true);
     window.addEventListener('beforeprint', before, { once: true });
     window.addEventListener('afterprint', finish, { once: true });
+
+    // 2. WICHTIG: Auch hier die kurze Pause erzwingen
     await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 3. Jetzt das Druckfenster öffnen
     window.print();
   };
 
@@ -744,17 +758,20 @@ export default function App() {
       {/* Eintragsliste */}
       <div
         id="fd-table"
+        className={isExportingPdf || isPrinting ? 'export-mode' : ''}
         style={{
           position: 'relative',
           marginLeft: -(maxLane * 5),
           width: `calc(100% + ${maxLane * 5}px)`,
         }}
       >
-        <ConnectionLines
-          connections={connections}
-          styles={styles}
-          handleConnectionClick={handleConnectionClick}
-        />
+        {!(isExportingPdf || isPrinting) && (
+          <ConnectionLines
+            connections={connections}
+            styles={styles}
+            handleConnectionClick={handleConnectionClick}
+          />
+        )}
         {dates.map(day => (
           <DayGroup
             key={day}
