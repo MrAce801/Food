@@ -16,19 +16,16 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
           >
             <div
               style={{
-                position: 'absolute',
-                left: offset,
-                top: 0,
+                marginLeft: offset,
                 height: height,
                 borderLeft: '2px dashed #b22222',
                 boxSizing: 'border-box',
+                position: 'relative',
               }}
             />
             <div
               style={{
-                position: 'absolute',
-                left: offset,
-                top: 0,
+                marginLeft: offset,
                 width: horizWidth,
                 borderTop: '2px dashed #b22222',
                 boxSizing: 'border-box',
@@ -36,9 +33,8 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
             />
             <div
               style={{
-                position: 'absolute',
-                left: offset,
-                top: height,
+                marginLeft: offset,
+                transform: `translateY(${height}px)`,
                 width: horizWidth,
                 borderTop: '2px dashed #b22222',
                 boxSizing: 'border-box',
@@ -48,9 +44,8 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
               <div
                 key={y}
                 style={{
-                  position: 'absolute',
-                  left: offset,
-                  top: y,
+                  marginLeft: offset,
+                  transform: `translateY(${y}px)`,
                   width: horizWidth,
                   borderTop: '2px dashed #b22222',
                   boxSizing: 'border-box',
