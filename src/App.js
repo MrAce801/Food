@@ -18,6 +18,7 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import EntryCard from "./components/EntryCard";
 import QuickMenu from "./components/QuickMenu";
+import FilterMenu from "./components/FilterMenu";
 
 // spacing and sizing for collapsed day indicators
 // slightly smaller rings but still large enough to show counts
@@ -30,6 +31,21 @@ const sortEntries = (a, b) => {
   const dateDiff = parseDateString(b.date) - parseDateString(a.date);
   if (dateDiff !== 0) return dateDiff;
   return (b.createdAt || 0) - (a.createdAt || 0);
+};
+
+const CATEGORY_ORDER = [
+  TAG_COLORS.GREEN,
+  TAG_COLORS.RED,
+  TAG_COLORS.BLUE,
+  TAG_COLORS.BROWN,
+  TAG_COLORS.YELLOW,
+];
+
+const sortEntriesByCategory = (a, b) => {
+  const ca = CATEGORY_ORDER.indexOf(a.tagColor || TAG_COLORS.GREEN);
+  const cb = CATEGORY_ORDER.indexOf(b.tagColor || TAG_COLORS.GREEN);
+  if (ca !== cb) return ca - cb;
+  return sortEntries(a, b);
 };
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
@@ -117,6 +133,9 @@ export default function App() {
   const [showSymptomQuick, setShowSymptomQuick] = useState(false);
   const [showEditFoodQuick, setShowEditFoodQuick] = useState(false);
   const [showEditSymptomQuick, setShowEditSymptomQuick] = useState(false);
+  const [filterTags, setFilterTags] = useState([]);
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+  const [sortMode, setSortMode] = useState('date');
 
   // keep ref in sync so event handlers see latest state immediately
   useEffect(() => {
@@ -224,10 +243,14 @@ export default function App() {
         const area = document.getElementById('edit-symptom-input-container');
         if (area && !area.contains(e.target)) setShowEditSymptomQuick(false);
       }
+      if (filterMenuOpen) {
+        const area = document.getElementById('filter-menu-container');
+        if (area && !area.contains(e.target)) setFilterMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleQuickClose);
     return () => document.removeEventListener('mousedown', handleQuickClose);
-  }, [showFoodQuick, showSymptomQuick, showEditFoodQuick, showEditSymptomQuick]);
+  }, [showFoodQuick, showSymptomQuick, showEditFoodQuick, showEditSymptomQuick, filterMenuOpen]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -258,11 +281,16 @@ export default function App() {
   // Automatisches Nachladen alter Einträge beim Scrollen
   useEffect(() => {
     const handleScroll = () => {
-      const total = entries.filter(e =>
-        (e.food && e.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (e.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (e.comment && e.comment.toLowerCase().includes(searchTerm.toLowerCase()))
-      ).length;
+      const total = entries.filter(e => {
+        const matchesSearch =
+          (e.food && e.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (e.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (e.comment && e.comment.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesFilter =
+          filterTags.length === 0 ||
+          filterTags.includes(e.tagColor || TAG_COLORS.GREEN);
+        return matchesSearch && matchesFilter;
+      }).length;
 
       if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
         setDisplayCount(dc => dc >= total ? dc : Math.min(dc + 20, total));
@@ -271,7 +299,7 @@ export default function App() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [entries, searchTerm]);
+  }, [entries, searchTerm, filterTags]);
 
   useEffect(() => {
     if (noteOpenIdx !== null) {
@@ -701,13 +729,25 @@ export default function App() {
 
   // --- DATENVORBEREITUNG FÜR DIE ANZEIGE ---
   const filteredWithIdx = entries.map((e, idx) => ({ entry: e, idx }))
-    .filter(({ entry }) =>
-      (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (entry.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    .filter(({ entry }) => {
+      const matchesSearch =
+        (entry.food && entry.food.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (entry.symptoms || []).some(s => s.txt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (entry.comment && entry.comment.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesFilter =
+        filterTags.length === 0 ||
+        filterTags.includes(entry.tagColor || TAG_COLORS.GREEN);
+      return matchesSearch && matchesFilter;
+    });
 
-  const entriesToRenderForUiOrPdf = (isExportingPdf || isPrinting) ? filteredWithIdx : filteredWithIdx.slice(0, displayCount);
+  const sortedFiltered = filteredWithIdx.slice().sort((a, b) =>
+    sortMode === 'category'
+      ? sortEntriesByCategory(a.entry, b.entry)
+      : sortEntries(a.entry, b.entry)
+  );
+  const entriesToRenderForUiOrPdf = (isExportingPdf || isPrinting)
+    ? sortedFiltered
+    : sortedFiltered.slice(0, displayCount);
 
   const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
     const day = entry.date.split(" ")[0];
@@ -782,6 +822,15 @@ export default function App() {
         showSymptomQuick={showSymptomQuick}
         setShowSymptomQuick={setShowSymptomQuick}
         QuickMenu={QuickMenu}
+        filterTags={filterTags}
+        setFilterTags={setFilterTags}
+        filterMenuOpen={filterMenuOpen}
+        setFilterMenuOpen={setFilterMenuOpen}
+        FilterMenu={FilterMenu}
+        TAG_COLORS={TAG_COLORS}
+        TAG_COLOR_NAMES={TAG_COLOR_NAMES}
+        sortMode={sortMode}
+        setSortMode={setSortMode}
       />
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
