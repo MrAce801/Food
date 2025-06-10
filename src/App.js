@@ -72,8 +72,10 @@ export default function App() {
   const fileRefEdit = useRef();
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
+  const [exportStatus, setExportStatus] = useState('idle'); // 'idle' | 'preparing' | 'ready'
+  const pdfExportTriggered = useRef(false);
+  const printTriggered = useRef(false);
+  const isExporting = exportStatus !== 'idle';
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
@@ -168,10 +170,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (editingIdx !== null && !(isExportingPdf || isPrinting)) {
+    if (editingIdx !== null && !isExporting) {
       document.getElementById(`entry-card-${editingIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [editingIdx, isExportingPdf, isPrinting]);
+  }, [editingIdx, isExporting]);
 
   useEffect(() => {
     if (showSearch) {
@@ -277,7 +279,55 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExportingPdf || isPrinting);
+  const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExporting);
+
+  // When layout is ready, advance export status
+  useEffect(() => {
+  if (exportStatus === 'preparing') {
+    const timer = setTimeout(() => {
+      setExportStatus('ready');
+    }, 100);
+    return () => clearTimeout(timer);
+  }
+}, [exportStatus, connections]);
+
+  // Run export or print when ready
+  useEffect(() => {
+    if (exportStatus !== 'ready') return;
+
+    const el = document.getElementById('fd-table');
+    if (!el) {
+      setExportStatus('idle');
+      pdfExportTriggered.current = false;
+      printTriggered.current = false;
+      return;
+    }
+
+    const cleanup = () => {
+      const trigger = pdfExportTriggered.current || printTriggered.current;
+
+      setExportStatus('idle');
+      pdfExportTriggered.current = false;
+      printTriggered.current = false;
+      window.removeEventListener('afterprint', cleanup);
+
+      if (trigger && typeof trigger.scrollY === 'number') {
+        window.scrollTo(0, trigger.scrollY);
+      }
+    };
+
+    if (pdfExportTriggered.current) {
+      exportTableToPdf(el)
+        .then(ok => {
+          addToast(ok ? 'PDF erfolgreich exportiert!' : 'Fehler beim PDF-Export.');
+        })
+        .finally(cleanup);
+    } else if (printTriggered.current) {
+      window.addEventListener('afterprint', cleanup, { once: true });
+      window.dispatchEvent(new Event('resize'));
+      window.print();
+    }
+  }, [exportStatus]);
 
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -312,47 +362,29 @@ export default function App() {
     });
   };
 
-  const handleExportPDF = async () => {
-    const el = document.getElementById("fd-table");
-    if (!el) return;
+  const handleExportPDF = () => {
+    if (exportStatus !== 'idle') return;
 
+    const scrollY = window.scrollY;
+    pdfExportTriggered.current = { scrollY };
+    printTriggered.current = false;
+
+    window.scrollTo(0, 0);
+
+    setExportStatus('preparing');
     addToast("PDF Export wird vorbereitet...");
-
-    // 1. Export-Modus aktivieren
-    // Dies sorgt dafür, dass alle Einträge gerendert werden.
-    setIsExportingPdf(true);
-
-    // 2. WICHTIG: Kurze Pause erzwingen
-    // Gib dem Browser und React einen Moment Zeit, das Layout neu zu zeichnen
-    // und die Linienpositionen im useConnections-Hook mit den neuen,
-    // korrekten Koordinaten zu aktualisieren.
-    await new Promise(resolve => setTimeout(resolve, 100)); // 100ms ist ein sicherer Wert
-
-    // 3. Jetzt, wo alles an der richtigen Position ist, den Export starten
-    const ok = await exportTableToPdf(el);
-    if (ok) addToast("PDF erfolgreich exportiert!");
-    else addToast("Fehler beim PDF-Export.");
-
-    // 4. Aufräumen und den Export-Modus beenden
-    setIsExportingPdf(false);
   };
 
-  const handlePrint = async () => {
-    const finish = () => setIsPrinting(false);
-    const before = () => {
-      window.dispatchEvent(new Event('resize'));
-    };
+  const handlePrint = () => {
+    if (exportStatus !== 'idle') return;
 
-    // 1. Druck-Modus aktivieren
-    setIsPrinting(true);
-    window.addEventListener('beforeprint', before, { once: true });
-    window.addEventListener('afterprint', finish, { once: true });
+    const scrollY = window.scrollY;
+    printTriggered.current = { scrollY };
+    pdfExportTriggered.current = false;
 
-    // 2. WICHTIG: Auch hier die kurze Pause erzwingen
-    await new Promise(resolve => setTimeout(resolve, 100));
+    window.scrollTo(0, 0);
 
-    // 3. Jetzt das Druckfenster öffnen
-    window.print();
+    setExportStatus('preparing');
   };
 
   const handleEditFile = async e => {
@@ -668,7 +700,7 @@ export default function App() {
       ? sortEntriesByCategory(a.entry, b.entry)
       : sortEntries(a.entry, b.entry)
   );
-  const entriesToRenderForUiOrPdf = (isExportingPdf || isPrinting)
+  const entriesToRenderForUiOrPdf = isExporting
     ? sortedFiltered
     : sortedFiltered.slice(0, displayCount);
 
@@ -760,8 +792,6 @@ export default function App() {
         id="fd-table"
         style={{
           position: 'relative',
-          marginLeft: -(maxLane * 5),
-          width: `calc(100% + ${maxLane * 5}px)`,
         }}
       >
         <ConnectionLines
@@ -777,14 +807,14 @@ export default function App() {
             collapsedDays={collapsedDays}
             toggleDay={toggleDay}
             dark={dark}
-            isExportingPdf={isExportingPdf}
-            isPrinting={isPrinting}
+            isExportingPdf={isExporting}
+            isPrinting={isExporting}
             entryRefs={entryRefs}
             entryCardProps={{
               isMobile,
               dark,
-              isExportingPdf: isExportingPdf || isPrinting,
-              isPrinting,
+              isExportingPdf: isExporting,
+              isPrinting: isExporting,
               editingIdx,
               editForm,
               setEditForm,
