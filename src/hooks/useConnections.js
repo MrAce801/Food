@@ -46,7 +46,7 @@ export default function useConnections(entries, searchTerm, displayCount, collap
       const sortedConns = conns
         .slice()
         .sort((a, b) => {
-          const lenDiff = (b.bottom - b.top) - (a.bottom - a.top);
+          const lenDiff = (a.bottom - a.top) - (b.bottom - b.top);
           return lenDiff !== 0 ? lenDiff : a.top - b.top;
         });
 
