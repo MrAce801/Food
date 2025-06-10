@@ -2,13 +2,10 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import useConnections from "./hooks/useConnections";
-import { exportTableToPdf } from "./utils/pdf";
-
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
-import PdfButton from "./components/PdfButton";
-import PrintButton from "./components/PrintButton";
+import ExportButton from "./components/ExportButton";
 import InsightsButton from "./components/InsightsButton";
 import BackButton from "./components/BackButton";
 import CameraButton from "./components/CameraButton";
@@ -73,9 +70,8 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
   const [exportStatus, setExportStatus] = useState('idle'); // 'idle' | 'preparing' | 'ready'
-  const pdfExportTriggered = useRef(false);
-  const printTriggered = useRef(false);
   const isExporting = exportStatus !== 'idle';
+  const prevCollapsedRef = useRef(new Set());
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
@@ -288,36 +284,25 @@ export default function App() {
     }
   }, [exportStatus, connections]);
 
-  // Run export or print when ready
+  // Trigger native print once layout is stable
   useEffect(() => {
     if (exportStatus !== 'ready') return;
 
     const el = document.getElementById('fd-table');
     if (!el) {
       setExportStatus('idle');
-      pdfExportTriggered.current = false;
-      printTriggered.current = false;
       return;
     }
 
     const cleanup = () => {
+      setCollapsedDays(prevCollapsedRef.current);
       setExportStatus('idle');
-      pdfExportTriggered.current = false;
-      printTriggered.current = false;
       window.removeEventListener('afterprint', cleanup);
     };
 
-    if (pdfExportTriggered.current) {
-      exportTableToPdf(el)
-        .then(ok => {
-          addToast(ok ? 'PDF erfolgreich exportiert!' : 'Fehler beim PDF-Export.');
-        })
-        .finally(cleanup);
-    } else if (printTriggered.current) {
-      window.addEventListener('afterprint', cleanup, { once: true });
-      window.dispatchEvent(new Event('resize'));
-      window.print();
-    }
+    window.addEventListener('afterprint', cleanup, { once: true });
+    window.dispatchEvent(new Event('resize'));
+    window.print();
   }, [exportStatus]);
 
   // --- KERNLOGIK & EVENT HANDLER ---
@@ -353,18 +338,10 @@ export default function App() {
     });
   };
 
-  const handleExportPDF = () => {
+  const handleExport = () => {
     if (exportStatus !== 'idle') return;
-    pdfExportTriggered.current = true;
-    printTriggered.current = false;
-    setExportStatus('preparing');
-    addToast("PDF Export wird vorbereitet...");
-  };
-
-  const handlePrint = () => {
-    if (exportStatus !== 'idle') return;
-    printTriggered.current = true;
-    pdfExportTriggered.current = false;
+    prevCollapsedRef.current = new Set(collapsedDays);
+    setCollapsedDays(new Set());
     setExportStatus('preparing');
   };
 
@@ -702,7 +679,7 @@ export default function App() {
         <div style={styles.topBar} className="top-bar">
           <BackButton onClick={() => setView("diary")} />{" "}
           <div>
-            <PrintButton onClick={handlePrint} />
+            <ExportButton onClick={handleExport} />
           </div>
         </div>
         <Insights entries={entries} />
@@ -718,8 +695,7 @@ export default function App() {
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
-          <PdfButton onClick={handleExportPDF} />{" "}
-          <PrintButton onClick={handlePrint} />{" "}
+          <ExportButton onClick={handleExport} />{" "}
           <InsightsButton onClick={() => setView("insights")} />
         </div>
       </div>
