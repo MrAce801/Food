@@ -283,10 +283,13 @@ export default function App() {
 
   // When layout is ready, advance export status
   useEffect(() => {
-    if (exportStatus === 'preparing') {
+  if (exportStatus === 'preparing') {
+    const timer = setTimeout(() => {
       setExportStatus('ready');
-    }
-  }, [exportStatus, connections]);
+    }, 100);
+    return () => clearTimeout(timer);
+  }
+}, [exportStatus, connections]);
 
   // Run export or print when ready
   useEffect(() => {
