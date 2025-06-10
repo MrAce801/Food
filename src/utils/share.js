@@ -2,7 +2,8 @@ export function generateShareUrl(entries) {
   try {
     const json = JSON.stringify(entries);
     const encoded = btoa(unescape(encodeURIComponent(json)));
-    return `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+    const safe = encodeURIComponent(encoded);
+    return `${window.location.origin}${window.location.pathname}?data=${safe}`;
   } catch {
     return '';
   }
