@@ -21,7 +21,8 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
         left: 0,
         height: maxBottom,
         width: gutterWidth,
-        zIndex: 10
+        zIndex: 3,
+        pointerEvents: 'none'
       }}
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -53,7 +54,7 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
             strokeDasharray="4 3"
             fill="none"
             onClick={e => { e.stopPropagation(); handleConnectionClick(c.id); }}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           />
         );
       })}
