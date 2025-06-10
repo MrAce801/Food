@@ -301,10 +301,16 @@ export default function App() {
     }
 
     const cleanup = () => {
+      const trigger = pdfExportTriggered.current || printTriggered.current;
+
       setExportStatus('idle');
       pdfExportTriggered.current = false;
       printTriggered.current = false;
       window.removeEventListener('afterprint', cleanup);
+
+      if (trigger && typeof trigger.scrollY === 'number') {
+        window.scrollTo(0, trigger.scrollY);
+      }
     };
 
     if (pdfExportTriggered.current) {
@@ -355,16 +361,26 @@ export default function App() {
 
   const handleExportPDF = () => {
     if (exportStatus !== 'idle') return;
-    pdfExportTriggered.current = true;
+
+    const scrollY = window.scrollY;
+    pdfExportTriggered.current = { scrollY };
     printTriggered.current = false;
+
+    window.scrollTo(0, 0);
+
     setExportStatus('preparing');
     addToast("PDF Export wird vorbereitet...");
   };
 
   const handlePrint = () => {
     if (exportStatus !== 'idle') return;
-    printTriggered.current = true;
+
+    const scrollY = window.scrollY;
+    printTriggered.current = { scrollY };
     pdfExportTriggered.current = false;
+
+    window.scrollTo(0, 0);
+
     setExportStatus('preparing');
   };
 
