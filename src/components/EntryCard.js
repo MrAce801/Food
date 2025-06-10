@@ -69,6 +69,7 @@ export default function EntryCard({
     <div
       ref={refCallback}
       id={`entry-card-${idx}`}
+      className="entry-card"
       style={styles.entryCard(dark, isSymptomOnlyEntry)}
       onClick={e => {
         if (isExportingPdf) return;

@@ -1,5 +1,6 @@
 import React from 'react';
 import EntryCard from './EntryCard';
+import { groupEntriesByLink } from '../utils';
 
 export default function DayGroup({
   day,
@@ -31,6 +32,8 @@ export default function DayGroup({
     TAG_COLORS.BROWN,
     TAG_COLORS.YELLOW,
   ].filter(c => colorCounts[c]);
+
+  const entryConnectionGroups = groupEntriesByLink(entries);
 
   return (
     <div>
@@ -66,7 +69,7 @@ export default function DayGroup({
         </div>
       ) : (
         <React.Fragment>
-          <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>
+          <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf || isPrinting)}>
             <button
               onClick={e => { e.stopPropagation(); toggleDay(day); }}
               style={styles.collapseButton(dark)}
@@ -76,14 +79,33 @@ export default function DayGroup({
             </button>
             {day}
           </div>
-          {entries.map(({ entry, idx }) => (
-            <EntryCard
-              key={idx}
-              refCallback={el => (entryRefs.current[idx] = el)}
-              entry={entry}
-              idx={idx}
-              {...entryCardProps}
-            />
+          {entryConnectionGroups.map((group, groupIndex) => (
+            group.length > 1 ? (
+              <div
+                key={group[0].entry.linkId || `group-${groupIndex}`}
+                className="connection-group"
+              >
+                {group.map(({ entry, idx }) => (
+                  <EntryCard
+                    key={idx}
+                    refCallback={el => (entryRefs.current[idx] = el)}
+                    entry={entry}
+                    idx={idx}
+                    {...entryCardProps}
+                  />
+                ))}
+              </div>
+            ) : (
+              group.length === 1 && (
+                <EntryCard
+                  key={group[0].idx}
+                  refCallback={el => (entryRefs.current[group[0].idx] = el)}
+                  entry={group[0].entry}
+                  idx={group[0].idx}
+                  {...entryCardProps}
+                />
+              )
+            )
           ))}
         </React.Fragment>
       )}

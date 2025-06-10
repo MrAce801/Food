@@ -47,6 +47,49 @@ code {
 }
 
 
+/* Verstecke die alten, per JS gezeichneten Linien im Export */
+.export-mode .connection-lines-container {
+  display: none !important;
+}
+
+/* Der Wrapper für eine verbundene Gruppe */
+.export-mode .connection-group {
+  position: relative;
+  padding-left: 20px; 
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* 1. Die VERTIKALE Hauptlinie (wie bisher, aber mit wichtigerem z-index) */
+.export-mode .connection-group::before {
+  content: '';
+  position: absolute;
+  background-color: #d32f2f;
+  width: 2px;
+  left: 5px; 
+  top: 30px; 
+  bottom: 30px;
+  z-index: 1; /* Stellt sicher, dass die Hauptlinie hinter den Verbindern liegt */
+}
+
+/* 2. NEU: Der HORIZONTALE Verbinder-Arm für JEDEN Eintrag in der Gruppe */
+/* Wir stylen hier die EntryCard-Komponente selbst, wenn sie im Wrapper ist */
+.export-mode .connection-group .entry-card {
+  position: relative; /* Wichtig für die Positionierung des Pseudo-Elements */
+}
+
+.export-mode .connection-group .entry-card::before {
+  content: '';
+  position: absolute;
+  background-color: #d32f2f;
+  height: 2px;   /* Höhe der horizontalen Linie */
+  width: 15px;   /* Länge der horizontalen Linie */
+  left: -14px;  /* Positioniert den Arm von der Kante der Karte nach links */
+  top: 25px;     /* Vertikale Position des Arms - MUSS ZUM PIN-ICON PASSEN */
+  z-index: 2;
+}
+
+
 @media print {
   body {
     -webkit-print-color-adjust: exact;
