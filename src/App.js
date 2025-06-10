@@ -79,6 +79,7 @@ export default function App() {
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
   const linkingInfoRef = useRef(null);
   const containerRef = useRef(null);
+  const exportContainerRef = useRef(null);
   const entryRefs = useRef([]);
   const [favoriteFoods, setFavoriteFoods] = useState(() => {
     try {
@@ -313,7 +314,7 @@ export default function App() {
   };
 
   const handleExportPDF = async () => {
-    const el = document.getElementById("fd-table");
+    const el = exportContainerRef.current;
     if (!el) return;
 
     setColorPickerOpenForIdx(null);
@@ -742,7 +743,13 @@ export default function App() {
         setSortMode={setSortMode}
       />
       {/* Eintragsliste */}
-      <div id="fd-table" style={{position:'relative'}}>
+      <div id="export-container" ref={exportContainerRef}>
+        <div id="fd-table" style={{
+          position: 'relative',
+          ...(isExportingPdf || isPrinting ? {
+            marginLeft: '60px'
+          } : {})
+        }}>
         <ConnectionLines
           connections={connections}
           styles={styles}
