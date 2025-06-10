@@ -63,9 +63,13 @@ export default function useConnections(entries, searchTerm, displayCount, collap
     updateConnections();
     window.addEventListener('scroll', updateConnections);
     window.addEventListener('resize', updateConnections);
+    window.addEventListener('beforeprint', updateConnections);
+    window.addEventListener('afterprint', updateConnections);
     return () => {
       window.removeEventListener('scroll', updateConnections);
       window.removeEventListener('resize', updateConnections);
+      window.removeEventListener('beforeprint', updateConnections);
+      window.removeEventListener('afterprint', updateConnections);
     };
   }, [entries, searchTerm, displayCount, collapsedDays, extraFlag]);
 

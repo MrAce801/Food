@@ -337,7 +337,7 @@ export default function App() {
     setIsPrinting(true);
     window.addEventListener('beforeprint', before, { once: true });
     window.addEventListener('afterprint', finish, { once: true });
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 300));
     window.print();
   };
 
