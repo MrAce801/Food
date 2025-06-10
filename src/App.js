@@ -758,6 +758,8 @@ export default function App() {
         style={{
           position: 'relative',
           overflow: 'visible',
+          marginLeft: -(20 + (maxLane * 5)),
+          width: `calc(100% + ${20 + (maxLane * 5)}px)`,
         }}
       >
         <ConnectionLines
