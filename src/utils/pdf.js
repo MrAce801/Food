@@ -1,4 +1,6 @@
 import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export async function exportTableToPdf(el) {
   if (!el) return;
@@ -52,5 +54,20 @@ export async function exportTableToPdf(el) {
       orig.el.style.objectFit = orig.objectFit;
     });
     if (prevBackground) el.style.backgroundColor = prevBackground;
+  }
+}
+
+export async function exportAppScreenshotToPdf(el) {
+  if (!el) return false;
+  try {
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height], orientation: 'portrait' });
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save('FoodDiary.pdf');
+    return true;
+  } catch (err) {
+    console.error('Fehler beim Erstellen des Screenshot-PDFs:', err);
+    return false;
   }
 }

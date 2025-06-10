@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import useConnections from "./hooks/useConnections";
-import { exportTableToPdf } from "./utils/pdf";
+import { exportTableToPdf, exportAppScreenshotToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
@@ -313,7 +313,7 @@ export default function App() {
   };
 
   const handleExportPDF = async () => {
-    const el = document.getElementById("fd-table");
+    const el = document.getElementById("root");
     if (!el) return;
 
     setColorPickerOpenForIdx(null);
@@ -323,7 +323,7 @@ export default function App() {
     setIsExportingPdf(true);
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    const ok = await exportTableToPdf(el);
+    const ok = await exportAppScreenshotToPdf(el);
     if (ok) addToast("PDF erfolgreich exportiert!");
     else addToast("Fehler beim PDF-Export.");
     setIsExportingPdf(false);
