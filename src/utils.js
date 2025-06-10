@@ -131,5 +131,26 @@ const determineTagColor = (food = "", symptoms = []) => {
   return TAG_COLORS.GREEN;
 };
 
+const sortEntries = (a, b) => {
+  const dateDiff = parseDateString(b.date) - parseDateString(a.date);
+  if (dateDiff !== 0) return dateDiff;
+  return (b.createdAt || 0) - (a.createdAt || 0);
+};
 
-export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor };
+const CATEGORY_ORDER = [
+  TAG_COLORS.GREEN,
+  TAG_COLORS.RED,
+  TAG_COLORS.BLUE,
+  TAG_COLORS.BROWN,
+  TAG_COLORS.YELLOW,
+];
+
+const sortEntriesByCategory = (a, b) => {
+  const ca = CATEGORY_ORDER.indexOf(a.tagColor || TAG_COLORS.GREEN);
+  const cb = CATEGORY_ORDER.indexOf(b.tagColor || TAG_COLORS.GREEN);
+  if (ca !== cb) return ca - cb;
+  return sortEntries(a, b);
+};
+
+
+export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory };
