@@ -1,4 +1,5 @@
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export async function exportTableToPdf(el) {
   if (!el) return;
@@ -26,16 +27,38 @@ export async function exportTableToPdf(el) {
       img.style.objectFit = 'contain';
     });
 
+    const connectionLines = Array.from(el.querySelectorAll('.connection-line'));
+    let extraLeft = 40;
+    let extraRight = 40;
+    const elRect = el.getBoundingClientRect();
+    connectionLines.forEach(line => {
+      const rect = line.getBoundingClientRect();
+      extraLeft = Math.max(extraLeft, elRect.left - rect.left);
+      extraRight = Math.max(extraRight, rect.right - elRect.right);
+    });
+
+
     prevBackground = el.style.backgroundColor;
     const bodyBg = getComputedStyle(document.body).backgroundColor;
     el.style.backgroundColor = bodyBg;
+    // Capture a bit more area on each side based on connection lines
 
-    await html2pdf().from(el).set({
-      margin: 10,
-      filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
-      jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-    }).save();
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: bodyBg,
+      width: el.scrollWidth + extraLeft + extraRight,
+      x: -extraLeft,
+    });
+
+    const pdf = new jsPDF({
+      unit: 'px',
+      format: [canvas.width, canvas.height],
+      orientation: 'portrait',
+    });
+    const imgData = canvas.toDataURL('image/png');
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save('FoodDiary.pdf');
     el.style.backgroundColor = prevBackground;
     return true;
   } catch (error) {
