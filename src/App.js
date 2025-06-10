@@ -277,7 +277,7 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  const connections = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExportingPdf || isPrinting);
+  const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExportingPdf || isPrinting);
 
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -742,7 +742,14 @@ export default function App() {
         setSortMode={setSortMode}
       />
       {/* Eintragsliste */}
-      <div id="fd-table" style={{position:'relative'}}>
+      <div
+        id="fd-table"
+        style={{
+          position: 'relative',
+          marginLeft: -(maxLane * 5),
+          width: `calc(100% + ${maxLane * 5}px)`,
+        }}
+      >
         <ConnectionLines
           connections={connections}
           styles={styles}

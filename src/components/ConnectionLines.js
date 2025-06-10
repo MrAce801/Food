@@ -6,26 +6,54 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
       {connections.map(c => {
         const offset = -c.lane * 5;
         const height = c.bottom - c.top;
-        let d = `M10 0 H${offset} V${height} H10`;
-        c.cross.forEach(y => {
-          d += ` M10 ${y} H${offset}`;
-        });
+        const horizWidth = 10 - offset;
         return (
-          <svg
+          <div
             key={c.id}
             className="connection-line"
             onClick={e => { e.stopPropagation(); handleConnectionClick(c.id); }}
             style={{ ...styles.connectionSvg, top: c.top, height }}
           >
-            <path
-              d={d}
-              stroke="#b22222"
-              strokeWidth="2"
-              fill="none"
-              strokeDasharray="4 2"
-              strokeLinecap="round"
+            <div
+              style={{
+                position: 'absolute',
+                left: offset,
+                top: 0,
+                bottom: 0,
+                borderLeft: '2px dashed #b22222',
+              }}
             />
-          </svg>
+            <div
+              style={{
+                position: 'absolute',
+                left: offset,
+                top: 0,
+                width: horizWidth,
+                borderTop: '2px dashed #b22222',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                left: offset,
+                bottom: 0,
+                width: horizWidth,
+                borderTop: '2px dashed #b22222',
+              }}
+            />
+            {c.cross.map(y => (
+              <div
+                key={y}
+                style={{
+                  position: 'absolute',
+                  left: offset,
+                  top: y,
+                  width: horizWidth,
+                  borderTop: '2px dashed #b22222',
+                }}
+              />
+            ))}
+          </div>
         );
       })}
     </>
