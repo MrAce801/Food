@@ -81,7 +81,8 @@ const styles = {
   entryCard: (dark, isSymptomOnly = false) => ({
     position: 'relative',
     marginBottom: 16,
-    marginLeft: 5,
+    marginLeft: 10,
+    marginRight: 5,
     padding: 12,
     borderRadius: 8,
     background: isSymptomOnly
