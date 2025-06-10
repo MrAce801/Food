@@ -5,6 +5,7 @@ export async function exportTableToPdf(el) {
 
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
+  const connectionLineOriginalStyles = [];
   let prevBackground = '';
 
   try {
@@ -26,14 +27,38 @@ export async function exportTableToPdf(el) {
       img.style.objectFit = 'contain';
     });
 
+    const connectionLines = Array.from(el.querySelectorAll('.connection-line'));
+    connectionLines.forEach(svg => {
+      connectionLineOriginalStyles.push({
+        el: svg,
+        width: svg.style.width,
+        left: svg.style.left,
+        transform: svg.style.transform,
+      });
+      const widen = 40;
+      const origWidth = parseFloat(svg.style.width || 0) || svg.getBoundingClientRect().width;
+      const origLeft = parseFloat(svg.style.left || 0);
+      svg.style.width = `${origWidth + widen}px`;
+      svg.style.left = `${origLeft - widen}px`;
+      svg.style.transform = `translateX(${widen}px)` + (svg.style.transform ? ` ${svg.style.transform}` : '');
+    });
+
     prevBackground = el.style.backgroundColor;
     const bodyBg = getComputedStyle(document.body).backgroundColor;
     el.style.backgroundColor = bodyBg;
+    // Capture a bit more area on each side
+    const extra = 40;
 
     await html2pdf().from(el).set({
       margin: 10,
       filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: bodyBg,
+        width: el.scrollWidth + extra * 2,
+        x: -extra
+      },
       jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
     }).save();
     el.style.backgroundColor = prevBackground;
@@ -50,6 +75,11 @@ export async function exportTableToPdf(el) {
       orig.el.style.width = orig.width;
       orig.el.style.height = orig.height;
       orig.el.style.objectFit = orig.objectFit;
+    });
+    connectionLineOriginalStyles.forEach(orig => {
+      orig.el.style.width = orig.width;
+      orig.el.style.left = orig.left;
+      orig.el.style.transform = orig.transform;
     });
     if (prevBackground) el.style.backgroundColor = prevBackground;
   }
