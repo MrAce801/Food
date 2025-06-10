@@ -7,10 +7,8 @@ import { exportTableToPdf } from "./utils/pdf";
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
-import { generateShareUrl, loadEntriesFromQuery } from "./utils/share";
 import PdfButton from "./components/PdfButton";
 import PrintButton from "./components/PrintButton";
-import ShareButton from "./components/ShareButton";
 import InsightsButton from "./components/InsightsButton";
 import BackButton from "./components/BackButton";
 import CameraButton from "./components/CameraButton";
@@ -38,7 +36,7 @@ export default function App() {
   const [view, setView] = useState("diary");
   const [entries, setEntries] = useState(() => {
     try {
-      const initialArr = loadEntriesFromQuery() || JSON.parse(localStorage.getItem("fd-entries") || "[]");
+      const initialArr = JSON.parse(localStorage.getItem("fd-entries") || "[]");
       const loadedEntries = initialArr
         .map((e, i) => {
           const symptoms = (e.symptoms || []).map(s => ({
@@ -341,20 +339,6 @@ export default function App() {
     window.addEventListener('afterprint', finish, { once: true });
     await new Promise(resolve => setTimeout(resolve, 100));
     window.print();
-  };
-
-  const handleShare = async () => {
-    const url = generateShareUrl(entries);
-    if (!url) {
-      addToast('Fehler beim Erstellen des Links');
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      addToast('Link kopiert!');
-    } catch {
-      window.prompt('Link kopieren:', url);
-    }
   };
 
   const handleEditFile = async e => {
@@ -691,7 +675,6 @@ export default function App() {
         <div style={styles.topBar} className="top-bar">
           <BackButton onClick={() => setView("diary")} />{" "}
           <div>
-            <ShareButton onClick={handleShare} />{" "}
             <PrintButton onClick={handlePrint} />
           </div>
         </div>
@@ -708,7 +691,6 @@ export default function App() {
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
-          <ShareButton onClick={handleShare} />{" "}
           <PdfButton onClick={handleExportPDF} />{" "}
           <PrintButton onClick={handlePrint} />{" "}
           <InsightsButton onClick={() => setView("insights")} />
