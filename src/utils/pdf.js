@@ -1,10 +1,12 @@
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export async function exportTableToPdf(el) {
   if (!el) return;
 
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
+  const connectionLineOriginalStyles = [];
   let prevBackground = '';
 
   try {
@@ -26,16 +28,42 @@ export async function exportTableToPdf(el) {
       img.style.objectFit = 'contain';
     });
 
+    const connectionLines = Array.from(el.querySelectorAll('.connection-line'));
+    const linePadding = 40;
+    connectionLines.forEach(line => {
+      connectionLineOriginalStyles.push({
+        el: line,
+        width: line.style.width,
+        transform: line.style.transform,
+      });
+      const width = line.offsetWidth || 20;
+      line.style.width = `${width + linePadding * 2}px`;
+      line.style.transform = `translateX(-${linePadding}px)`;
+    });
+
+
     prevBackground = el.style.backgroundColor;
     const bodyBg = getComputedStyle(document.body).backgroundColor;
     el.style.backgroundColor = bodyBg;
+    // Capture a bit more area on each side
+    const extra = 40;
 
-    await html2pdf().from(el).set({
-      margin: 10,
-      filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
-      jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-    }).save();
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: bodyBg,
+      width: el.scrollWidth + extra * 2,
+      x: -extra,
+    });
+
+    const pdf = new jsPDF({
+      unit: 'px',
+      format: [canvas.width, canvas.height],
+      orientation: 'portrait',
+    });
+    const imgData = canvas.toDataURL('image/png');
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save('FoodDiary.pdf');
     el.style.backgroundColor = prevBackground;
     return true;
   } catch (error) {
@@ -50,6 +78,10 @@ export async function exportTableToPdf(el) {
       orig.el.style.width = orig.width;
       orig.el.style.height = orig.height;
       orig.el.style.objectFit = orig.objectFit;
+    });
+    connectionLineOriginalStyles.forEach(orig => {
+      orig.el.style.width = orig.width;
+      orig.el.style.transform = orig.transform;
     });
     if (prevBackground) el.style.backgroundColor = prevBackground;
   }
