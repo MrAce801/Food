@@ -16,9 +16,10 @@ import ImgStack from "./components/ImgStack";
 import SymTag from "./components/SymTag";
 import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
-import EntryCard from "./components/EntryCard";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
+import ConnectionLines from "./components/ConnectionLines";
+import DayGroup from "./components/DayGroup";
 
 // spacing and sizing for collapsed day indicators
 // slightly smaller rings but still large enough to show counts
@@ -834,147 +835,78 @@ export default function App() {
       />
       {/* Eintragsliste */}
       <div id="fd-table" style={{position:'relative'}}>
-        {connections.map(c => {
-          const offset = -c.lane * 5;
-          const height = c.bottom - c.top;
-          let d = `M10 0 H${offset} V${height} H10`;
-          c.cross.forEach(y => {
-            d += ` M10 ${y} H${offset}`;
-          });
-          return (
-            <svg
-              key={c.id}
-              className="connection-line"
-              onClick={(e) => { e.stopPropagation(); handleConnectionClick(c.id); }}
-              style={{...styles.connectionSvg, top: c.top, height}}
-            >
-              <path
-                d={d}
-                stroke="#b22222"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="4 2"
-                strokeLinecap="round"
-              />
-            </svg>
-          );
-        })}
-        {dates.map(day => {
-          const colorCounts = grouped[day].reduce((acc, { entry }) => {
-            const color = entry.tagColor || TAG_COLORS.GREEN;
-            acc[color] = (acc[color] || 0) + 1;
-            return acc;
-          }, {});
-          const orderedColors = [
-            TAG_COLORS.GREEN,
-            TAG_COLORS.RED,
-            TAG_COLORS.BLUE,
-            TAG_COLORS.BROWN,
-            TAG_COLORS.YELLOW,
-          ].filter(c => colorCounts[c]);
-          return (
-            <div key={day}>
-              {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
-                <div
-                  onClick={() => toggleDay(day)}
-                  style={styles.dayCover(dark, orderedColors.length, DAY_MARK_SPACING, DAY_MARK_OFFSET)}
-                >
-                  <div style={styles.dayCoverText}>
-                    <button
-                      onClick={e => { e.stopPropagation(); toggleDay(day); }}
-                      style={styles.collapseButton(dark)}
-                      aria-label="Expand day"
-                    >
-                      ▶
-                    </button>
-                    {day}
-                  </div>
-                  {orderedColors.map((color, i) => (
-                    <div
-                      key={color}
-                      style={styles.dayCoverCircle(
-                        color,
-                        i * DAY_MARK_SPACING + DAY_MARK_OFFSET,
-                        DAY_MARK_SIZE,
-                        DAY_MARK_TOP,
-                        dark
-                      )}
-                    >
-                      {colorCounts[color]}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-              <React.Fragment>
-                <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>
-                  <button
-                    onClick={e => { e.stopPropagation(); toggleDay(day); }}
-                    style={styles.collapseButton(dark)}
-                    aria-label="Collapse day"
-                  >
-                    ▼
-                  </button>
-                  {day}
-                </div>
-                {grouped[day].map(({ entry, idx }) => (
-                  <EntryCard
-                    key={idx}
-                    refCallback={el => (entryRefs.current[idx] = el)}
-            entry={entry}
-            idx={idx}
+        <ConnectionLines
+          connections={connections}
+          styles={styles}
+          handleConnectionClick={handleConnectionClick}
+        />
+        {dates.map(day => (
+          <DayGroup
+            key={day}
+            day={day}
+            entries={grouped[day]}
+            collapsedDays={collapsedDays}
+            toggleDay={toggleDay}
             dark={dark}
-            isMobile={isMobile}
-            isExportingPdf={isExportingPdf || isPrinting}
+            isExportingPdf={isExportingPdf}
             isPrinting={isPrinting}
-            editingIdx={editingIdx}
-            editForm={editForm}
-            setEditForm={setEditForm}
-            startEdit={startEdit}
-            cancelEdit={cancelEdit}
-            saveEdit={saveEdit}
-            deleteEntry={deleteEntry}
-            addEditSymptom={addEditSymptom}
-            removeEditSymptom={removeEditSymptom}
-            handleEditFile={handleEditFile}
-            fileRefEdit={fileRefEdit}
-            removeEditImg={removeEditImg}
-            handlePinClick={handlePinClick}
-            linkingInfo={linkingInfo}
-            colorPickerOpenForIdx={colorPickerOpenForIdx}
-            setColorPickerOpenForIdx={setColorPickerOpenForIdx}
-            handleTagColorChange={handleTagColorChange}
-            noteOpenIdx={noteOpenIdx}
-            setNoteOpenIdx={setNoteOpenIdx}
-            toggleNote={toggleNote}
-            noteDraft={noteDraft}
-            setNoteDraft={setNoteDraft}
-            saveNote={saveNote}
-            favoriteFoods={favoriteFoods}
-            favoriteSymptoms={favoriteSymptoms}
-            toggleFavoriteFood={toggleFavoriteFood}
-            toggleFavoriteSymptom={toggleFavoriteSymptom}
-            SYMPTOM_CHOICES={SYMPTOM_CHOICES}
-            TIME_CHOICES={TIME_CHOICES}
-            sortSymptomsByTime={sortSymptomsByTime}
-            TAG_COLORS={TAG_COLORS}
-            TAG_COLOR_NAMES={TAG_COLOR_NAMES}
-            handleFocus={handleFocus}
-            ImgStack={ImgStack}
-            CameraButton={CameraButton}
-            SymTag={SymTag}
+            entryRefs={entryRefs}
+            entryCardProps={{
+              isMobile,
+              dark,
+              isExportingPdf: isExportingPdf || isPrinting,
+              isPrinting,
+              editingIdx,
+              editForm,
+              setEditForm,
+              startEdit,
+              cancelEdit,
+              saveEdit,
+              deleteEntry,
+              addEditSymptom,
+              removeEditSymptom,
+              handleEditFile,
+              fileRefEdit,
+              removeEditImg,
+              handlePinClick,
+              linkingInfo,
+              colorPickerOpenForIdx,
+              setColorPickerOpenForIdx,
+              handleTagColorChange,
+              noteOpenIdx,
+              setNoteOpenIdx,
+              toggleNote,
+              noteDraft,
+              setNoteDraft,
+              saveNote,
+              favoriteFoods,
+              favoriteSymptoms,
+              toggleFavoriteFood,
+              toggleFavoriteSymptom,
+              SYMPTOM_CHOICES,
+              TIME_CHOICES,
+              sortSymptomsByTime,
+              TAG_COLORS,
+              TAG_COLOR_NAMES,
+              handleFocus,
+              ImgStack,
+              CameraButton,
+              SymTag,
+              styles,
+              QuickMenu,
+              showEditFoodQuick,
+              setShowEditFoodQuick,
+              showEditSymptomQuick,
+              setShowEditSymptomQuick,
+            }}
             styles={styles}
-            QuickMenu={QuickMenu}
-            showEditFoodQuick={showEditFoodQuick}
-            setShowEditFoodQuick={setShowEditFoodQuick}
-            showEditSymptomQuick={showEditSymptomQuick}
-            setShowEditSymptomQuick={setShowEditSymptomQuick}
-                  />
-                ))}
-              </React.Fragment>
-            )}
-            </div>
-          );
-        })}
+            TAG_COLORS={TAG_COLORS}
+            dayMarkSpacing={DAY_MARK_SPACING}
+            dayMarkSize={DAY_MARK_SIZE}
+            dayMarkOffset={DAY_MARK_OFFSET}
+            dayMarkTop={DAY_MARK_TOP}
+          />
+        ))}
       </div>
     </div>
   );
