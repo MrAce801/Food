@@ -43,7 +43,6 @@ export default function useConnections(entries, searchTerm, displayCount, collap
           }
         }
       });
-      // Offset overlapping lines - shorter connections use inner lanes
       const sortedConns = conns
         .slice()
         .sort((a, b) => {
@@ -62,14 +61,22 @@ export default function useConnections(entries, searchTerm, displayCount, collap
       setConnections(sortedConns);
       setMaxLane(sortedConns.reduce((m, c) => Math.max(m, c.lane), 0));
     };
-    updateConnections();
-    window.addEventListener('scroll', updateConnections);
-    window.addEventListener('resize', updateConnections);
-    return () => {
-      window.removeEventListener('scroll', updateConnections);
-      window.removeEventListener('resize', updateConnections);
-    };
-  }, [entries, searchTerm, displayCount, collapsedDays, extraFlag]);
+
+    if (extraFlag) {
+      // IN EXPORT MODE: Delay measurement until the next frame.
+      const animationFrameId = requestAnimationFrame(updateConnections);
+      return () => cancelAnimationFrame(animationFrameId);
+    } else {
+      // IN LIVE MODE: Update on scroll and resize.
+      updateConnections();
+      window.addEventListener('scroll', updateConnections);
+      window.addEventListener('resize', updateConnections);
+      return () => {
+        window.removeEventListener('scroll', updateConnections);
+        window.removeEventListener('resize', updateConnections);
+      };
+    }
+  }, [entries, searchTerm, displayCount, collapsedDays, entryRefs, extraFlag, setConnections, setMaxLane]);
 
   return { connections, maxLane };
 }

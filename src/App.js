@@ -2,13 +2,10 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import useConnections from "./hooks/useConnections";
-import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
-import PdfButton from "./components/PdfButton";
-import PrintButton from "./components/PrintButton";
 import InsightsButton from "./components/InsightsButton";
 import BackButton from "./components/BackButton";
 import CameraButton from "./components/CameraButton";
@@ -281,44 +278,30 @@ export default function App() {
 
   const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExporting);
 
-  // When layout is ready, advance export status
   useEffect(() => {
     if (exportStatus === 'preparing') {
-      setExportStatus('ready');
+      const timer = setTimeout(() => {
+        setExportStatus('ready');
+      }, 150); // A safe buffer
+      return () => clearTimeout(timer);
+    }
+
+    if (exportStatus === 'ready') {
+      const cleanup = () => {
+        const trigger = printTriggered.current;
+        if (trigger && typeof trigger.scrollY === 'number') {
+          window.scrollTo(0, trigger.scrollY);
+        }
+        setExportStatus('idle');
+        printTriggered.current = false;
+      };
+      window.addEventListener('afterprint', cleanup, { once: true });
+      // This is the only export command we need. The user can choose "Save as PDF".
+      window.print();
     }
   }, [exportStatus, connections]);
 
-  // Run export or print when ready
-  useEffect(() => {
-    if (exportStatus !== 'ready') return;
 
-    const el = document.getElementById('fd-table');
-    if (!el) {
-      setExportStatus('idle');
-      pdfExportTriggered.current = false;
-      printTriggered.current = false;
-      return;
-    }
-
-    const cleanup = () => {
-      setExportStatus('idle');
-      pdfExportTriggered.current = false;
-      printTriggered.current = false;
-      window.removeEventListener('afterprint', cleanup);
-    };
-
-    if (pdfExportTriggered.current) {
-      exportTableToPdf(el)
-        .then(ok => {
-          addToast(ok ? 'PDF erfolgreich exportiert!' : 'Fehler beim PDF-Export.');
-        })
-        .finally(cleanup);
-    } else if (printTriggered.current) {
-      window.addEventListener('afterprint', cleanup, { once: true });
-      window.dispatchEvent(new Event('resize'));
-      window.print();
-    }
-  }, [exportStatus]);
 
   // --- KERNLOGIK & EVENT HANDLER ---
   const handleFocus = e => e.target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -353,19 +336,19 @@ export default function App() {
     });
   };
 
-  const handleExportPDF = () => {
+  const handleExport = () => {
     if (exportStatus !== 'idle') return;
-    pdfExportTriggered.current = true;
-    printTriggered.current = false;
-    setExportStatus('preparing');
-    addToast("PDF Export wird vorbereitet...");
-  };
 
-  const handlePrint = () => {
-    if (exportStatus !== 'idle') return;
-    printTriggered.current = true;
-    pdfExportTriggered.current = false;
+    const scrollY = window.scrollY;
+    printTriggered.current = { scrollY };
+    pdfExportTriggered.current = false; // We no longer use a separate PDF flow
+
+    // Scroll to top to create a clean measurement environment
+    window.scrollTo(0, 0);
+
+    // Kick off the state machine
     setExportStatus('preparing');
+    addToast("Export wird vorbereitet...");
   };
 
   const handleEditFile = async e => {
@@ -702,7 +685,7 @@ export default function App() {
         <div style={styles.topBar} className="top-bar">
           <BackButton onClick={() => setView("diary")} />{" "}
           <div>
-            <PrintButton onClick={handlePrint} />
+            <button onClick={handleExport} className="haptic" title="Export als PDF/Drucken" style={styles.buttonSecondary("#1976d2")}>Export / Print</button>
           </div>
         </div>
         <Insights entries={entries} />
@@ -718,8 +701,9 @@ export default function App() {
           {dark ? "🌙" : "☀️"}
         </button>
         <div>
-          <PdfButton onClick={handleExportPDF} />{" "}
-          <PrintButton onClick={handlePrint} />{" "}
+          <button onClick={handleExport} className="haptic" title="Export als PDF/Drucken" style={styles.buttonSecondary("#1976d2")}>
+            Export / Print
+          </button>{" "}
           <InsightsButton onClick={() => setView("insights")} />
         </div>
       </div>
@@ -773,14 +757,15 @@ export default function App() {
         id="fd-table"
         style={{
           position: 'relative',
-          marginLeft: -(maxLane * 5),
-          width: `calc(100% + ${maxLane * 5}px)`,
+          marginLeft: -(20 + (maxLane * 5)),
+          width: `calc(100% + ${20 + (maxLane * 5)}px)`,
         }}
       >
         <ConnectionLines
           connections={connections}
           styles={styles}
           handleConnectionClick={handleConnectionClick}
+          maxLane={maxLane}
         />
         {dates.map(day => (
           <DayGroup
