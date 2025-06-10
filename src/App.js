@@ -20,6 +20,8 @@ import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
 import ConnectionLines from "./components/ConnectionLines";
 import DayGroup from "./components/DayGroup";
+import useNewEntryForm from "./hooks/useNewEntryForm";
+import { sortEntries, sortEntriesByCategory } from "./utils";
 
 // spacing and sizing for collapsed day indicators
 // slightly smaller rings but still large enough to show counts
@@ -27,27 +29,6 @@ const DAY_MARK_SPACING = 26;
 const DAY_MARK_SIZE = 20;
 const DAY_MARK_OFFSET = 40;
 const DAY_MARK_TOP = 24;
-
-const sortEntries = (a, b) => {
-  const dateDiff = parseDateString(b.date) - parseDateString(a.date);
-  if (dateDiff !== 0) return dateDiff;
-  return (b.createdAt || 0) - (a.createdAt || 0);
-};
-
-const CATEGORY_ORDER = [
-  TAG_COLORS.GREEN,
-  TAG_COLORS.RED,
-  TAG_COLORS.BLUE,
-  TAG_COLORS.BROWN,
-  TAG_COLORS.YELLOW,
-];
-
-const sortEntriesByCategory = (a, b) => {
-  const ca = CATEGORY_ORDER.indexOf(a.tagColor || TAG_COLORS.GREEN);
-  const cb = CATEGORY_ORDER.indexOf(b.tagColor || TAG_COLORS.GREEN);
-  if (ca !== cb) return ca - cb;
-  return sortEntries(a, b);
-};
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
   // --- STATE VARIABLEN ---
@@ -83,20 +64,6 @@ export default function App() {
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef(null);
   const [displayCount, setDisplayCount] = useState(20);
-  const [newForm, setNewForm] = useState(() => {
-    const saved = localStorage.getItem("fd-form-new");
-    const initialForm = { food: "", imgs: [], symptomInput: "", symptomTime: 0, symptomStrength: 1 };
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            const strength = Math.min(parseInt(parsed.symptomStrength) || 1, 3);
-            return { ...initialForm, ...parsed, symptomStrength: strength };
-        } catch { return initialForm; }
-    }
-    return initialForm;
-  });
-  const [newSymptoms, setNewSymptoms] = useState([]);
-  const fileRefNew = useRef();
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [noteOpenIdx, setNoteOpenIdx] = useState(null);
@@ -130,8 +97,6 @@ export default function App() {
       return SYMPTOM_CHOICES.slice().sort((a, b) => a.localeCompare(b));
     }
   });
-  const [showFoodQuick, setShowFoodQuick] = useState(false);
-  const [showSymptomQuick, setShowSymptomQuick] = useState(false);
   const [showEditFoodQuick, setShowEditFoodQuick] = useState(false);
   const [showEditSymptomQuick, setShowEditSymptomQuick] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
@@ -180,9 +145,6 @@ export default function App() {
     }
   }, [entries]);
 
-  useEffect(() => {
-    localStorage.setItem("fd-form-new", JSON.stringify(newForm));
-  }, [newForm]);
 
   useEffect(() => {
     localStorage.setItem('fd-fav-foods', JSON.stringify(favoriteFoods));
@@ -228,14 +190,6 @@ export default function App() {
 
   useEffect(() => {
     const handleQuickClose = (e) => {
-      if (showFoodQuick) {
-        const area = document.getElementById('food-input-container');
-        if (area && !area.contains(e.target)) setShowFoodQuick(false);
-      }
-      if (showSymptomQuick) {
-        const area = document.getElementById('symptom-input-container');
-        if (area && !area.contains(e.target)) setShowSymptomQuick(false);
-      }
       if (showEditFoodQuick) {
         const area = document.getElementById('edit-food-input-container');
         if (area && !area.contains(e.target)) setShowEditFoodQuick(false);
@@ -251,7 +205,7 @@ export default function App() {
     };
     document.addEventListener('mousedown', handleQuickClose);
     return () => document.removeEventListener('mousedown', handleQuickClose);
-  }, [showFoodQuick, showSymptomQuick, showEditFoodQuick, showEditSymptomQuick, filterMenuOpen]);
+  }, [showEditFoodQuick, showEditSymptomQuick, filterMenuOpen]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -333,6 +287,22 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2000);
   };
 
+  const {
+    newForm,
+    setNewForm,
+    newSymptoms,
+    addNewSymptom,
+    removeNewSymptom,
+    addEntry,
+    handleNewFile,
+    removeNewImg,
+    fileRefNew,
+    showFoodQuick,
+    setShowFoodQuick,
+    showSymptomQuick,
+    setShowSymptomQuick
+  } = useNewEntryForm(setEntries, addToast);
+
   const toggleDay = day => {
     setCollapsedDays(prev => {
       const newSet = new Set(prev);
@@ -370,25 +340,6 @@ export default function App() {
     window.print();
   };
 
-  const handleNewFile = async e => {
-    for (let file of Array.from(e.target.files || [])) {
-      try {
-        if (file.size > 5 * 1024 * 1024) throw new Error("Datei zu groß (max 5MB)");
-        const smallB64 = await resizeToJpeg(file, 800);
-        setNewForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
-        addToast("Foto hinzugefügt (verkleinert)");
-      } catch (err) {
-        console.error("Fehler beim Hinzufügen des Bildes (neuer Eintrag):", err);
-        addToast(err.message || "Ungültiges oder zu großes Bild");
-      }
-    }
-    if (e.target) e.target.value = "";
-  };
-  const removeNewImg = idx => {
-    setNewForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
-    addToast("Foto gelöscht");
-  };
-
   const handleEditFile = async e => {
     if (!editForm) return;
     for (let file of Array.from(e.target.files || [])) {
@@ -409,51 +360,7 @@ export default function App() {
     addToast("Foto gelöscht");
   };
 
-  const addNewSymptom = () => {
-    if (!newForm.symptomInput.trim()) return;
-    setNewSymptoms(s => sortSymptomsByTime([
-        ...s,
-        {
-            txt: newForm.symptomInput.trim(),
-            time: newForm.symptomTime,
-            strength: newForm.symptomStrength
-        }
-    ]));
-    setNewForm(fm => ({ ...fm, symptomInput: "", symptomTime: 0, symptomStrength: 1 }));
-    vibrate(20);
-  };
-  const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
-
-  const addEntry = () => {
-    const pendingSymptom = newForm.symptomInput.trim()
-      ? {
-          txt: newForm.symptomInput.trim(),
-          time: newForm.symptomTime,
-          strength: newForm.symptomStrength,
-        }
-      : null;
-    const allSymptoms = sortSymptomsByTime([
-      ...newSymptoms,
-      ...(pendingSymptom ? [pendingSymptom] : []),
-    ]);
-    if (!newForm.food.trim() && allSymptoms.length === 0) return;
-    const entry = {
-      food: newForm.food.trim(),
-      imgs: newForm.imgs,
-      symptoms: allSymptoms,
-      comment: "",
-      date: now(),
-      tagColor: determineTagColor(newForm.food.trim(), allSymptoms),
-      tagColorManual: false,
-      linkId: null,
-      createdAt: Date.now(),
-    };
-    setEntries(prevEntries => [...prevEntries, entry].sort(sortEntries));
-    setNewForm({ food: "", imgs: [], symptomInput: "", symptomTime: 0, symptomStrength: 1 });
-    setNewSymptoms([]);
-    addToast("Eintrag gespeichert");
-    vibrate(50);
-  };
+  // addEntry and symptom handlers provided by useNewEntryForm
 
   const startEdit = i => {
     const e = entries[i];
