@@ -6,6 +6,8 @@ export async function exportTableToPdf(el) {
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
   let prevBackground = '';
+  const prevPaddingLeft = el.style.paddingLeft;
+  const prevPaddingRight = el.style.paddingRight;
 
   try {
     const imgStackContainers = Array.from(el.querySelectorAll('.img-stack-container'));
@@ -29,11 +31,21 @@ export async function exportTableToPdf(el) {
     prevBackground = el.style.backgroundColor;
     const bodyBg = getComputedStyle(document.body).backgroundColor;
     el.style.backgroundColor = bodyBg;
+    // Extra padding to ensure connection lines are not cropped
+    const extra = 40;
+    el.style.paddingLeft = `${extra}px`;
+    el.style.paddingRight = `${extra}px`;
 
     await html2pdf().from(el).set({
       margin: 10,
       filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: bodyBg,
+        width: el.scrollWidth,
+        x: -extra
+      },
       jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
     }).save();
     el.style.backgroundColor = prevBackground;
@@ -52,5 +64,8 @@ export async function exportTableToPdf(el) {
       orig.el.style.objectFit = orig.objectFit;
     });
     if (prevBackground) el.style.backgroundColor = prevBackground;
+    // restore padding after export
+    el.style.paddingLeft = prevPaddingLeft;
+    el.style.paddingRight = prevPaddingRight;
   }
 }
