@@ -46,13 +46,26 @@ export default function useConnections(entries, searchTerm, displayCount, collap
       const sortedConns = conns
         .slice()
         .sort((a, b) => {
-          const lenDiff = (a.bottom - a.top) - (b.bottom - b.top);
+          const lenDiff = (b.bottom - b.top) - (a.bottom - a.top);
           return lenDiff !== 0 ? lenDiff : a.top - b.top;
         });
+
       const active = [];
       sortedConns.forEach((c) => {
+        // Remove connections that end before this one starts
+        for (let i = active.length - 1; i >= 0; i--) {
+          if (active[i].bottom <= c.top) {
+            active.splice(i, 1);
+          }
+        }
+
         let lane = 0;
-        while (active.some((a) => a.lane === lane && !(c.bottom < a.top || c.top > a.bottom))) {
+        // Ensure at least a two-lane gap to avoid bracket crossings
+        while (
+          active.some(
+            (a) => Math.abs(a.lane - lane) < 2 && !(c.bottom < a.top || c.top > a.bottom)
+          )
+        ) {
           lane++;
         }
         c.lane = lane;
