@@ -21,7 +21,7 @@ const TAG_COLORS = {
   BLUE: '#64b5f6',  // light blue for supplements
 };
 const TAG_COLOR_NAMES = {
-  [TAG_COLORS.GREEN]: "Standard",
+  [TAG_COLORS.GREEN]: "Essen",
   [TAG_COLORS.RED]: "Symptome",
   [TAG_COLORS.YELLOW]: "Vorgeschichte",
   [TAG_COLORS.BROWN]: "Stuhlgang",

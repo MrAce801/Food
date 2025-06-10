@@ -30,7 +30,16 @@ export default function NewEntryForm({
   setShowFoodQuick,
   showSymptomQuick,
   setShowSymptomQuick,
-  QuickMenu
+  QuickMenu,
+  filterTags,
+  setFilterTags,
+  filterMenuOpen,
+  setFilterMenuOpen,
+  FilterMenu,
+  TAG_COLORS,
+  TAG_COLOR_NAMES,
+  sortMode,
+  setSortMode
 }) {
   return (
     <div className="new-entry-form" style={{ marginBottom: 24 }}>
@@ -173,6 +182,25 @@ export default function NewEntryForm({
             style={{ ...styles.smallInput, flexGrow: 1 }}
           />
         )}
+        <div id="filter-menu-container" style={{ position: 'relative', marginLeft: 'auto' }}>
+          <button
+            onClick={() => setFilterMenuOpen(o => !o)}
+            style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
+            title="Filter"
+          >
+            ⚙️
+          </button>
+          {filterMenuOpen && (
+            <FilterMenu
+              options={Object.values(TAG_COLORS).map(val => ({ value: val, label: TAG_COLOR_NAMES[val] || val }))}
+              selected={filterTags}
+              onToggle={tag => setFilterTags(t => t.includes(tag) ? t.filter(x => x !== tag) : [...t, tag])}
+              sortMode={sortMode}
+              setSortMode={setSortMode}
+              style={{ top: '40px', right: 0 }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
