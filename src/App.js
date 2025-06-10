@@ -742,7 +742,14 @@ export default function App() {
         setSortMode={setSortMode}
       />
       {/* Eintragsliste */}
-      <div id="fd-table" style={{position:'relative'}}>
+      <div id="fd-table" style={{
+        position: 'relative',
+        ...(isExportingPdf || isPrinting ? {
+          paddingLeft: '60px',
+          marginLeft: '-60px',
+          boxSizing: 'border-box',
+        } : {})
+      }}>
         <ConnectionLines
           connections={connections}
           styles={styles}
