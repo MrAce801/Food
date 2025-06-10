@@ -757,8 +757,7 @@ export default function App() {
         id="fd-table"
         style={{
           position: 'relative',
-          marginLeft: -(20 + (maxLane * 5)),
-          width: `calc(100% + ${20 + (maxLane * 5)}px)`,
+          overflow: 'visible',
         }}
       >
         <ConnectionLines

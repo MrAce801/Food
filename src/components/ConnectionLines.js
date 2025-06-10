@@ -18,7 +18,7 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
         ...styles.connectionSvg,
         position: 'absolute',
         top: 0,
-        left: 0,
+        left: -gutterWidth,
         height: maxBottom,
         width: gutterWidth,
         zIndex: 3,
@@ -28,8 +28,8 @@ export default function ConnectionLines({ connections, styles, handleConnectionC
     >
       {connections.map(c => {
         // Position the line's X-coordinate within the SVG canvas
-        const verticalLineX = 5 + (c.lane * 5); // Draw from the left edge
-        const stubEndX = verticalLineX + 8; // Draw stubs to the right
+        const verticalLineX = gutterWidth - 5 - (c.lane * 5); // From the right edge
+        const stubEndX = verticalLineX - 8; // Draw stubs to the left
 
         let pathData = ``;
         // Main vertical line
