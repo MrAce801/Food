@@ -1,5 +1,7 @@
 // --- HILFSFUNKTIONEN ---
 import { TAG_COLORS } from "./constants";
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 function resizeToJpeg(file, maxWidth = 800) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -152,5 +154,30 @@ const sortEntriesByCategory = (a, b) => {
   return sortEntries(a, b);
 };
 
+async function exportTableAsScreenshotPdf(el) {
+  if (!el) return false;
+  try {
+    const canvas = await html2canvas(el, { scale: 2, scrollY: -window.scrollY });
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * (imgWidth / canvas.width);
 
-export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory };
+    let position = 0;
+    while (position < imgHeight) {
+      pdf.addImage(imgData, 'JPEG', 0, -position, imgWidth, imgHeight);
+      position += pageHeight;
+      if (position < imgHeight) pdf.addPage();
+    }
+    pdf.save('FoodDiary.pdf');
+    return true;
+  } catch (err) {
+    console.error('Fehler beim Screenshot-PDF-Export:', err);
+    return false;
+  }
+}
+
+
+export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory, exportTableAsScreenshotPdf };
