@@ -81,7 +81,7 @@ export default function useConnections(entries, searchTerm, displayCount, collap
         window.removeEventListener('resize', updateConnections);
       };
     }
-  }, [entries, searchTerm, displayCount, collapsedDays, entryRefs, extraFlag]);
+  }, [entries, searchTerm, displayCount, collapsedDays, entryRefs, extraFlag, setConnections, setMaxLane]);
 
   return { connections, maxLane };
 }
