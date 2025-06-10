@@ -1,7 +1,8 @@
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export async function exportTableToPdf(el) {
-  if (!el) return;
+  if (!el) return false;
 
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
@@ -30,13 +31,26 @@ export async function exportTableToPdf(el) {
     const bodyBg = getComputedStyle(document.body).backgroundColor;
     el.style.backgroundColor = bodyBg;
 
-    await html2pdf().from(el).set({
-      margin: 10,
-      filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
-      jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-    }).save();
-    el.style.backgroundColor = prevBackground;
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: bodyBg,
+      scrollX: 0,
+      scrollY: -window.scrollY,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'px',
+      format: [canvas.width, canvas.height]
+    });
+
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save('FoodDiary.pdf');
+
     return true;
   } catch (error) {
     console.error('Fehler beim Erstellen des PDFs:', error);
