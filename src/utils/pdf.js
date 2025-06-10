@@ -29,11 +29,19 @@ export async function exportTableToPdf(el) {
     prevBackground = el.style.backgroundColor;
     const bodyBg = getComputedStyle(document.body).backgroundColor;
     el.style.backgroundColor = bodyBg;
+    // Capture a bit more area on each side
+    const extra = 40;
 
     await html2pdf().from(el).set({
       margin: 10,
       filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: bodyBg,
+        width: el.scrollWidth + extra * 2,
+        x: -extra
+      },
       jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
     }).save();
     el.style.backgroundColor = prevBackground;
