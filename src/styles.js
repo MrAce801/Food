@@ -106,7 +106,7 @@ const styles = {
     width: '100%',
     background: isPdf ? '#f5f5f5' : 'transparent',
     padding: isPdf ? '4px 8px' : 0,
-    borderBottom: '1px solid #ccc',
+    borderBottom: isPdf ? '1px solid #ccc' : 'none',
   }),
   dayCover: (dark, bandCount = 0, bandSpacing = 25, bandOffset = 0) => ({
     fontSize: 18,
