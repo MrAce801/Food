@@ -775,15 +775,27 @@ export default function App() {
 
   const grouped = Object.fromEntries(
     Object.entries(perDay).map(([day, { all, groups }]) => {
-      const multiIds = Object.keys(groups)
-        .filter(id => groups[id].length >= 2)
-        .map(id => Number(id))
-        .sort((a,b) => b - a);
-      const normal = all.filter(({ entry }) => {
-        const id = entry.linkId;
-        return !id || groups[id].length === 1;
-      });
-      const list = [...normal, ...multiIds.flatMap(id => groups[id])];
+      const multiIds = new Set(
+        Object.keys(groups)
+          .filter(id => groups[id].length >= 2)
+          .map(id => Number(id))
+      );
+
+      const added = new Set();
+      const list = [];
+
+      for (const item of all) {
+        const id = item.entry.linkId;
+        if (id && multiIds.has(id)) {
+          if (!added.has(id)) {
+            list.push(...groups[id]);
+            added.add(id);
+          }
+        } else {
+          list.push(item);
+        }
+      }
+
       return [day, { list, groups }];
     })
   );
