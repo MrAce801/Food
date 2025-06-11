@@ -1,7 +1,6 @@
 // --- IMPORTS ---
 import React, { useState, useRef, useEffect } from "react";
 
-import useConnections from "./hooks/useConnections";
 import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
@@ -18,7 +17,6 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
-import ConnectionLines from "./components/ConnectionLines";
 import DayGroup from "./components/DayGroup";
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
@@ -50,7 +48,9 @@ export default function App() {
             symptoms,
             tagColor: e.tagColor || TAG_COLORS.GREEN,
             tagColorManual: e.tagColorManual || false,
-            linkId: e.linkId || null,
+            linkId: typeof e.linkId === 'number'
+              ? e.linkId
+              : (e.linkId ? parseInt(e.linkId, 10) || null : null),
             createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
           };
           if (!base.tagColorManual) {
@@ -80,6 +80,16 @@ export default function App() {
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
   const linkingInfoRef = useRef(null);
+  const [linkChoice, setLinkChoice] = useState(null); // { idx, options }
+  const [nextLinkId, setNextLinkId] = useState(() => {
+    try {
+      const arr = JSON.parse(localStorage.getItem('fd-entries') || '[]');
+      const nums = arr
+        .map(e => (typeof e.linkId === 'number' ? e.linkId : parseInt(e.linkId, 10)))
+        .filter(n => !isNaN(n));
+      return nums.length ? Math.max(...nums) + 1 : 1;
+    } catch { return 1; }
+  });
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
   const [favoriteFoods, setFavoriteFoods] = useState(() => {
@@ -116,8 +126,7 @@ export default function App() {
       if (linkingInfoRef.current !== null) {
         const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
         const pinClicked = targetEl && targetEl.closest('.entry-pin');
-        const lineClicked = targetEl && targetEl.closest('.connection-line');
-        if (!pinClicked && !lineClicked) {
+        if (!pinClicked) {
           cancelLinking();
         }
       }
@@ -279,14 +288,12 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExporting);
-
   // When layout is ready, advance export status
   useEffect(() => {
     if (exportStatus === 'preparing') {
       setExportStatus('ready');
     }
-  }, [exportStatus, connections]);
+  }, [exportStatus]);
 
   // Run export or print when ready
   useEffect(() => {
@@ -545,35 +552,43 @@ export default function App() {
 
   const handlePinClick = (idx) => {
     if (!linkingInfoRef.current) {
-      const group = entries[idx].linkId;
-      if (group) {
-        // Entferne bestehende Verknüpfung
-        setEntries(prev => prev.map(e => e.linkId === group ? { ...e, linkId: null } : e));
+      const currentId = entries[idx].linkId;
+      if (currentId) {
+        if (window.confirm('Verknüpfung entfernen?')) {
+          const count = entries.filter(e => e.linkId === currentId).length;
+          setEntries(prev => prev.map((e,i) => {
+            if (count === 2) {
+              return e.linkId === currentId ? { ...e, linkId: null } : e;
+            }
+            return i === idx ? { ...e, linkId: null } : e;
+          }));
+        }
       } else {
-        // Starte neuen Link-Vorgang und weise erste ID zu
-        const newGroupId = `g-${Date.now()}`;
-        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newGroupId } : e));
-        linkingInfoRef.current = { baseIdx: idx, id: newGroupId };
-        setLinkingInfo(linkingInfoRef.current);
+        const existing = Array.from(new Set(entries.map(e => e.linkId).filter(id => id !== null))).sort((a,b) => a-b);
+        if (existing.length === 0) {
+          const newId = nextLinkId;
+          setNextLinkId(n => Math.max(n, newId + 1));
+          setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newId } : e));
+          linkingInfoRef.current = { baseIdx: idx, id: newId };
+          setLinkingInfo(linkingInfoRef.current);
+        } else {
+          setLinkChoice({ idx, options: existing });
+        }
       }
     } else {
       if (idx === linkingInfoRef.current.baseIdx) {
-        // Beenden des Link-Vorgangs
         cancelLinking();
         return;
       }
       const baseGroupId = linkingInfoRef.current.id;
       const targetGroupId = entries[idx].linkId;
       if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
-        // Already part of this group, nothing to do
         cancelLinking();
         return;
       }
       if (targetGroupId) {
-        // Ziel hat bereits eine Gruppe -> verschmelze
         setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
       } else {
-        // Ziel zur aktuellen Gruppe hinzufügen
         setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: baseGroupId } : e));
       }
       linkingInfoRef.current = null;
@@ -606,23 +621,40 @@ export default function App() {
     }
   };
 
-  const handleConnectionClick = (id) => {
-    if (linkingInfoRef.current && linkingInfoRef.current.id === id) {
-      cancelLinking();
-    } else {
-      linkingInfoRef.current = { baseIdx: null, id };
-      setLinkingInfo(linkingInfoRef.current);
+  const chooseLink = (choice) => {
+    if (!linkChoice) return;
+    const { idx, options } = linkChoice;
+    if (choice === null) {
+      setLinkChoice(null);
+      return;
     }
+    if (choice === 'new') {
+      const newId = nextLinkId;
+      setNextLinkId(n => Math.max(n, newId + 1));
+      setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newId } : e));
+      linkingInfoRef.current = { baseIdx: idx, id: newId };
+      setLinkingInfo(linkingInfoRef.current);
+    } else {
+      const id = choice;
+      if (options.includes(id)) {
+        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: id } : e));
+      }
+    }
+    setLinkChoice(null);
   };
 
   const handleRootMouseDown = (e) => {
     if (linkingInfoRef.current !== null) {
       const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
       const pinClicked = targetEl && targetEl.closest('.entry-pin');
-      const lineClicked = targetEl && targetEl.closest('.connection-line');
-      if (!pinClicked && !lineClicked) {
+      if (!pinClicked) {
         cancelLinking();
       }
+    }
+    if (linkChoice) {
+      const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
+      const chooser = targetEl && targetEl.closest('.link-chooser');
+      if (!chooser) setLinkChoice(null);
     }
   };
 
@@ -631,10 +663,16 @@ export default function App() {
 
       if (linkingInfoRef.current !== null) {
           const pinClicked = targetEl && targetEl.closest('.entry-pin');
-          const lineClicked = targetEl && targetEl.closest('.connection-line');
-          if (!pinClicked && !lineClicked) {
+          if (!pinClicked) {
               cancelLinking();
               return;
+          }
+      }
+
+      if (linkChoice) {
+          const chooser = targetEl && targetEl.closest('.link-chooser');
+          if (!chooser) {
+              setLinkChoice(null);
           }
       }
 
@@ -685,13 +723,33 @@ export default function App() {
     ? sortedFiltered
     : sortedFiltered.slice(0, displayCount);
 
-  const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
-    const day = entry.date.split(" ")[0];
-    (acc[day] = acc[day] || []).push({ entry, idx });
+  const perDay = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
+    const day = entry.date.split(' ')[0];
+    if (!acc[day]) acc[day] = { all: [], groups: {} };
+    acc[day].all.push({ entry, idx });
+    if (entry.linkId) {
+      (acc[day].groups[entry.linkId] = acc[day].groups[entry.linkId] || []).push({ entry, idx });
+    }
     return acc;
   }, {});
+
+  const grouped = Object.fromEntries(
+    Object.entries(perDay).map(([day, { all, groups }]) => {
+      const multiIds = Object.keys(groups)
+        .filter(id => groups[id].length >= 2)
+        .map(id => Number(id))
+        .sort((a,b) => a-b);
+      const normal = all.filter(({ entry }) => {
+        const id = entry.linkId;
+        return !id || groups[id].length === 1;
+      });
+      const list = [...normal, ...multiIds.flatMap(id => groups[id])];
+      return [day, { list, groups }];
+    })
+  );
+
   const dates = Object.keys(grouped)
-    .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
+    .sort((a,b) => parseDateString(grouped[b].list[0].entry.date) - parseDateString(grouped[a].list[0].entry.date));
 
 
   // --- JSX RENDERING LOGIK ---
@@ -773,20 +831,15 @@ export default function App() {
         id="fd-table"
         style={{
           position: 'relative',
-          marginLeft: -(maxLane * 5),
-          width: `calc(100% + ${maxLane * 5}px)`,
+          width: '100%',
         }}
       >
-        <ConnectionLines
-          connections={connections}
-          styles={styles}
-          handleConnectionClick={handleConnectionClick}
-        />
         {dates.map(day => (
           <DayGroup
             key={day}
             day={day}
-            entries={grouped[day]}
+            entries={grouped[day].list}
+            groups={grouped[day].groups}
             collapsedDays={collapsedDays}
             toggleDay={toggleDay}
             dark={dark}
@@ -850,6 +903,42 @@ export default function App() {
           />
         ))}
       </div>
+      {linkChoice && (
+        <div
+          className="link-chooser"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setLinkChoice(null)}
+        >
+          <div
+            style={{ background: dark ? '#333' : '#fff', padding: 16, borderRadius: 8 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ marginBottom: 8 }}>Link-ID wählen</div>
+            {linkChoice.options.map(id => (
+              <button key={id} style={{ margin: 4 }} onClick={() => chooseLink(id)}>
+                {id}
+              </button>
+            ))}
+            <button style={{ margin: 4 }} onClick={() => chooseLink('new')}>
+              Neu
+            </button>
+            <button style={{ margin: 4 }} onClick={() => chooseLink(null)}>
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

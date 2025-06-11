@@ -4,6 +4,7 @@ import EntryCard from './EntryCard';
 export default function DayGroup({
   day,
   entries,
+  groups,
   collapsedDays,
   toggleDay,
   dark,
@@ -76,15 +77,21 @@ export default function DayGroup({
             </button>
             {day}
           </div>
-          {entries.map(({ entry, idx }) => (
-            <EntryCard
-              key={idx}
-              refCallback={el => (entryRefs.current[idx] = el)}
-              entry={entry}
-              idx={idx}
-              {...entryCardProps}
-            />
-          ))}
+          {entries.map(({ entry, idx }, i) => {
+            const next = entries[i + 1];
+            const linkedLen = entry.linkId && groups[entry.linkId] ? groups[entry.linkId].length : 0;
+            const marginBottom = linkedLen >= 2 && next && next.entry.linkId === entry.linkId ? 2 : 16;
+            return (
+              <EntryCard
+                key={idx}
+                refCallback={el => (entryRefs.current[idx] = el)}
+                entry={entry}
+                idx={idx}
+                marginBottom={marginBottom}
+                {...entryCardProps}
+              />
+            );
+          })}
         </React.Fragment>
       )}
     </div>
