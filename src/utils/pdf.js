@@ -5,9 +5,30 @@ export async function exportTableToPdf(el) {
 
   const imgStackItemOriginalStyles = [];
   const individualImageOriginalStyles = [];
+  const headerOriginalBreaks = [];
   let prevBackground = '';
 
   try {
+    const headers = Array.from(el.querySelectorAll('.fd-group-header'));
+    headers.forEach(h => {
+      headerOriginalBreaks.push({
+        el: h,
+        breakBefore: h.style.breakBefore,
+        pageBreakBefore: h.style.pageBreakBefore,
+      });
+      h.style.breakBefore = '';
+      h.style.pageBreakBefore = '';
+    });
+
+    const marginPx = 10;
+    const pageHeightPx = 842 - marginPx * 2;
+    headers.forEach(h => {
+      const pos = (h.offsetTop - marginPx) % pageHeightPx;
+      if (pos > pageHeightPx * 0.9) {
+        h.style.pageBreakBefore = 'always';
+        h.style.breakBefore = 'page';
+      }
+    });
     const imgStackContainers = Array.from(el.querySelectorAll('.img-stack-container'));
     imgStackContainers.forEach(stackContainer => {
       const childrenItems = Array.from(stackContainer.children).filter(child => child.classList.contains('img-stack-item'));
@@ -50,6 +71,10 @@ export async function exportTableToPdf(el) {
       orig.el.style.width = orig.width;
       orig.el.style.height = orig.height;
       orig.el.style.objectFit = orig.objectFit;
+    });
+    headerOriginalBreaks.forEach(orig => {
+      orig.el.style.pageBreakBefore = orig.pageBreakBefore;
+      orig.el.style.breakBefore = orig.breakBefore;
     });
     if (prevBackground) el.style.backgroundColor = prevBackground;
   }

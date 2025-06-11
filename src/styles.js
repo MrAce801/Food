@@ -91,14 +91,22 @@ const styles = {
     pageBreakInside: 'avoid',
     breakInside: 'avoid'
   }),
+  dayGroupContainer: {
+    pageBreakInside: 'avoid',
+    breakInside: 'avoid',
+  },
   groupHeader: (isPdf) => ({
     fontSize: 18,
     fontWeight: 600,
-    margin: isPdf ? "32px 0 12px" : "24px 0 8px",
+    margin: isPdf ? "48px 0 12px" : "24px 0 8px",
     color: isPdf ? '#333' : undefined,
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '8px',
+    width: '100%',
+    background: isPdf ? '#f5f5f5' : 'transparent',
+    padding: isPdf ? '4px 8px' : 0,
+    borderBottom: isPdf ? '1px solid #ccc' : 'none',
   }),
   dayCover: (dark, bandCount = 0, bandSpacing = 25, bandOffset = 0) => ({
     fontSize: 18,

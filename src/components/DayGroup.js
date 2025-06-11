@@ -34,7 +34,7 @@ export default function DayGroup({
   ].filter(c => colorCounts[c]);
 
   return (
-    <div>
+    <div className="fd-day-group" style={styles.dayGroupContainer}>
       {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
         <div
           onClick={() => toggleDay(day)}
@@ -67,7 +67,11 @@ export default function DayGroup({
         </div>
       ) : (
         <React.Fragment>
-          <div onClick={() => toggleDay(day)} style={styles.groupHeader(isExportingPdf)}>
+          <div
+            onClick={() => toggleDay(day)}
+            className="fd-group-header"
+            style={styles.groupHeader(isExportingPdf)}
+          >
             <button
               onClick={e => { e.stopPropagation(); toggleDay(day); }}
               style={styles.collapseButton(dark)}
