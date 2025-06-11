@@ -22,6 +22,7 @@ export default function EntryCard({
   removeEditImg,
   handlePinClick,
   linkingInfo,
+  linkGroup,
   colorPickerOpenForIdx,
   setColorPickerOpenForIdx,
   handleTagColorChange,
@@ -65,11 +66,20 @@ export default function EntryCard({
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
 
+  const borderHighlight = linkGroup ? {
+    borderLeft: '2px solid #b22222',
+    borderTop: linkGroup.isFirst ? '2px solid #b22222' : undefined,
+    borderBottom: linkGroup.isLast ? '2px solid #b22222' : undefined,
+  } : {};
+
   return (
     <div
       ref={refCallback}
       id={`entry-card-${idx}`}
-      style={styles.entryCard(dark, isSymptomOnlyEntry)}
+      style={{
+        ...styles.entryCard(dark, isSymptomOnlyEntry),
+        ...borderHighlight,
+      }}
       onClick={e => {
         if (isExportingPdf) return;
         e.stopPropagation();
