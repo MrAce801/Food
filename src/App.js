@@ -1,7 +1,6 @@
 // --- IMPORTS ---
 import React, { useState, useRef, useEffect } from "react";
 
-import useConnections from "./hooks/useConnections";
 import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
@@ -18,7 +17,6 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
-import ConnectionLines from "./components/ConnectionLines";
 import DayGroup from "./components/DayGroup";
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
@@ -50,7 +48,9 @@ export default function App() {
             symptoms,
             tagColor: e.tagColor || TAG_COLORS.GREEN,
             tagColorManual: e.tagColorManual || false,
-            linkId: e.linkId || null,
+            linkId: typeof e.linkId === 'number'
+              ? e.linkId
+              : (e.linkId ? parseInt(e.linkId, 10) || null : null),
             createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
           };
           if (!base.tagColorManual) {
@@ -80,6 +80,15 @@ export default function App() {
   const [collapsedDays, setCollapsedDays] = useState(new Set());
   const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
   const linkingInfoRef = useRef(null);
+  const [nextLinkId, setNextLinkId] = useState(() => {
+    try {
+      const arr = JSON.parse(localStorage.getItem('fd-entries') || '[]');
+      const nums = arr
+        .map(e => (typeof e.linkId === 'number' ? e.linkId : parseInt(e.linkId, 10)))
+        .filter(n => !isNaN(n));
+      return nums.length ? Math.max(...nums) + 1 : 1;
+    } catch { return 1; }
+  });
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
   const [favoriteFoods, setFavoriteFoods] = useState(() => {
@@ -116,8 +125,7 @@ export default function App() {
       if (linkingInfoRef.current !== null) {
         const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
         const pinClicked = targetEl && targetEl.closest('.entry-pin');
-        const lineClicked = targetEl && targetEl.closest('.connection-line');
-        if (!pinClicked && !lineClicked) {
+        if (!pinClicked) {
           cancelLinking();
         }
       }
@@ -279,14 +287,12 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExporting);
-
   // When layout is ready, advance export status
   useEffect(() => {
     if (exportStatus === 'preparing') {
       setExportStatus('ready');
     }
-  }, [exportStatus, connections]);
+  }, [exportStatus]);
 
   // Run export or print when ready
   useEffect(() => {
@@ -545,35 +551,45 @@ export default function App() {
 
   const handlePinClick = (idx) => {
     if (!linkingInfoRef.current) {
-      const group = entries[idx].linkId;
-      if (group) {
-        // Entferne bestehende Verknüpfung
-        setEntries(prev => prev.map(e => e.linkId === group ? { ...e, linkId: null } : e));
+      const currentId = entries[idx].linkId;
+      if (currentId) {
+        if (window.confirm('Verknüpfung entfernen?')) {
+          setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: null } : e));
+        }
       } else {
-        // Starte neuen Link-Vorgang und weise erste ID zu
-        const newGroupId = `g-${Date.now()}`;
-        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newGroupId } : e));
-        linkingInfoRef.current = { baseIdx: idx, id: newGroupId };
+        const existing = Array.from(new Set(entries.map(e => e.linkId).filter(id => id !== null))).sort((a,b) => a-b);
+        if (existing.length > 0) {
+          const input = window.prompt(`Mit welcher Link-ID verbinden? Vorhanden: ${existing.join(', ')}. Leer f\u00fcr neue.`);
+          if (input === null) return;
+          const chosen = input.trim();
+          if (chosen) {
+            const num = parseInt(chosen, 10);
+            if (!isNaN(num) && existing.includes(num)) {
+              setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: num } : e));
+              return;
+            }
+          }
+        }
+        const newId = nextLinkId;
+        setNextLinkId(n => Math.max(n, newId + 1));
+        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newId } : e));
+        linkingInfoRef.current = { baseIdx: idx, id: newId };
         setLinkingInfo(linkingInfoRef.current);
       }
     } else {
       if (idx === linkingInfoRef.current.baseIdx) {
-        // Beenden des Link-Vorgangs
         cancelLinking();
         return;
       }
       const baseGroupId = linkingInfoRef.current.id;
       const targetGroupId = entries[idx].linkId;
       if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
-        // Already part of this group, nothing to do
         cancelLinking();
         return;
       }
       if (targetGroupId) {
-        // Ziel hat bereits eine Gruppe -> verschmelze
         setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
       } else {
-        // Ziel zur aktuellen Gruppe hinzufügen
         setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: baseGroupId } : e));
       }
       linkingInfoRef.current = null;
@@ -606,21 +622,11 @@ export default function App() {
     }
   };
 
-  const handleConnectionClick = (id) => {
-    if (linkingInfoRef.current && linkingInfoRef.current.id === id) {
-      cancelLinking();
-    } else {
-      linkingInfoRef.current = { baseIdx: null, id };
-      setLinkingInfo(linkingInfoRef.current);
-    }
-  };
-
   const handleRootMouseDown = (e) => {
     if (linkingInfoRef.current !== null) {
       const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
       const pinClicked = targetEl && targetEl.closest('.entry-pin');
-      const lineClicked = targetEl && targetEl.closest('.connection-line');
-      if (!pinClicked && !lineClicked) {
+      if (!pinClicked) {
         cancelLinking();
       }
     }
@@ -631,8 +637,7 @@ export default function App() {
 
       if (linkingInfoRef.current !== null) {
           const pinClicked = targetEl && targetEl.closest('.entry-pin');
-          const lineClicked = targetEl && targetEl.closest('.connection-line');
-          if (!pinClicked && !lineClicked) {
+          if (!pinClicked) {
               cancelLinking();
               return;
           }
@@ -685,11 +690,28 @@ export default function App() {
     ? sortedFiltered
     : sortedFiltered.slice(0, displayCount);
 
-  const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
-    const day = entry.date.split(" ")[0];
-    (acc[day] = acc[day] || []).push({ entry, idx });
+  const perDay = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
+    const day = entry.date.split(' ')[0];
+    if (!acc[day]) acc[day] = { all: [], groups: {} };
+    acc[day].all.push({ entry, idx });
+    if (entry.linkId) {
+      (acc[day].groups[entry.linkId] = acc[day].groups[entry.linkId] || []).push({ entry, idx });
+    }
     return acc;
   }, {});
+
+  const grouped = Object.fromEntries(
+    Object.entries(perDay).map(([day, { all, groups }]) => {
+      const multiIds = Object.keys(groups).filter(id => groups[id].length >= 2).map(id => Number(id)).sort((a,b) => a-b);
+      const normal = all.filter(({ entry }) => {
+        const id = entry.linkId;
+        return !id || groups[id].length === 1;
+      });
+      const multi = multiIds.flatMap(id => groups[id]);
+      return [day, [...normal, ...multi]];
+    })
+  );
+
   const dates = Object.keys(grouped)
     .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
 
@@ -773,15 +795,9 @@ export default function App() {
         id="fd-table"
         style={{
           position: 'relative',
-          marginLeft: -(maxLane * 5),
-          width: `calc(100% + ${maxLane * 5}px)`,
+          width: '100%',
         }}
       >
-        <ConnectionLines
-          connections={connections}
-          styles={styles}
-          handleConnectionClick={handleConnectionClick}
-        />
         {dates.map(day => (
           <DayGroup
             key={day}
