@@ -1,7 +1,6 @@
 // --- IMPORTS ---
 import React, { useState, useRef, useEffect } from "react";
 
-import useConnections from "./hooks/useConnections";
 import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
@@ -18,7 +17,6 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
-import ConnectionLines from "./components/ConnectionLines";
 import DayGroup from "./components/DayGroup";
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
@@ -116,8 +114,7 @@ export default function App() {
       if (linkingInfoRef.current !== null) {
         const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
         const pinClicked = targetEl && targetEl.closest('.entry-pin');
-        const lineClicked = targetEl && targetEl.closest('.connection-line');
-        if (!pinClicked && !lineClicked) {
+        if (!pinClicked) {
           cancelLinking();
         }
       }
@@ -279,14 +276,12 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExporting);
-
   // When layout is ready, advance export status
   useEffect(() => {
     if (exportStatus === 'preparing') {
       setExportStatus('ready');
     }
-  }, [exportStatus, connections]);
+  }, [exportStatus]);
 
   // Run export or print when ready
   useEffect(() => {
@@ -545,12 +540,12 @@ export default function App() {
 
   const handlePinClick = (idx) => {
     if (!linkingInfoRef.current) {
-      const group = entries[idx].linkId;
-      if (group) {
-        // Entferne bestehende Verknüpfung
-        setEntries(prev => prev.map(e => e.linkId === group ? { ...e, linkId: null } : e));
+      const currentId = entries[idx].linkId;
+      if (currentId) {
+        if (window.confirm('Verknüpfung entfernen?')) {
+          setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: null } : e));
+        }
       } else {
-        // Starte neuen Link-Vorgang und weise erste ID zu
         const newGroupId = `g-${Date.now()}`;
         setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: newGroupId } : e));
         linkingInfoRef.current = { baseIdx: idx, id: newGroupId };
@@ -558,22 +553,18 @@ export default function App() {
       }
     } else {
       if (idx === linkingInfoRef.current.baseIdx) {
-        // Beenden des Link-Vorgangs
         cancelLinking();
         return;
       }
       const baseGroupId = linkingInfoRef.current.id;
       const targetGroupId = entries[idx].linkId;
       if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
-        // Already part of this group, nothing to do
         cancelLinking();
         return;
       }
       if (targetGroupId) {
-        // Ziel hat bereits eine Gruppe -> verschmelze
         setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
       } else {
-        // Ziel zur aktuellen Gruppe hinzufügen
         setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: baseGroupId } : e));
       }
       linkingInfoRef.current = null;
@@ -606,21 +597,11 @@ export default function App() {
     }
   };
 
-  const handleConnectionClick = (id) => {
-    if (linkingInfoRef.current && linkingInfoRef.current.id === id) {
-      cancelLinking();
-    } else {
-      linkingInfoRef.current = { baseIdx: null, id };
-      setLinkingInfo(linkingInfoRef.current);
-    }
-  };
-
   const handleRootMouseDown = (e) => {
     if (linkingInfoRef.current !== null) {
       const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
       const pinClicked = targetEl && targetEl.closest('.entry-pin');
-      const lineClicked = targetEl && targetEl.closest('.connection-line');
-      if (!pinClicked && !lineClicked) {
+      if (!pinClicked) {
         cancelLinking();
       }
     }
@@ -631,8 +612,7 @@ export default function App() {
 
       if (linkingInfoRef.current !== null) {
           const pinClicked = targetEl && targetEl.closest('.entry-pin');
-          const lineClicked = targetEl && targetEl.closest('.connection-line');
-          if (!pinClicked && !lineClicked) {
+          if (!pinClicked) {
               cancelLinking();
               return;
           }
@@ -685,11 +665,27 @@ export default function App() {
     ? sortedFiltered
     : sortedFiltered.slice(0, displayCount);
 
-  const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
-    const day = entry.date.split(" ")[0];
-    (acc[day] = acc[day] || []).push({ entry, idx });
+  const perDay = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
+    const day = entry.date.split(' ')[0];
+    if (!acc[day]) acc[day] = { unlinked: [], groups: {} };
+    if (entry.linkId) {
+      (acc[day].groups[entry.linkId] = acc[day].groups[entry.linkId] || []).push({ entry, idx });
+    } else {
+      acc[day].unlinked.push({ entry, idx });
+    }
     return acc;
   }, {});
+
+  const grouped = Object.fromEntries(
+    Object.entries(perDay).map(([day, { unlinked, groups }]) => [
+      day,
+      [
+        ...unlinked,
+        ...Object.values(groups).flat(),
+      ],
+    ])
+  );
+
   const dates = Object.keys(grouped)
     .sort((a,b) => parseDateString(grouped[b][0].entry.date) - parseDateString(grouped[a][0].entry.date));
 
@@ -773,15 +769,9 @@ export default function App() {
         id="fd-table"
         style={{
           position: 'relative',
-          marginLeft: -(maxLane * 5),
-          width: `calc(100% + ${maxLane * 5}px)`,
+          width: '100%',
         }}
       >
-        <ConnectionLines
-          connections={connections}
-          styles={styles}
-          handleConnectionClick={handleConnectionClick}
-        />
         {dates.map(day => (
           <DayGroup
             key={day}
