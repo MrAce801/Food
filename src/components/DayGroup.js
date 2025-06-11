@@ -76,12 +76,13 @@ export default function DayGroup({
             </button>
             {day}
           </div>
-          {entries.map(({ entry, idx }) => (
+          {entries.map(({ entry, idx, linkGroup }) => (
             <EntryCard
               key={idx}
               refCallback={el => (entryRefs.current[idx] = el)}
               entry={entry}
               idx={idx}
+              linkGroup={linkGroup}
               {...entryCardProps}
             />
           ))}

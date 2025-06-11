@@ -22,6 +22,7 @@ export default function EntryCard({
   removeEditImg,
   handlePinClick,
   linkingInfo,
+  linkGroup,
   colorPickerOpenForIdx,
   setColorPickerOpenForIdx,
   handleTagColorChange,
@@ -65,11 +66,18 @@ export default function EntryCard({
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
 
+  const borderHighlight = linkGroup ? {
+    borderLeft: '2px solid #b22222',
+  } : {};
+
   return (
     <div
       ref={refCallback}
       id={`entry-card-${idx}`}
-      style={styles.entryCard(dark, isSymptomOnlyEntry)}
+      style={{
+        ...styles.entryCard(dark, isSymptomOnlyEntry),
+        ...borderHighlight,
+      }}
       onClick={e => {
         if (isExportingPdf) return;
         e.stopPropagation();
@@ -80,6 +88,15 @@ export default function EntryCard({
         }
       }}
     >
+      {linkGroup && linkGroup.isFirst && (
+        <div style={{ position: 'absolute', top: 0, left: 0, height: '2px', width: '25%', background: '#b22222' }} />
+      )}
+      {linkGroup && linkGroup.isLast && (
+        <div style={{ position: 'absolute', bottom: 0, left: 0, height: '2px', width: '25%', background: '#b22222' }} />
+      )}
+      {linkGroup && !linkGroup.isLast && (
+        <div style={{ position: 'absolute', bottom: -16, left: 0, width: '2px', height: '16px', background: '#b22222' }} />
+      )}
       <div style={styles.pinContainer}>
         <div
           className="entry-pin"

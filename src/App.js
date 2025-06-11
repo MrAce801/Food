@@ -1,7 +1,6 @@
 // --- IMPORTS ---
 import React, { useState, useRef, useEffect } from "react";
 
-import useConnections from "./hooks/useConnections";
 import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
@@ -18,7 +17,6 @@ import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
-import ConnectionLines from "./components/ConnectionLines";
 import DayGroup from "./components/DayGroup";
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
@@ -116,8 +114,7 @@ export default function App() {
       if (linkingInfoRef.current !== null) {
         const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
         const pinClicked = targetEl && targetEl.closest('.entry-pin');
-        const lineClicked = targetEl && targetEl.closest('.connection-line');
-        if (!pinClicked && !lineClicked) {
+        if (!pinClicked) {
           cancelLinking();
         }
       }
@@ -279,14 +276,12 @@ export default function App() {
     }
   }, [noteOpenIdx, noteDraft]);
 
-  const { connections, maxLane } = useConnections(entries, searchTerm, displayCount, collapsedDays, entryRefs, isExporting);
-
   // When layout is ready, advance export status
   useEffect(() => {
     if (exportStatus === 'preparing') {
       setExportStatus('ready');
     }
-  }, [exportStatus, connections]);
+  }, [exportStatus]);
 
   // Run export or print when ready
   useEffect(() => {
@@ -606,21 +601,12 @@ export default function App() {
     }
   };
 
-  const handleConnectionClick = (id) => {
-    if (linkingInfoRef.current && linkingInfoRef.current.id === id) {
-      cancelLinking();
-    } else {
-      linkingInfoRef.current = { baseIdx: null, id };
-      setLinkingInfo(linkingInfoRef.current);
-    }
-  };
 
   const handleRootMouseDown = (e) => {
     if (linkingInfoRef.current !== null) {
       const targetEl = e.target instanceof Element ? e.target : e.target.parentElement;
       const pinClicked = targetEl && targetEl.closest('.entry-pin');
-      const lineClicked = targetEl && targetEl.closest('.connection-line');
-      if (!pinClicked && !lineClicked) {
+      if (!pinClicked) {
         cancelLinking();
       }
     }
@@ -631,8 +617,7 @@ export default function App() {
 
       if (linkingInfoRef.current !== null) {
           const pinClicked = targetEl && targetEl.closest('.entry-pin');
-          const lineClicked = targetEl && targetEl.closest('.connection-line');
-          if (!pinClicked && !lineClicked) {
+          if (!pinClicked) {
               cancelLinking();
               return;
           }
@@ -685,9 +670,23 @@ export default function App() {
     ? sortedFiltered
     : sortedFiltered.slice(0, displayCount);
 
+  const linkGroupsMap = {};
+  entriesToRenderForUiOrPdf.forEach(({ entry, idx }) => {
+    if (entry.linkId) {
+      (linkGroupsMap[entry.linkId] = linkGroupsMap[entry.linkId] || []).push(idx);
+    }
+  });
+  const linkGroupInfo = {};
+  Object.values(linkGroupsMap).forEach(arr => {
+    arr.sort((a, b) => a - b);
+    arr.forEach((i, j) => {
+      linkGroupInfo[i] = { isFirst: j === 0, isLast: j === arr.length - 1 };
+    });
+  });
+
   const grouped = entriesToRenderForUiOrPdf.reduce((acc, { entry, idx }) => {
     const day = entry.date.split(" ")[0];
-    (acc[day] = acc[day] || []).push({ entry, idx });
+    (acc[day] = acc[day] || []).push({ entry, idx, linkGroup: linkGroupInfo[idx] });
     return acc;
   }, {});
   const dates = Object.keys(grouped)
@@ -773,15 +772,8 @@ export default function App() {
         id="fd-table"
         style={{
           position: 'relative',
-          marginLeft: -(maxLane * 5),
-          width: `calc(100% + ${maxLane * 5}px)`,
         }}
       >
-        <ConnectionLines
-          connections={connections}
-          styles={styles}
-          handleConnectionClick={handleConnectionClick}
-        />
         {dates.map(day => (
           <DayGroup
             key={day}
