@@ -869,6 +869,7 @@ export default function App() {
         FilterMenu={FilterMenu}
         TAG_COLORS={TAG_COLORS}
         TAG_COLOR_NAMES={TAG_COLOR_NAMES}
+        TAG_COLOR_ICONS={TAG_COLOR_ICONS}
         sortMode={sortMode}
         setSortMode={setSortMode}
       />

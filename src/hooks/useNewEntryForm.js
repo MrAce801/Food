@@ -1,15 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
 import { resizeToJpeg, now, vibrate, determineTagColor, sortSymptomsByTime, sortEntries } from '../utils';
+import { TAG_COLORS } from '../constants';
 
 export default function useNewEntryForm(setEntries, addToast) {
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem('fd-form-new');
-    const initialForm = { food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1 };
+    const initialForm = { food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false };
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         const strength = Math.min(parseInt(parsed.symptomStrength) || 1, 3);
-        return { ...initialForm, ...parsed, symptomStrength: strength };
+        return {
+          ...initialForm,
+          ...parsed,
+          symptomStrength: strength,
+          tagColor: parsed.tagColor || TAG_COLORS.GREEN,
+          tagColorManual: parsed.tagColorManual || false,
+        };
       } catch {
         return initialForm;
       }
@@ -67,19 +74,20 @@ export default function useNewEntryForm(setEntries, addToast) {
       ...(pendingSymptom ? [pendingSymptom] : [])
     ]);
     if (!newForm.food.trim() && allSymptoms.length === 0) return;
+    const autoColor = determineTagColor(newForm.food.trim(), allSymptoms);
     const entry = {
       food: newForm.food.trim(),
       imgs: newForm.imgs,
       symptoms: allSymptoms,
       comment: '',
       date: now(),
-      tagColor: determineTagColor(newForm.food.trim(), allSymptoms),
-      tagColorManual: false,
+      tagColor: newForm.tagColorManual ? newForm.tagColor : autoColor,
+      tagColorManual: newForm.tagColorManual,
       linkId: null,
       createdAt: Date.now(),
     };
     setEntries(prev => [...prev, entry].sort(sortEntries));
-    setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1 });
+    setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false });
     setNewSymptoms([]);
     addToast('Eintrag gespeichert');
     vibrate(50);
