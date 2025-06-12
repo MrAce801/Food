@@ -240,6 +240,25 @@ const styles = {
     border: isActive ? (currentThemeDark ? '2px solid #FFFFFF' : '2px solid #000000') : '2px solid transparent',
     boxSizing: 'border-box',
   }),
+  categoryButton: (color, isActive, dark) => ({
+    width: '40px',
+    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '24px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+    backdropFilter: 'blur(4px)',
+    border: isActive
+      ? `2px solid ${dark ? '#ffffff' : '#000000'}`
+      : dark
+      ? '1px solid rgba(255,255,255,0.15)'
+      : '1px solid rgba(0,0,0,0.1)',
+    boxSizing: 'border-box',
+    color: dark ? '#f0f0f8' : '#333',
+  }),
   categoryIcon: {
     position: 'absolute',
     top: '50%',

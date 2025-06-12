@@ -97,7 +97,7 @@ export default function NewEntryForm({
             key={colorValue}
             type="button"
             onClick={() => setNewForm(fm => ({ ...fm, tagColor: colorValue, tagColorManual: true }))}
-            style={styles.colorPickerItem(colorValue, newForm.tagColorManual && newForm.tagColor === colorValue, dark)}
+            style={styles.categoryButton(colorValue, newForm.tagColorManual && newForm.tagColor === colorValue, dark)}
             title={TAG_COLOR_NAMES[colorValue] || colorValue}
           >
             {TAG_COLOR_ICONS[colorValue]}
