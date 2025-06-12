@@ -43,15 +43,14 @@ export default function NewEntryForm({
   setSortMode
 }) {
   const categoryRowRef = useRef(null);
+  const formRef = useRef(null);
 
   useEffect(() => {
     const handler = e => {
       const target = e.target;
-      const clickedInsideCategory =
-        categoryRowRef.current && categoryRowRef.current.contains(target);
-      const isInteractiveField = target.closest('button, textarea, input');
+      const insideForm = formRef.current && formRef.current.contains(target);
 
-      if (!clickedInsideCategory && !isInteractiveField) {
+      if (!insideForm) {
         setNewForm(fm =>
           fm.tagColorManual
             ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
@@ -63,7 +62,7 @@ export default function NewEntryForm({
     return () => document.removeEventListener('click', handler);
   }, [setNewForm]);
   return (
-    <div className="new-entry-form" style={{ marginBottom: 24 }}>
+    <div ref={formRef} className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
         <input
           placeholder="Eintrag..."
