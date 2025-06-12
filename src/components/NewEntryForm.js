@@ -38,6 +38,7 @@ export default function NewEntryForm({
   FilterMenu,
   TAG_COLORS,
   TAG_COLOR_NAMES,
+  TAG_COLOR_ICONS,
   sortMode,
   setSortMode
 }) {
@@ -90,7 +91,21 @@ export default function NewEntryForm({
       </div>
       {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
-      <div style={{ marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: '8px', marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
+        {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW].map(colorValue => (
+          <button
+            key={colorValue}
+            type="button"
+            onClick={() => setNewForm(fm => ({ ...fm, tagColor: colorValue, tagColorManual: true }))}
+            style={styles.colorPickerItem(colorValue, newForm.tagColorManual && newForm.tagColor === colorValue, dark)}
+            title={TAG_COLOR_NAMES[colorValue] || colorValue}
+          >
+            {TAG_COLOR_ICONS[colorValue]}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: 8 }}>
       <div id="symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
         <input
           placeholder="Symptom..."
@@ -151,7 +166,14 @@ export default function NewEntryForm({
               </option>
             ))}
           </select>
-          <button onClick={addNewSymptom} style={styles.symptomAddButton('#388e3c')}>
+          <button
+            onClick={addNewSymptom}
+            disabled={!newForm.symptomInput.trim()}
+            style={{
+              ...styles.symptomAddButton('#388e3c'),
+              opacity: newForm.symptomInput.trim() ? 1 : 0.5,
+            }}
+          >
             +
           </button>
         </div>
