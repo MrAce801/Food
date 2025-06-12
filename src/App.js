@@ -21,12 +21,6 @@ import DayGroup from "./components/DayGroup";
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
 
-// spacing and sizing for collapsed day indicators
-// slightly smaller rings but still large enough to show counts
-const DAY_MARK_SPACING = 26;
-const DAY_MARK_SIZE = 20;
-const DAY_MARK_OFFSET = 40;
-const DAY_MARK_TOP = 24;
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
   // --- STATE VARIABLEN ---
@@ -950,10 +944,6 @@ export default function App() {
             styles={styles}
             TAG_COLORS={TAG_COLORS}
             TAG_COLOR_ICONS={TAG_COLOR_ICONS}
-            dayMarkSpacing={DAY_MARK_SPACING}
-            dayMarkSize={DAY_MARK_SIZE}
-            dayMarkOffset={DAY_MARK_OFFSET}
-            dayMarkTop={DAY_MARK_TOP}
           />
         ))}
       </div>

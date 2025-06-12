@@ -15,10 +15,6 @@ export default function DayGroup({
   styles,
   TAG_COLORS,
   TAG_COLOR_ICONS,
-  dayMarkSpacing,
-  dayMarkSize,
-  dayMarkOffset,
-  dayMarkTop,
 }) {
   const colorCounts = entries.reduce((acc, { entry }) => {
     const color = entry.tagColor || TAG_COLORS.GREEN;
@@ -38,10 +34,7 @@ export default function DayGroup({
   return (
     <div className="fd-day-group" style={styles.dayGroupContainer(isExportingPdf)}>
       {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
-        <div
-          onClick={() => toggleDay(day)}
-          style={styles.dayCover(dark, orderedColors.length, dayMarkSpacing, dayMarkOffset)}
-        >
+        <div onClick={() => toggleDay(day)} style={styles.dayCover(dark)}>
           <div style={styles.dayCoverText}>
             <button
               onClick={e => { e.stopPropagation(); toggleDay(day); }}
@@ -52,19 +45,14 @@ export default function DayGroup({
             </button>
             {day}
           </div>
-          {orderedColors.map((color, i) => (
-            <div
-              key={color}
-              style={styles.dayCoverCircle(
-                i * dayMarkSpacing + dayMarkOffset,
-                dayMarkSize,
-                dayMarkTop,
-                dark
-              )}
-            >
-              {TAG_COLOR_ICONS[color]} {colorCounts[color]}
-            </div>
-          ))}
+          <div style={styles.dayCoverCounts}>
+            {orderedColors.map(color => (
+              <div key={color} style={styles.dayCoverCountPair(dark)}>
+                <span>{TAG_COLOR_ICONS[color]}</span>
+                <span>{colorCounts[color]}</span>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <React.Fragment>
