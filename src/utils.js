@@ -120,7 +120,12 @@ const sortSymptomsByTime = (symptoms) => {
     return [...symptoms].sort((a, b) => {
         const tA = typeof a.time === 'number' ? a.time : parseFloat(a.time) || 0;
         const tB = typeof b.time === 'number' ? b.time : parseFloat(b.time) || 0;
-        if (tA === tB) return (a.txt || '').localeCompare(b.txt || '');
+        if (tA === tB) {
+            const sA = typeof a.strength === 'number' ? a.strength : parseInt(a.strength) || 0;
+            const sB = typeof b.strength === 'number' ? b.strength : parseInt(b.strength) || 0;
+            if (sA !== sB) return sA - sB;
+            return (a.txt || '').localeCompare(b.txt || '');
+        }
         return tA - tB;
     });
 };
