@@ -34,7 +34,7 @@ export default function DayGroup({
   ].filter(c => colorCounts[c]);
 
   return (
-    <div className="fd-day-group" style={styles.dayGroupContainer}>
+    <div className="fd-day-group" style={styles.dayGroupContainer(isExportingPdf)}>
       {collapsedDays.has(day) && !(isExportingPdf || isPrinting) ? (
         <div
           onClick={() => toggleDay(day)}

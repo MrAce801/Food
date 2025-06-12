@@ -91,14 +91,14 @@ const styles = {
     pageBreakInside: 'avoid',
     breakInside: 'avoid'
   }),
-  dayGroupContainer: {
-    pageBreakInside: 'avoid',
-    breakInside: 'avoid',
-  },
+  dayGroupContainer: (isPdf) => ({
+    pageBreakInside: isPdf ? 'auto' : 'avoid',
+    breakInside: isPdf ? 'auto' : 'avoid',
+  }),
   groupHeader: (isPdf) => ({
     fontSize: 18,
     fontWeight: 600,
-    margin: isPdf ? "48px 0 12px" : "24px 0 8px",
+    margin: isPdf ? "24px 0 8px" : "24px 0 8px",
     color: isPdf ? '#333' : undefined,
     display: 'flex',
     alignItems: 'center',
