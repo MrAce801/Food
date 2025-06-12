@@ -23,12 +23,11 @@ export default function DayGroup({
   }, {});
 
   const orderedColors = [
-    TAG_COLORS.GREEN,
-    TAG_COLORS.PURPLE,
-    TAG_COLORS.RED,
+    TAG_COLORS.YELLOW,
     TAG_COLORS.BLUE,
     TAG_COLORS.BROWN,
-    TAG_COLORS.YELLOW,
+    TAG_COLORS.RED,
+    TAG_COLORS.GREEN,
   ].filter(c => colorCounts[c]);
 
   return (
