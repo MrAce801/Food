@@ -133,7 +133,7 @@ const styles = {
   dayCoverCountPair: (dark) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '5px',
+    gap: '3px',
     color: dark ? '#fff' : '#333',
     fontSize: '14px',
   }),
