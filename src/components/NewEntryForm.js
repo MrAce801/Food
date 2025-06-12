@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function NewEntryForm({
   newForm,
@@ -42,6 +42,21 @@ export default function NewEntryForm({
   sortMode,
   setSortMode
 }) {
+  const categoryRowRef = useRef(null);
+
+  useEffect(() => {
+    const handler = e => {
+      if (categoryRowRef.current && !categoryRowRef.current.contains(e.target)) {
+        setNewForm(fm =>
+          fm.tagColorManual
+            ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
+            : fm
+        );
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [setNewForm]);
   return (
     <div className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -91,12 +106,21 @@ export default function NewEntryForm({
       </div>
       {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
-      <div style={{ display: 'flex', gap: '8px', marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}>
+      <div
+        ref={categoryRowRef}
+        style={{ display: 'flex', gap: '8px', marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}
+      >
         {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW].map(colorValue => (
           <button
             key={colorValue}
             type="button"
-            onClick={() => setNewForm(fm => ({ ...fm, tagColor: colorValue, tagColorManual: true }))}
+            onClick={() =>
+              setNewForm(fm =>
+                fm.tagColorManual && fm.tagColor === colorValue
+                  ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
+                  : { ...fm, tagColor: colorValue, tagColorManual: true }
+              )
+            }
             style={styles.categoryButton(colorValue, newForm.tagColorManual && newForm.tagColor === colorValue, dark)}
             title={TAG_COLOR_NAMES[colorValue] || colorValue}
           >
