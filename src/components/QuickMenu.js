@@ -1,8 +1,9 @@
 import React from 'react';
 
-export default function QuickMenu({ items, onSelect, style }) {
+const QuickMenu = React.forwardRef(function QuickMenu({ items, onSelect, style }, ref) {
   return (
     <div
+      ref={ref}
       className="quick-menu"
       style={{ position: 'absolute', background: '#fff', border: '1px solid #ccc', borderRadius: 4, zIndex: 50, ...style }}
     >
@@ -21,5 +22,7 @@ export default function QuickMenu({ items, onSelect, style }) {
       )}
     </div>
   );
-}
+});
+
+export default QuickMenu;
 

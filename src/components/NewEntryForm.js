@@ -44,6 +44,12 @@ export default function NewEntryForm({
 }) {
   const categoryRowRef = useRef(null);
   const formRef = useRef(null);
+  const foodQuickBtnRef = useRef(null);
+  const foodQuickMenuRef = useRef(null);
+  const symptomQuickBtnRef = useRef(null);
+  const symptomQuickMenuRef = useRef(null);
+  const filterBtnRef = useRef(null);
+  const filterMenuRef = useRef(null);
 
   useEffect(() => {
     const handler = e => {
@@ -57,10 +63,48 @@ export default function NewEntryForm({
             : fm
         );
       }
+
+      if (
+        showFoodQuick &&
+        foodQuickMenuRef.current &&
+        !foodQuickMenuRef.current.contains(target) &&
+        foodQuickBtnRef.current &&
+        !foodQuickBtnRef.current.contains(target)
+      ) {
+        setShowFoodQuick(false);
+      }
+
+      if (
+        showSymptomQuick &&
+        symptomQuickMenuRef.current &&
+        !symptomQuickMenuRef.current.contains(target) &&
+        symptomQuickBtnRef.current &&
+        !symptomQuickBtnRef.current.contains(target)
+      ) {
+        setShowSymptomQuick(false);
+      }
+
+      if (
+        filterMenuOpen &&
+        filterMenuRef.current &&
+        !filterMenuRef.current.contains(target) &&
+        filterBtnRef.current &&
+        !filterBtnRef.current.contains(target)
+      ) {
+        setFilterMenuOpen(false);
+      }
     };
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
-  }, [setNewForm]);
+  }, [
+    setNewForm,
+    showFoodQuick,
+    setShowFoodQuick,
+    showSymptomQuick,
+    setShowSymptomQuick,
+    filterMenuOpen,
+    setFilterMenuOpen,
+  ]);
   return (
     <div ref={formRef} className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -72,6 +116,7 @@ export default function NewEntryForm({
           style={{ ...styles.input, flexGrow: 1, paddingRight: '32px' }}
         />
         <button
+          ref={foodQuickBtnRef}
           className="quick-arrow"
           onClick={() => setShowFoodQuick(s => !s)}
           style={{
@@ -89,6 +134,7 @@ export default function NewEntryForm({
         </button>
         {showFoodQuick && (
           <QuickMenu
+            ref={foodQuickMenuRef}
             items={favoriteFoods}
             onSelect={item => {
               setNewForm(fm => ({ ...fm, food: item }));
@@ -143,6 +189,7 @@ export default function NewEntryForm({
           style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
         />
         <button
+          ref={symptomQuickBtnRef}
           className="quick-arrow"
           onClick={() => setShowSymptomQuick(s => !s)}
           style={{
@@ -160,6 +207,7 @@ export default function NewEntryForm({
         </button>
           {showSymptomQuick && (
             <QuickMenu
+              ref={symptomQuickMenuRef}
               items={favoriteSymptoms}
               onSelect={sym => {
                 setNewForm(fm => ({ ...fm, symptomInput: sym }));
@@ -234,6 +282,7 @@ export default function NewEntryForm({
         )}
         <div id="filter-menu-container" style={{ position: 'relative', marginLeft: 'auto' }}>
           <button
+            ref={filterBtnRef}
             onClick={() => setFilterMenuOpen(o => !o)}
             style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
             title="Filter"
@@ -242,6 +291,7 @@ export default function NewEntryForm({
           </button>
           {filterMenuOpen && (
             <FilterMenu
+              ref={filterMenuRef}
               options={Object.values(TAG_COLORS).map(val => ({ value: val, label: TAG_COLOR_NAMES[val] || val }))}
               selected={filterTags}
               onToggle={tag => setFilterTags(t => t.includes(tag) ? t.filter(x => x !== tag) : [...t, tag])}
