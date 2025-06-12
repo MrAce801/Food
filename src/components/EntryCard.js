@@ -40,6 +40,7 @@ export default function EntryCard({
   sortSymptomsByTime,
   TAG_COLORS,
   TAG_COLOR_NAMES,
+  TAG_COLOR_ICONS,
   handleFocus,
   ImgStack,
   CameraButton,
@@ -445,7 +446,7 @@ export default function EntryCard({
           <>
             <div
               id={`tag-marker-${idx}`}
-              style={styles.tagMarkerOuter(currentTagColor)}
+              style={styles.categoryIcon}
               onClick={e => {
                 if (isExportingPdf) return;
                 e.stopPropagation();
@@ -457,8 +458,9 @@ export default function EntryCard({
                   ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`
                   : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`
               }
-            />
-            <div style={styles.tagMarkerInnerHint(cardBackgroundColor)} />
+            >
+              {TAG_COLOR_ICONS[currentTagColor]}
+            </div>
 
             {!isExportingPdf && colorPickerOpenForIdx === idx && (
               <div
@@ -466,13 +468,15 @@ export default function EntryCard({
                 style={styles.colorPickerPopup(dark)}
                 onClick={e => e.stopPropagation()}
               >
-                {[TAG_COLORS.GREEN, TAG_COLORS.RED, TAG_COLORS.YELLOW, TAG_COLORS.BROWN, TAG_COLORS.BLUE].map(colorValue => (
+                {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW].map(colorValue => (
                   <div
                     key={colorValue}
                     style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
                     title={TAG_COLOR_NAMES[colorValue] || colorValue}
                     onClick={() => handleTagColorChange(idx, colorValue)}
-                  />
+                  >
+                    {TAG_COLOR_ICONS[colorValue]}
+                  </div>
                 ))}
               </div>
             )}

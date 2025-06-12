@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
-import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
+import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import PdfButton from "./components/PdfButton";
 import PrintButton from "./components/PrintButton";
@@ -21,12 +21,6 @@ import DayGroup from "./components/DayGroup";
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
 
-// spacing and sizing for collapsed day indicators
-// slightly smaller rings but still large enough to show counts
-const DAY_MARK_SPACING = 26;
-const DAY_MARK_SIZE = 20;
-const DAY_MARK_OFFSET = 40;
-const DAY_MARK_TOP = 24;
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
   // --- STATE VARIABLEN ---
@@ -935,6 +929,7 @@ export default function App() {
               sortSymptomsByTime,
               TAG_COLORS,
               TAG_COLOR_NAMES,
+              TAG_COLOR_ICONS,
               handleFocus,
               ImgStack,
               CameraButton,
@@ -948,10 +943,7 @@ export default function App() {
             }}
             styles={styles}
             TAG_COLORS={TAG_COLORS}
-            dayMarkSpacing={DAY_MARK_SPACING}
-            dayMarkSize={DAY_MARK_SIZE}
-            dayMarkOffset={DAY_MARK_OFFSET}
-            dayMarkTop={DAY_MARK_TOP}
+            TAG_COLOR_ICONS={TAG_COLOR_ICONS}
           />
         ))}
       </div>

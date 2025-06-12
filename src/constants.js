@@ -18,14 +18,25 @@ const TAG_COLORS = {
   RED: 'red',
   YELLOW: 'yellow',
   BROWN: '#c19a6b', // light brown for bowel movement
-  BLUE: '#64b5f6',  // light blue for supplements
+  BLUE: '#64b5f6',  // for medication
+  PURPLE: '#ba68c8', // for exercise
 };
 const TAG_COLOR_NAMES = {
-  [TAG_COLORS.GREEN]: "Essen",
-  [TAG_COLORS.RED]: "Symptome",
-  [TAG_COLORS.YELLOW]: "Vorgeschichte",
-  [TAG_COLORS.BROWN]: "Stuhlgang",
-  [TAG_COLORS.BLUE]: "Supplemente",
+  [TAG_COLORS.GREEN]: 'Essen',
+  [TAG_COLORS.PURPLE]: 'Exercise',
+  [TAG_COLORS.RED]: 'Symptome',
+  [TAG_COLORS.BLUE]: 'Medikamente',
+  [TAG_COLORS.BROWN]: 'Stuhlgang',
+  [TAG_COLORS.YELLOW]: 'Vorgeschichte',
 };
 
-export { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES };
+const TAG_COLOR_ICONS = {
+  [TAG_COLORS.GREEN]: '🍽️',
+  [TAG_COLORS.PURPLE]: '💪🏻',
+  [TAG_COLORS.RED]: '‼️',
+  [TAG_COLORS.BLUE]: '💊',
+  [TAG_COLORS.BROWN]: '🚽',
+  [TAG_COLORS.YELLOW]: '📋',
+};
+
+export { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS };
