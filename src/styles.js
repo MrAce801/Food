@@ -185,9 +185,7 @@ const styles = {
   }),
   glassyButtonAccent: (dark) => ({
     ...styles.glassyButton(dark),
-    border: dark
-      ? '1px solid rgba(25, 118, 210, 0.5)'
-      : '1px solid rgba(25, 118, 210, 0.3)',
+    border: '2px solid #555',
   }),
   collapseButton: (dark) => ({
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
