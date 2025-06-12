@@ -23,7 +23,7 @@ const TAG_COLORS = {
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: 'Essen',
-  [TAG_COLORS.PURPLE]: 'Sport',
+  [TAG_COLORS.PURPLE]: 'Exercise',
   [TAG_COLORS.RED]: 'Symptome',
   [TAG_COLORS.BLUE]: 'Medikamente',
   [TAG_COLORS.BROWN]: 'Stuhlgang',
@@ -31,8 +31,8 @@ const TAG_COLOR_NAMES = {
 };
 
 const TAG_COLOR_ICONS = {
-  [TAG_COLORS.GREEN]: '🥗',
-  [TAG_COLORS.PURPLE]: '🏃',
+  [TAG_COLORS.GREEN]: '🍽️',
+  [TAG_COLORS.PURPLE]: '💪🏻',
   [TAG_COLORS.RED]: '‼️',
   [TAG_COLORS.BLUE]: '💊',
   [TAG_COLORS.BROWN]: '🚽',
