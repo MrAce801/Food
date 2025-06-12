@@ -20,15 +20,6 @@ export async function exportTableToPdf(el) {
       h.style.pageBreakBefore = '';
     });
 
-    const marginPx = 10;
-    const pageHeightPx = 842 - marginPx * 2;
-    headers.forEach(h => {
-      const pos = (h.offsetTop - marginPx) % pageHeightPx;
-      if (pos > pageHeightPx * 0.9) {
-        h.style.pageBreakBefore = 'always';
-        h.style.breakBefore = 'page';
-      }
-    });
     const imgStackContainers = Array.from(el.querySelectorAll('.img-stack-container'));
     imgStackContainers.forEach(stackContainer => {
       const childrenItems = Array.from(stackContainer.children).filter(child => child.classList.contains('img-stack-item'));
