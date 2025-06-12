@@ -135,7 +135,7 @@ const styles = {
     height: `${size}px`,
     borderRadius: '50%',
     border: `2px solid ${color}`,
-    background: '#ffffff',
+    background: 'rgba(255, 255, 255, 0.7)',
     boxSizing: 'border-box',
     transform: 'translateY(-50%)',
     zIndex: 5,
