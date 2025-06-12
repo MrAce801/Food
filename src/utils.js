@@ -144,6 +144,7 @@ const sortEntries = (a, b) => {
 
 const CATEGORY_ORDER = [
   TAG_COLORS.GREEN,
+  TAG_COLORS.PURPLE,
   TAG_COLORS.RED,
   TAG_COLORS.BLUE,
   TAG_COLORS.BROWN,

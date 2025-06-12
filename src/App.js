@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
-import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES } from "./constants";
+import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import PdfButton from "./components/PdfButton";
 import PrintButton from "./components/PrintButton";
@@ -935,6 +935,7 @@ export default function App() {
               sortSymptomsByTime,
               TAG_COLORS,
               TAG_COLOR_NAMES,
+              TAG_COLOR_ICONS,
               handleFocus,
               ImgStack,
               CameraButton,
@@ -948,6 +949,7 @@ export default function App() {
             }}
             styles={styles}
             TAG_COLORS={TAG_COLORS}
+            TAG_COLOR_ICONS={TAG_COLOR_ICONS}
             dayMarkSpacing={DAY_MARK_SPACING}
             dayMarkSize={DAY_MARK_SIZE}
             dayMarkOffset={DAY_MARK_OFFSET}

@@ -14,6 +14,7 @@ export default function DayGroup({
   entryCardProps,
   styles,
   TAG_COLORS,
+  TAG_COLOR_ICONS,
   dayMarkSpacing,
   dayMarkSize,
   dayMarkOffset,
@@ -27,6 +28,7 @@ export default function DayGroup({
 
   const orderedColors = [
     TAG_COLORS.GREEN,
+    TAG_COLORS.PURPLE,
     TAG_COLORS.RED,
     TAG_COLORS.BLUE,
     TAG_COLORS.BROWN,
@@ -61,7 +63,7 @@ export default function DayGroup({
                 dark
               )}
             >
-              {colorCounts[color]}
+              {TAG_COLOR_ICONS[color]} {colorCounts[color]}
             </div>
           ))}
         </div>
