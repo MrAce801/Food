@@ -8,12 +8,10 @@ import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_I
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import PdfButton from "./components/PdfButton";
 import PrintButton from "./components/PrintButton";
-import InsightsButton from "./components/InsightsButton";
-import BackButton from "./components/BackButton";
+import PersonButton from "./components/PersonButton";
 import CameraButton from "./components/CameraButton";
 import ImgStack from "./components/ImgStack";
 import SymTag from "./components/SymTag";
-import Insights from "./components/Insights";
 import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
@@ -25,7 +23,6 @@ import { sortEntries, sortEntriesByCategory } from "./utils";
 export default function App() {
   // --- STATE VARIABLEN ---
   const [dark, setDark] = useState(false);
-  const [view, setView] = useState("diary");
   const [entries, setEntries] = useState(() => {
     try {
       const initialArr = JSON.parse(localStorage.getItem("fd-entries") || "[]");
@@ -100,6 +97,22 @@ export default function App() {
   const [filterTags, setFilterTags] = useState([]);
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [sortMode, setSortMode] = useState('date');
+
+  const [showPerson, setShowPerson] = useState(false);
+  const [personInfo, setPersonInfo] = useState(() => {
+    try {
+      return (
+        JSON.parse(localStorage.getItem('fd-person-info')) || {
+          age: '',
+          gender: '',
+          height: '',
+          weight: '',
+        }
+      );
+    } catch {
+      return { age: '', gender: '', height: '', weight: '' };
+    }
+  });
 
   const dayOf = (entry) => entry.date.split(' ')[0];
 
@@ -177,6 +190,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('fd-fav-symptoms', JSON.stringify(favoriteSymptoms));
   }, [favoriteSymptoms]);
+
+  useEffect(() => {
+    localStorage.setItem('fd-person-info', JSON.stringify(personInfo));
+  }, [personInfo]);
 
   useEffect(() => {
     document.body.style.background = dark ? "#22222a" : "#f4f7fc";
@@ -386,6 +403,12 @@ export default function App() {
     pdfExportTriggered.current = false;
     setExportStatus('preparing');
   };
+
+  const handlePersonChange = (field, value) => {
+    setPersonInfo(info => ({ ...info, [field]: value }));
+  };
+
+  const closePerson = () => setShowPerson(false);
 
   const handleEditFile = async e => {
     if (!editForm) return;
@@ -798,21 +821,8 @@ export default function App() {
     .sort((a,b) => parseDateString(grouped[b].list[0].entry.date) - parseDateString(grouped[a].list[0].entry.date));
 
 
+
   // --- JSX RENDERING LOGIK ---
-  if (view === "insights") {
-    return (
-      <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
-        {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
-        <div style={styles.topBar} className="top-bar">
-          <BackButton onClick={() => setView("diary")} />{" "}
-          <div>
-            <PrintButton onClick={handlePrint} />
-          </div>
-        </div>
-        <Insights entries={entries} />
-      </div>
-    );
-  }
 
   return (
     <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
@@ -821,10 +831,10 @@ export default function App() {
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
-        <div>
-          <PdfButton onClick={handleExportPDF} />{" "}
-          <PrintButton onClick={handlePrint} />{" "}
-          <InsightsButton onClick={() => setView("insights")} />
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <PersonButton onClick={() => setShowPerson(true)} dark={dark} />
+          <PdfButton onClick={handleExportPDF} dark={dark} />
+          <PrintButton onClick={handlePrint} dark={dark} />
         </div>
       </div>
       <h2 style={styles.title}>Food Diary</h2>
@@ -881,6 +891,14 @@ export default function App() {
           width: '100%',
         }}
       >
+        {isExporting && (
+          <div style={styles.personInfoBox(dark)}>
+            {personInfo.age && <span>Alter: {personInfo.age}</span>}
+            {personInfo.gender && <span>Geschlecht: {personInfo.gender}</span>}
+            {personInfo.height && <span>Größe: {personInfo.height} cm</span>}
+            {personInfo.weight && <span>Gewicht: {personInfo.weight} kg</span>}
+          </div>
+        )}
         {dates.map(day => (
           <DayGroup
             key={day}
@@ -981,6 +999,62 @@ export default function App() {
             <button style={{ margin: 6, padding: '6px 12px', fontSize: 16 }} onClick={() => chooseLink(null)}>
               Abbrechen
             </button>
+          </div>
+        </div>
+      )}
+      {showPerson && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={closePerson}
+        >
+          <div
+            style={{ background: dark ? '#333' : '#fff', padding: 24, borderRadius: 8, minWidth: 250 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ marginBottom: 8 }}>Persönliche Daten</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input
+                placeholder="Alter"
+                value={personInfo.age}
+                onChange={e => handlePersonChange('age', e.target.value)}
+                style={styles.input}
+              />
+              <input
+                placeholder="Geschlecht"
+                value={personInfo.gender}
+                onChange={e => handlePersonChange('gender', e.target.value)}
+                style={styles.input}
+              />
+              <input
+                placeholder="Größe (cm)"
+                value={personInfo.height}
+                onChange={e => handlePersonChange('height', e.target.value)}
+                style={styles.input}
+              />
+              <input
+                placeholder="Gewicht (kg)"
+                value={personInfo.weight}
+                onChange={e => handlePersonChange('weight', e.target.value)}
+                style={styles.input}
+              />
+              <button
+                onClick={closePerson}
+                style={{ ...styles.buttonSecondary('#1976d2'), marginTop: 8 }}
+              >
+                Schließen
+              </button>
+            </div>
           </div>
         </div>
       )}

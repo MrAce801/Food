@@ -1,11 +1,15 @@
 import React from "react";
+import styles from "../styles";
 
-const CameraButton = ({ onClick }) => (
-  <button onClick={onClick} className="haptic" title="Foto" style={{
-    width: 36, height: 36, borderRadius: 6, border: 0,
-    background: "#247be5", display: "flex", alignItems: "center",
-    justifyContent: "center", cursor: "pointer"
-  }}>📷</button>
+const CameraButton = ({ onClick, dark }) => (
+  <button
+    onClick={onClick}
+    className="haptic"
+    title="Foto"
+    style={{ ...styles.glassyIconButton(dark), width: 36, height: 36, fontSize: 20 }}
+  >
+    📷
+  </button>
 );
 
 export default CameraButton;

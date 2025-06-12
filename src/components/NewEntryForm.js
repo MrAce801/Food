@@ -143,7 +143,7 @@ export default function NewEntryForm({
             style={{ top: '40px', left: 0 }}
           />
         )}
-        <CameraButton onClick={() => fileRefNew.current?.click()} />
+        <CameraButton onClick={() => fileRefNew.current?.click()} dark={dark} />
         <input
           ref={fileRefNew}
           type="file"
