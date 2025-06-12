@@ -1,8 +1,9 @@
 import React from 'react';
 
-export default function FilterMenu({ options, selected, onToggle, sortMode, setSortMode, style }) {
+const FilterMenu = React.forwardRef(function FilterMenu({ options, selected, onToggle, sortMode, setSortMode, style }, ref) {
   return (
     <div
+      ref={ref}
       className="filter-menu"
       style={{ position: 'absolute', background: '#fff', border: '1px solid #ccc', borderRadius: 4, zIndex: 50, padding: 4, fontSize: 14, ...style }}
     >
@@ -42,4 +43,6 @@ export default function FilterMenu({ options, selected, onToggle, sortMode, setS
       ))}
     </div>
   );
-}
+});
+
+export default FilterMenu;
