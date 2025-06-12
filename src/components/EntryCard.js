@@ -474,7 +474,9 @@ export default function EntryCard({
                     style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
                     title={TAG_COLOR_NAMES[colorValue] || colorValue}
                     onClick={() => handleTagColorChange(idx, colorValue)}
-                  />
+                  >
+                    {TAG_COLOR_ICONS[colorValue]}
+                  </div>
                 ))}
               </div>
             )}

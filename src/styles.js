@@ -127,7 +127,7 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
-  dayCoverCircle: (color, offset = 0, size = 11, top = 24, dark = false) => ({
+  dayCoverCircle: (offset = 0, size = 11, top = 24, dark = false) => ({
     position: 'absolute',
     top: `${top}px`,
     right: `${offset}px`,
@@ -233,9 +233,13 @@ const styles = {
     gap: '8px',
   }),
   colorPickerItem: (color, isActive, currentThemeDark) => ({
-    width: '24px',
-    height: '24px',
-    backgroundColor: color,
+    width: '28px',
+    height: '28px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    background: 'transparent',
     borderRadius: '4px',
     cursor: 'pointer',
     border: isActive ? (currentThemeDark ? '2px solid #FFFFFF' : '2px solid #000000') : '2px solid transparent',

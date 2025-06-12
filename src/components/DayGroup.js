@@ -56,7 +56,6 @@ export default function DayGroup({
             <div
               key={color}
               style={styles.dayCoverCircle(
-                color,
                 i * dayMarkSpacing + dayMarkOffset,
                 dayMarkSize,
                 dayMarkTop,
