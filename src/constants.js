@@ -31,9 +31,9 @@ const TAG_COLOR_NAMES = {
 };
 
 const TAG_COLOR_ICONS = {
-  [TAG_COLORS.GREEN]: '🍽️',
+  [TAG_COLORS.GREEN]: '🥗',
   [TAG_COLORS.PURPLE]: '💪🏻',
-  [TAG_COLORS.RED]: '‼️',
+  [TAG_COLORS.RED]: '❗',
   [TAG_COLORS.BLUE]: '💊',
   [TAG_COLORS.BROWN]: '🚽',
   [TAG_COLORS.YELLOW]: '📋',
