@@ -46,7 +46,12 @@ export default function NewEntryForm({
 
   useEffect(() => {
     const handler = e => {
-      if (categoryRowRef.current && !categoryRowRef.current.contains(e.target)) {
+      const target = e.target;
+      const clickedInsideCategory = categoryRowRef.current && categoryRowRef.current.contains(target);
+      const isTextInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+      const submitBtnClicked = target.closest('#add-entry-button');
+
+      if (!clickedInsideCategory && !isTextInput && !submitBtnClicked) {
         setNewForm(fm =>
           fm.tagColorManual
             ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
@@ -208,6 +213,7 @@ export default function NewEntryForm({
         ))}
       </div>
       <button
+        id="add-entry-button"
         onClick={addEntry}
         disabled={!newForm.food.trim() && newSymptoms.length === 0}
         style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() || newSymptoms.length > 0 ? 1 : 0.5 }}
