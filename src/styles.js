@@ -170,6 +170,19 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   }),
+  glassyButton: (dark) => ({
+    background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+    border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
+    borderRadius: 6,
+    padding: '8px 16px',
+    cursor: 'pointer',
+    fontSize: 14,
+    lineHeight: 1,
+    color: dark ? '#f0f0f8' : '#333',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }),
   collapseButton: (dark) => ({
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
@@ -300,6 +313,19 @@ const styles = {
     overflow: 'visible',
     cursor: 'pointer',
   },
+  personInfoBox: (dark) => ({
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    margin: '8px 0 16px',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+    border: dark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.1)',
+    backdropFilter: 'blur(4px)',
+    color: dark ? '#f0f0f8' : '#333',
+    fontSize: '14px',
+  }),
 };
 
 export default styles;

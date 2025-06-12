@@ -6,7 +6,7 @@ const PersonButton = ({ onClick, dark }) => (
     onClick={onClick}
     className="haptic"
     title="Personendaten"
-    style={styles.glassyIconButton(dark)}
+    style={styles.glassyButton(dark)}
   >
     🧍
   </button>

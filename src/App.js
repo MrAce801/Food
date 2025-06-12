@@ -833,8 +833,10 @@ export default function App() {
         </button>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <PersonButton onClick={() => setShowPerson(true)} dark={dark} />
-          <PdfButton onClick={handleExportPDF} />{' '}
-          <PrintButton onClick={handlePrint} />
+          <div style={{ display: 'flex', gap: 4 }}>
+            <PdfButton onClick={handleExportPDF} dark={dark} />
+            <PrintButton onClick={handlePrint} dark={dark} />
+          </div>
         </div>
       </div>
       <h2 style={styles.title}>Food Diary</h2>
@@ -891,6 +893,14 @@ export default function App() {
           width: '100%',
         }}
       >
+        {isExporting && (
+          <div style={styles.personInfoBox(dark)}>
+            {personInfo.age && <span>Alter: {personInfo.age}</span>}
+            {personInfo.gender && <span>Geschlecht: {personInfo.gender}</span>}
+            {personInfo.height && <span>Größe: {personInfo.height} cm</span>}
+            {personInfo.weight && <span>Gewicht: {personInfo.weight} kg</span>}
+          </div>
+        )}
         {dates.map(day => (
           <DayGroup
             key={day}

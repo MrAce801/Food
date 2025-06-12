@@ -159,7 +159,7 @@ export default function EntryCard({
             >
               ★
             </button>
-            <CameraButton onClick={() => fileRefEdit.current?.click()} />
+            <CameraButton onClick={() => fileRefEdit.current?.click()} dark={dark} />
             <input
               ref={fileRefEdit}
               type="file"
