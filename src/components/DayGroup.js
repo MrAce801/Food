@@ -48,7 +48,7 @@ export default function DayGroup({
           <div style={styles.dayCoverCounts}>
             {orderedColors.map(color => (
               <div key={color} style={styles.dayCoverCountPair(dark)}>
-                <span>{TAG_COLOR_ICONS[color]}</span>
+                <span style={{ width: 18, textAlign: 'center' }}>{TAG_COLOR_ICONS[color]}</span>
                 <span>{colorCounts[color]}</span>
               </div>
             ))}
