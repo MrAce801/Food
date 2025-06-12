@@ -831,12 +831,10 @@ export default function App() {
         <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
           {dark ? "🌙" : "☀️"}
         </button>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <PersonButton onClick={() => setShowPerson(true)} dark={dark} />
-          <div style={{ display: 'flex', gap: 4 }}>
-            <PdfButton onClick={handleExportPDF} dark={dark} />
-            <PrintButton onClick={handlePrint} dark={dark} />
-          </div>
+          <PdfButton onClick={handleExportPDF} dark={dark} />
+          <PrintButton onClick={handlePrint} dark={dark} />
         </div>
       </div>
       <h2 style={styles.title}>Food Diary</h2>
