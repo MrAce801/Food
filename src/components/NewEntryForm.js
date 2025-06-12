@@ -49,9 +49,9 @@ export default function NewEntryForm({
       const target = e.target;
       const clickedInsideCategory =
         categoryRowRef.current && categoryRowRef.current.contains(target);
-      const isButtonOrTextarea = target.closest('button, textarea');
+      const isInteractiveField = target.closest('button, textarea, input');
 
-      if (!clickedInsideCategory && !isButtonOrTextarea) {
+      if (!clickedInsideCategory && !isInteractiveField) {
         setNewForm(fm =>
           fm.tagColorManual
             ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
