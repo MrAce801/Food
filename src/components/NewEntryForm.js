@@ -295,16 +295,7 @@ export default function NewEntryForm({
         <button onClick={() => setShowSearch(s => !s)} style={{ ...styles.glassyIconButton(dark), padding: '6px' }} title="Suche">
           🔍
         </button>
-        {showSearch && (
-          <input
-            ref={searchInputRef}
-            placeholder="Suche..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={{ ...styles.smallInput, flexGrow: 1 }}
-          />
-        )}
-        <div id="filter-menu-container" style={{ position: 'relative', marginLeft: 'auto' }}>
+        <div id="filter-menu-container" style={{ position: 'relative' }}>
           <button
             ref={filterBtnRef}
             onClick={() => setFilterMenuOpen(o => !o)}
@@ -325,6 +316,15 @@ export default function NewEntryForm({
             />
           )}
         </div>
+        {showSearch && (
+          <input
+            ref={searchInputRef}
+            placeholder="Suche..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={{ ...styles.smallInput, flexGrow: 1 }}
+          />
+        )}
       </div>
     </div>
   );
