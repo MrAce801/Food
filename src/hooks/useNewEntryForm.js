@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { resizeToJpeg, now, vibrate, determineTagColor, sortSymptomsByTime, sortEntries } from '../utils';
 import { TAG_COLORS } from '../constants';
+import { getNutritionForFood } from '../utils/nutrition';
 
 export default function useNewEntryForm(setEntries, addToast) {
   const [newForm, setNewForm] = useState(() => {
@@ -65,7 +66,7 @@ export default function useNewEntryForm(setEntries, addToast) {
 
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
-  const addEntry = () => {
+  const addEntry = async () => {
     const pendingSymptom = newForm.symptomInput.trim()
       ? { txt: newForm.symptomInput.trim(), time: newForm.symptomTime, strength: newForm.symptomStrength }
       : null;
@@ -75,6 +76,12 @@ export default function useNewEntryForm(setEntries, addToast) {
     ]);
     if (!newForm.food.trim() && allSymptoms.length === 0) return;
     const autoColor = determineTagColor(newForm.food.trim(), allSymptoms);
+    let nutrition = null;
+    try {
+      nutrition = await getNutritionForFood(newForm.food.trim());
+    } catch (err) {
+      console.error('Nährwertsuche fehlgeschlagen:', err);
+    }
     const entry = {
       food: newForm.food.trim(),
       imgs: newForm.imgs,
@@ -85,6 +92,7 @@ export default function useNewEntryForm(setEntries, addToast) {
       tagColorManual: newForm.tagColorManual,
       linkId: null,
       createdAt: Date.now(),
+      nutrition,
     };
     setEntries(prev => [...prev, entry].sort(sortEntries));
     setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false });
