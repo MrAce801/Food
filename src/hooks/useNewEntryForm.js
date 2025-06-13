@@ -65,7 +65,7 @@ export default function useNewEntryForm(setEntries, addToast) {
 
   const removeNewSymptom = idx => setNewSymptoms(s => s.filter((_, i) => i !== idx));
 
-  const addEntry = () => {
+  const addEntry = (portionSize = null, portionGrams = '') => {
     const pendingSymptom = newForm.symptomInput.trim()
       ? { txt: newForm.symptomInput.trim(), time: newForm.symptomTime, strength: newForm.symptomStrength }
       : null;
@@ -85,6 +85,8 @@ export default function useNewEntryForm(setEntries, addToast) {
       tagColorManual: newForm.tagColorManual,
       linkId: null,
       createdAt: Date.now(),
+      portionSize: portionSize,
+      portionGrams: portionGrams,
     };
     setEntries(prev => [...prev, entry].sort(sortEntries));
     setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false });
