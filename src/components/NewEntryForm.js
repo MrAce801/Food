@@ -51,6 +51,9 @@ export default function NewEntryForm({
   const filterBtnRef = useRef(null);
   const filterMenuRef = useRef(null);
   const [showCategories, setShowCategories] = useState(false);
+  const [portionMenuOpen, setPortionMenuOpen] = useState(false);
+  const [portionSize, setPortionSize] = useState('middle');
+  const [portionGrams, setPortionGrams] = useState('');
 
   useEffect(() => {
     const handler = e => {
@@ -284,7 +287,7 @@ export default function NewEntryForm({
         ))}
       </div>
       <button
-        onClick={addEntry}
+        onClick={() => setPortionMenuOpen(true)}
         disabled={!newForm.food.trim() && newSymptoms.length === 0}
         style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() || newSymptoms.length > 0 ? 1 : 0.5 }}
       >
@@ -326,6 +329,56 @@ export default function NewEntryForm({
           )}
         </div>
       </div>
+      {portionMenuOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setPortionMenuOpen(false)}
+        >
+          <div
+            style={{ background: dark ? '#333' : '#fff', padding: 24, borderRadius: 8, minWidth: 200 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ marginBottom: 8 }}>Portionsgröße wählen</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {['small','middle','big'].map(size => (
+                <button
+                  key={size}
+                  onClick={() => { setPortionSize(size); setPortionMenuOpen(false); addEntry(size, ''); setPortionSize('middle'); setPortionGrams(''); }}
+                  style={styles.buttonSecondary('#1976d2')}
+                >
+                  {size}
+                </button>
+              ))}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input
+                  value={portionGrams}
+                  onChange={e => { setPortionSize('custom'); setPortionGrams(e.target.value); }}
+                  placeholder="Gramm"
+                  style={{ ...styles.smallInput, flexGrow: 1 }}
+                />
+                <button
+                  onClick={() => { if (portionGrams.trim()) { setPortionMenuOpen(false); addEntry('custom', portionGrams.trim()); setPortionSize('middle'); setPortionGrams(''); } }}
+                  style={styles.buttonSecondary('#388e3c')}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+            <button onClick={() => setPortionMenuOpen(false)} style={{ ...styles.buttonSecondary('#888'), marginTop: 8 }}>Abbrechen</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -43,6 +43,8 @@ export default function App() {
               ? e.linkId
               : (e.linkId ? parseInt(e.linkId, 10) || null : null),
             createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
+            portionSize: e.portionSize || null,
+            portionGrams: e.portionGrams || '',
           };
           if (!base.tagColorManual) {
             base.tagColor = determineTagColor(base.food, base.symptoms);

@@ -445,21 +445,39 @@ export default function EntryCard({
 
           <>
             <div
-              id={`tag-marker-${idx}`}
-              style={styles.categoryIcon}
-              onClick={e => {
-                if (isExportingPdf) return;
-                e.stopPropagation();
-                setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                setNoteOpenIdx(null);
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: '6px',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                zIndex: 6,
               }}
-              title={
-                !isExportingPdf
-                  ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`
-                  : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`
-              }
             >
-              {TAG_COLOR_ICONS[currentTagColor]}
+              {entry.portionSize && (
+                <span style={{ fontSize: 12 }}>
+                  {entry.portionSize === 'custom' ? `${entry.portionGrams}g` : entry.portionSize}
+                </span>
+              )}
+              <div
+                id={`tag-marker-${idx}`}
+                style={styles.categoryIcon}
+                onClick={e => {
+                  if (isExportingPdf) return;
+                  e.stopPropagation();
+                  setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
+                  setNoteOpenIdx(null);
+                }}
+                title={
+                  !isExportingPdf
+                    ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`
+                    : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`
+                }
+              >
+                {TAG_COLOR_ICONS[currentTagColor]}
+              </div>
             </div>
 
             {!isExportingPdf && colorPickerOpenForIdx === idx && (
