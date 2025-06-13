@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export default function NewEntryForm({
   newForm,
@@ -50,6 +50,7 @@ export default function NewEntryForm({
   const symptomQuickMenuRef = useRef(null);
   const filterBtnRef = useRef(null);
   const filterMenuRef = useRef(null);
+  const [showCategories, setShowCategories] = useState(false);
 
   useEffect(() => {
     const handler = e => {
@@ -158,25 +159,50 @@ export default function NewEntryForm({
 
       <div
         ref={categoryRowRef}
-        style={{ display: 'flex', gap: '8px', marginTop: newForm.imgs.length > 0 ? 8 : 0, marginBottom: 8 }}
+        style={{
+          display: 'flex',
+          gap: '8px',
+          marginTop: newForm.imgs.length > 0 ? 8 : 0,
+          marginBottom: 8,
+          alignItems: 'center',
+        }}
       >
-        {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW].map(colorValue => (
-          <button
-            key={colorValue}
-            type="button"
-            onClick={() =>
-              setNewForm(fm =>
-                fm.tagColorManual && fm.tagColor === colorValue
-                  ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
-                  : { ...fm, tagColor: colorValue, tagColorManual: true }
-              )
-            }
-            style={styles.categoryButton(colorValue, newForm.tagColorManual && newForm.tagColor === colorValue, dark)}
-            title={TAG_COLOR_NAMES[colorValue] || colorValue}
-          >
-            {TAG_COLOR_ICONS[colorValue]}
-          </button>
-        ))}
+        <button
+          type="button"
+          onClick={() => setShowCategories(s => !s)}
+          style={styles.glassyButton(dark)}
+        >
+          Kategorien {showCategories ? '▲' : '▼'}
+        </button>
+        {showCategories &&
+          [
+            TAG_COLORS.GREEN,
+            TAG_COLORS.PURPLE,
+            TAG_COLORS.RED,
+            TAG_COLORS.BLUE,
+            TAG_COLORS.BROWN,
+            TAG_COLORS.YELLOW,
+          ].map(colorValue => (
+            <button
+              key={colorValue}
+              type="button"
+              onClick={() =>
+                setNewForm(fm =>
+                  fm.tagColorManual && fm.tagColor === colorValue
+                    ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
+                    : { ...fm, tagColor: colorValue, tagColorManual: true }
+                )
+              }
+              style={styles.categoryButton(
+                colorValue,
+                newForm.tagColorManual && newForm.tagColor === colorValue,
+                dark
+              )}
+              title={TAG_COLOR_NAMES[colorValue] || colorValue}
+            >
+              {TAG_COLOR_ICONS[colorValue]}
+            </button>
+          ))}
       </div>
 
       <div style={{ marginBottom: 8 }}>
