@@ -392,10 +392,19 @@ export default function EntryCard({
 
           {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
           <div style={{ display: 'flex', flexWrap: 'wrap', margin: '8px 0 0' }}>
-            {sortedAllDisplay.map((s, j) => (
-              <SymTag key={j} txt={s.txt} time={s.time} strength={s.strength} dark={dark} />
-            ))}
+          {sortedAllDisplay.map((s, j) => (
+            <SymTag key={j} txt={s.txt} time={s.time} strength={s.strength} dark={dark} />
+          ))}
+        </div>
+
+        {entry.nutrition && (
+          <div style={{ marginTop: 8, fontSize: 14 }}>
+            <div>Kalorien: {entry.nutrition.calories ?? 'n/a'} kcal</div>
+            <div>Kohlenhydrate: {entry.nutrition.carbs ?? 'n/a'} g</div>
+            <div>Protein: {entry.nutrition.protein ?? 'n/a'} g</div>
+            <div>Fett: {entry.nutrition.fat ?? 'n/a'} g</div>
           </div>
+        )}
 
           {noteOpenIdx === idx && !isExportingPdf && (
             <div onClick={e => e.stopPropagation()} style={{ marginTop: '8px', zIndex: 15 }}>
