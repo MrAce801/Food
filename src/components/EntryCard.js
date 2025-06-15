@@ -227,7 +227,11 @@ export default function EntryCard({
             type="datetime-local"
             value={editForm.date}
             onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
-            style={{ ...styles.input, marginBottom: '12px', width: '100%' }}
+            style={{
+              ...styles.input,
+              marginBottom: '12px',
+              width: showPortion ? 'calc(100% - 70px)' : '100%'
+            }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
