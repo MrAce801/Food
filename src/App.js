@@ -6,8 +6,8 @@ import { exportTableToPdf } from "./utils/pdf";
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
-import PdfButton from "./components/PdfButton";
-import PrintButton from "./components/PrintButton";
+import ExportButton from "./components/ExportButton";
+import LanguageButton from "./components/LanguageButton";
 import PersonButton from "./components/PersonButton";
 import CameraButton from "./components/CameraButton";
 import ImgStack from "./components/ImgStack";
@@ -16,6 +16,8 @@ import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
 import DayGroup from "./components/DayGroup";
+import { LanguageContext } from './LanguageContext';
+import useTranslation from './useTranslation';
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
 
@@ -23,6 +25,8 @@ import { sortEntries, sortEntriesByCategory } from "./utils";
 export default function App() {
   // --- STATE VARIABLEN ---
   const [dark, setDark] = useState(false);
+  const [language, setLanguage] = useState(() => localStorage.getItem('fd-lang') || 'de');
+  const t = useTranslation();
   const [entries, setEntries] = useState(() => {
     try {
       const initialArr = JSON.parse(localStorage.getItem("fd-entries") || "[]");
@@ -346,7 +350,7 @@ export default function App() {
     if (pdfExportTriggered.current) {
       exportTableToPdf(el)
         .then(ok => {
-          addToast(ok ? 'PDF erfolgreich exportiert!' : 'Fehler beim PDF-Export.');
+          addToast(ok ? t('PDF erfolgreich exportiert!') : t('Fehler beim PDF-Export.'));
         })
         .finally(cleanup);
     } else if (printTriggered.current) {
@@ -394,7 +398,7 @@ export default function App() {
     pdfExportTriggered.current = true;
     printTriggered.current = false;
     setExportStatus('preparing');
-    addToast("PDF Export wird vorbereitet...");
+    addToast(t('PDF Export wird vorbereitet...'));
   };
 
   const handlePrint = () => {
@@ -402,6 +406,14 @@ export default function App() {
     printTriggered.current = true;
     pdfExportTriggered.current = false;
     setExportStatus('preparing');
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(lang => {
+      const newLang = lang === 'de' ? 'en' : 'de';
+      localStorage.setItem('fd-lang', newLang);
+      return newLang;
+    });
   };
 
   const handlePersonChange = (field, value) => {
@@ -825,6 +837,7 @@ export default function App() {
   // --- JSX RENDERING LOGIK ---
 
   return (
+    <LanguageContext.Provider value={language}>
     <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar} className="top-bar">
@@ -833,11 +846,11 @@ export default function App() {
         </button>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <PersonButton onClick={() => setShowPerson(true)} dark={dark} />
-          <PdfButton onClick={handleExportPDF} dark={dark} />
-          <PrintButton onClick={handlePrint} dark={dark} />
+          <ExportButton onExportPdf={handleExportPDF} onPrint={handlePrint} dark={dark} />
+          <LanguageButton toggle={toggleLanguage} dark={dark} />
         </div>
       </div>
-      <h2 style={styles.title}>Food Diary</h2>
+      <h2 style={styles.title}>{t('Food Diary')}</h2>
 
       {/* Neuer Eintrag Formular */}
 
@@ -963,6 +976,7 @@ export default function App() {
             styles={styles}
             TAG_COLORS={TAG_COLORS}
             TAG_COLOR_ICONS={TAG_COLOR_ICONS}
+            language={language}
           />
         ))}
       </div>
@@ -1059,5 +1073,6 @@ export default function App() {
         </div>
       )}
     </div>
+    </LanguageContext.Provider>
   );
 }

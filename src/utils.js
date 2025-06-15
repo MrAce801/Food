@@ -1,5 +1,23 @@
 // --- HILFSFUNKTIONEN ---
 import { TAG_COLORS } from "./constants";
+const MONTH_NAMES = {
+  en: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+  de: ["Januar","Februar","Mrz","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
+};
+function englishOrdinal(n){
+  if(n%10===1&&n%100!==11) return "st";
+  if(n%10===2&&n%100!==12) return "nd";
+  if(n%10===3&&n%100!==13) return "rd";
+  return "th";
+}
+function formatCollapsedDay(day, lang){
+  const [d,m] = day.split(".");
+  const dayNum = parseInt(d,10);
+  const monthIdx = parseInt(m,10)-1;
+  if(lang==="de") return `${dayNum}. ${MONTH_NAMES.de[monthIdx]}`;
+  return `${dayNum}${englishOrdinal(dayNum)} of ${MONTH_NAMES.en[monthIdx]}`;
+}
+
 function resizeToJpeg(file, maxWidth = 800) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -159,4 +177,4 @@ const sortEntriesByCategory = (a, b) => {
 };
 
 
-export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory };
+export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory , formatCollapsedDay };
