@@ -509,8 +509,15 @@ export default function EntryCard({
                 {['S','M','L'].map(size => (
                   <div
                     key={size}
-                    style={styles.portionPickerItem(PORTION_COLORS[size], portion.size === size, dark)}
-                    onClick={() => { setEditForm(fm => ({ ...fm, portion: { size, grams: null } })); setShowEditPortionQuick(false); }}
+                    style={styles.portionPickerItem(
+                      PORTION_COLORS[size],
+                      (editForm.portion || { size: 'M' }).size === size,
+                      dark
+                    )}
+                    onClick={() => {
+                      setEditForm(fm => ({ ...fm, portion: { size, grams: null } }));
+                      setShowEditPortionQuick(false);
+                    }}
                   >
                     {size}
                   </div>

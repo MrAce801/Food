@@ -97,7 +97,11 @@ const translations = {
     'PDF': 'PDF',
     'Language': 'Sprache',
     'Exercise': 'Übung',
-    'Favorite': 'Favorit'
+    'Favorite': 'Favorit',
+    'Portion': 'Portion',
+    'Portion wählen': 'Portion wählen',
+    'Benutzerdefiniert': 'Benutzerdefiniert',
+    'Gramm': 'Gramm'
   }
 };
 
