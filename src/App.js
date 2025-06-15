@@ -613,6 +613,16 @@ export default function App() {
     setColorPickerOpenForIdx(null);
   };
 
+  const handlePortionChange = (entryIdx, portion) => {
+    setEntries(prevEntries =>
+      prevEntries.map((entry, i) =>
+        i === entryIdx ? { ...entry, portion } : entry
+      )
+    );
+    addToast(t('Portion geändert'));
+    setShowEditPortionQuick(false);
+  };
+
   const handlePinClick = (idx) => {
     const day = dayOf(entries[idx]);
 
@@ -964,6 +974,7 @@ export default function App() {
               colorPickerOpenForIdx,
               setColorPickerOpenForIdx,
               handleTagColorChange,
+              handlePortionChange,
               noteOpenIdx,
               setNoteOpenIdx,
               toggleNote,

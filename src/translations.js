@@ -89,7 +89,8 @@ const translations = {
     'Portion': 'Portion',
     'Portion wählen': 'Select portion',
     'Benutzerdefiniert': 'Custom',
-    'Gramm': 'grams'
+    'Gramm': 'grams',
+    'Portion geändert': 'Portion updated'
   },
   de: {
     'Export': 'Exportieren',
@@ -101,7 +102,8 @@ const translations = {
     'Portion': 'Portion',
     'Portion wählen': 'Portion wählen',
     'Benutzerdefiniert': 'Benutzerdefiniert',
-    'Gramm': 'Gramm'
+    'Gramm': 'Gramm',
+    'Portion geändert': 'Portion geändert'
   }
 };
 

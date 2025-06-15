@@ -193,17 +193,22 @@ export default function NewEntryForm({
         >
           {t('Kategorien')} {showCategories ? '▼' : '▶'}
         </button>
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', marginLeft: 4 }}>
           <button
             ref={portionBtnRef}
             type="button"
             onClick={() => setShowPortionQuick(s => !s)}
-            style={styles.glassyButton(dark)}
+            style={{
+              ...styles.glassyButton(dark),
+              color: PORTION_COLORS[
+                newForm.portion.size === 'custom' ? 'M' : newForm.portion.size
+              ],
+            }}
           >
             {newForm.portion.size === 'custom' ? `${newForm.portion.grams || ''}g` : newForm.portion.size}
           </button>
           {showPortionQuick && (
-            <div ref={portionMenuRef} style={{ ...styles.portionPickerPopup(dark), top: '40px', left: 0 }}>
+            <div ref={portionMenuRef} style={styles.portionPickerPopup(dark)}>
               {['S','M','L'].map(size => (
                 <div
                   key={size}

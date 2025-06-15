@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
 
@@ -27,6 +27,7 @@ export default function EntryCard({
   colorPickerOpenForIdx,
   setColorPickerOpenForIdx,
   handleTagColorChange,
+  handlePortionChange,
   noteOpenIdx,
   setNoteOpenIdx,
   toggleNote,
@@ -58,6 +59,14 @@ export default function EntryCard({
   marginBottom = 16
 }) {
   const t = useTranslation();
+  const [quickGrams, setQuickGrams] = useState(
+    entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
+  );
+  useEffect(() => {
+    setQuickGrams(
+      entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
+    );
+  }, [entry.portion]);
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
     (entry.symptoms || []).map(s => ({
@@ -112,7 +121,10 @@ export default function EntryCard({
         onClick={e => {
           if (isExportingPdf) return;
           e.stopPropagation();
-          setShowEditPortionQuick(showEditPortionQuick ? false : true);
+          setQuickGrams(
+            entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
+          );
+          setShowEditPortionQuick(s => !s);
         }}
         title={t('Portion wählen')}
       >
@@ -500,7 +512,7 @@ export default function EntryCard({
               </div>
             )}
 
-            {!isExportingPdf && showEditPortionQuick && editingIdx === idx && (
+            {!isExportingPdf && showEditPortionQuick && (
               <div
                 id="portion-picker-container"
                 style={styles.portionPickerPopup(dark)}
@@ -511,12 +523,15 @@ export default function EntryCard({
                     key={size}
                     style={styles.portionPickerItem(
                       PORTION_COLORS[size],
-                      (editForm.portion || { size: 'M' }).size === size,
+                      (editingIdx === idx ? editForm.portion : entry.portion || { size: 'M' }).size === size,
                       dark
                     )}
                     onClick={() => {
-                      setEditForm(fm => ({ ...fm, portion: { size, grams: null } }));
-                      setShowEditPortionQuick(false);
+                      if (editingIdx === idx) {
+                        setEditForm(fm => ({ ...fm, portion: { size, grams: null } }));
+                      } else {
+                        handlePortionChange(idx, { size, grams: null });
+                      }
                     }}
                   >
                     {size}
@@ -525,12 +540,26 @@ export default function EntryCard({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <input
                     type="number"
-                    value={editForm.portion?.size === 'custom' ? editForm.portion.grams || '' : ''}
-                    onChange={e => setEditForm(fm => ({ ...fm, portion: { size: 'custom', grams: e.target.value } }))}
+                    value={editingIdx === idx ? (editForm.portion?.size === 'custom' ? editForm.portion.grams || '' : '') : quickGrams}
+                    onChange={e => {
+                      if (editingIdx === idx) {
+                        setEditForm(fm => ({ ...fm, portion: { size: 'custom', grams: e.target.value } }));
+                      } else {
+                        setQuickGrams(e.target.value);
+                      }
+                    }}
                     style={{ ...styles.smallInput, width: '70px' }}
                   />
                   <span>g</span>
-                  <button onClick={() => setShowEditPortionQuick(false)} style={{ ...styles.buttonSecondary('#1976d2'), padding: '4px 8px', fontSize: 12 }}>
+                  <button
+                    onClick={() => {
+                      if (editingIdx !== idx) {
+                        handlePortionChange(idx, { size: 'custom', grams: quickGrams });
+                      }
+                      setShowEditPortionQuick(false);
+                    }}
+                    style={{ ...styles.buttonSecondary('#1976d2'), padding: '4px 8px', fontSize: 12 }}
+                  >
                     OK
                   </button>
                 </div>

@@ -321,7 +321,7 @@ const styles = {
   portionLabel: (size) => ({
     position: 'absolute',
     top: '36px',
-    right: '34px',
+    right: '38px',
     transform: 'translateY(-50%)',
     fontSize: '16px',
     fontWeight: 'bold',
@@ -331,15 +331,16 @@ const styles = {
   }),
   portionPickerPopup: (dark) => ({
     position: 'absolute',
-    bottom: '30px',
-    right: '40px',
+    top: '50%',
+    left: 'calc(100% + 4px)',
+    transform: 'translateY(-50%)',
     background: dark ? '#4a4a52' : '#fff',
     padding: '8px',
     borderRadius: '6px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
     zIndex: 30,
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
     gap: '6px',
   }),
   portionPickerItem: (color, isActive, dark) => ({
