@@ -85,7 +85,12 @@ const translations = {
     'Schleim im Hals': 'Mucus in throat',
     'Niesen': 'Sneezing',
     'Kopfschmerzen': 'Headaches',
-    'Rötung Haut': 'Skin redness'
+    'Rötung Haut': 'Skin redness',
+    'Portion': 'Portion',
+    'Portion wählen': 'Select portion',
+    'Benutzerdefiniert': 'Custom',
+    'Gramm': 'grams',
+    'Portion geändert': 'Portion updated'
   },
   de: {
     'Export': 'Exportieren',
@@ -93,7 +98,12 @@ const translations = {
     'PDF': 'PDF',
     'Language': 'Sprache',
     'Exercise': 'Übung',
-    'Favorite': 'Favorit'
+    'Favorite': 'Favorit',
+    'Portion': 'Portion',
+    'Portion wählen': 'Portion wählen',
+    'Benutzerdefiniert': 'Benutzerdefiniert',
+    'Gramm': 'Gramm',
+    'Portion geändert': 'Portion geändert'
   }
 };
 

@@ -43,6 +43,7 @@ export default function App() {
             symptoms,
             tagColor: e.tagColor || TAG_COLORS.GREEN,
             tagColorManual: e.tagColorManual || false,
+            portion: e.portion || { size: 'M', grams: null },
             linkId: typeof e.linkId === 'number'
               ? e.linkId
               : (e.linkId ? parseInt(e.linkId, 10) || null : null),
@@ -98,6 +99,7 @@ export default function App() {
   });
   const [showEditFoodQuick, setShowEditFoodQuick] = useState(false);
   const [showEditSymptomQuick, setShowEditSymptomQuick] = useState(false);
+  const [showEditPortionQuick, setShowEditPortionQuick] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [sortMode, setSortMode] = useState('date');
@@ -243,6 +245,10 @@ export default function App() {
         const area = document.getElementById('edit-symptom-input-container');
         if (area && !area.contains(e.target)) setShowEditSymptomQuick(false);
       }
+      if (showEditPortionQuick) {
+        const area = document.getElementById('portion-picker-container');
+        if (area && !area.contains(e.target)) setShowEditPortionQuick(false);
+      }
       if (filterMenuOpen) {
         const area = document.getElementById('filter-menu-container');
         if (area && !area.contains(e.target)) setFilterMenuOpen(false);
@@ -250,7 +256,7 @@ export default function App() {
     };
     document.addEventListener('mousedown', handleQuickClose);
     return () => document.removeEventListener('mousedown', handleQuickClose);
-  }, [showEditFoodQuick, showEditSymptomQuick, filterMenuOpen]);
+  }, [showEditFoodQuick, showEditSymptomQuick, showEditPortionQuick, filterMenuOpen]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -382,7 +388,9 @@ export default function App() {
     showFoodQuick,
     setShowFoodQuick,
     showSymptomQuick,
-    setShowSymptomQuick
+    setShowSymptomQuick,
+    showPortionQuick,
+    setShowPortionQuick
   } = useNewEntryForm(setEntries, addToast);
 
   const toggleDay = day => {
@@ -455,7 +463,8 @@ export default function App() {
         symptomTime: 0,
         newSymptomStrength: 1,
         date: toDateTimePickerFormat(e.date),
-        linkId: e.linkId || null
+        linkId: e.linkId || null,
+        portion: e.portion || { size: 'M', grams: null }
     });
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
@@ -467,6 +476,7 @@ export default function App() {
     setEditForm(null);
     setShowEditFoodQuick(false);
     setShowEditSymptomQuick(false);
+    setShowEditPortionQuick(false);
   };
 
   const addEditSymptom = () => {
@@ -551,6 +561,7 @@ export default function App() {
                 date: displayDateToSave,
                 linkId: editForm.linkId || null,
                 tagColor: newColor,
+                portion: editForm.portion,
               }
             : ent
         )
@@ -600,6 +611,16 @@ export default function App() {
       )
     );
     setColorPickerOpenForIdx(null);
+  };
+
+  const handlePortionChange = (entryIdx, portion) => {
+    setEntries(prevEntries =>
+      prevEntries.map((entry, i) =>
+        i === entryIdx ? { ...entry, portion } : entry
+      )
+    );
+    addToast(t('Portion geändert'));
+    setShowEditPortionQuick(false);
   };
 
   const handlePinClick = (idx) => {
@@ -889,6 +910,8 @@ export default function App() {
         setShowFoodQuick={setShowFoodQuick}
         showSymptomQuick={showSymptomQuick}
         setShowSymptomQuick={setShowSymptomQuick}
+        showPortionQuick={showPortionQuick}
+        setShowPortionQuick={setShowPortionQuick}
         QuickMenu={QuickMenu}
         filterTags={filterTags}
         setFilterTags={setFilterTags}
@@ -951,6 +974,7 @@ export default function App() {
               colorPickerOpenForIdx,
               setColorPickerOpenForIdx,
               handleTagColorChange,
+              handlePortionChange,
               noteOpenIdx,
               setNoteOpenIdx,
               toggleNote,
@@ -977,6 +1001,8 @@ export default function App() {
               setShowEditFoodQuick,
               showEditSymptomQuick,
               setShowEditSymptomQuick,
+              showEditPortionQuick,
+              setShowEditPortionQuick,
             }}
             styles={styles}
             TAG_COLORS={TAG_COLORS}

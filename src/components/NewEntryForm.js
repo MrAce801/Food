@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useTranslation from '../useTranslation';
+import { PORTION_COLORS } from '../constants';
 
 export default function NewEntryForm({
   newForm,
@@ -31,6 +32,8 @@ export default function NewEntryForm({
   setShowFoodQuick,
   showSymptomQuick,
   setShowSymptomQuick,
+  showPortionQuick,
+  setShowPortionQuick,
   QuickMenu,
   filterTags,
   setFilterTags,
@@ -49,6 +52,8 @@ export default function NewEntryForm({
   const foodQuickMenuRef = useRef(null);
   const symptomQuickBtnRef = useRef(null);
   const symptomQuickMenuRef = useRef(null);
+  const portionBtnRef = useRef(null);
+  const portionMenuRef = useRef(null);
   const filterBtnRef = useRef(null);
   const filterMenuRef = useRef(null);
   const [showCategories, setShowCategories] = useState(false);
@@ -88,6 +93,16 @@ export default function NewEntryForm({
       }
 
       if (
+        showPortionQuick &&
+        portionMenuRef.current &&
+        !portionMenuRef.current.contains(target) &&
+        portionBtnRef.current &&
+        !portionBtnRef.current.contains(target)
+      ) {
+        setShowPortionQuick(false);
+      }
+
+      if (
         filterMenuOpen &&
         filterMenuRef.current &&
         !filterMenuRef.current.contains(target) &&
@@ -105,6 +120,8 @@ export default function NewEntryForm({
     setShowFoodQuick,
     showSymptomQuick,
     setShowSymptomQuick,
+    showPortionQuick,
+    setShowPortionQuick,
     filterMenuOpen,
     setFilterMenuOpen,
   ]);
@@ -176,6 +193,44 @@ export default function NewEntryForm({
         >
           {t('Kategorien')} {showCategories ? '▼' : '▶'}
         </button>
+        <div style={{ position: 'relative', marginLeft: 4 }}>
+          <button
+            ref={portionBtnRef}
+            type="button"
+            onClick={() => setShowPortionQuick(s => !s)}
+            style={{
+              ...styles.glassyButton(dark),
+              color: PORTION_COLORS[
+                newForm.portion.size === 'custom' ? 'M' : newForm.portion.size
+              ],
+            }}
+          >
+            {newForm.portion.size === 'custom' ? `${newForm.portion.grams || ''}g` : newForm.portion.size}
+          </button>
+          {showPortionQuick && (
+            <div ref={portionMenuRef} style={styles.portionPickerPopup(dark)}>
+              {['S','M','L'].map(size => (
+                <div
+                  key={size}
+                  style={styles.portionPickerItem(PORTION_COLORS[size], newForm.portion.size === size, dark)}
+                  onClick={() => { setNewForm(fm => ({ ...fm, portion: { size, grams: null } })); setShowPortionQuick(false); }}
+                >
+                  {size}
+                </div>
+              ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                  type="number"
+                  value={newForm.portion.size === 'custom' ? newForm.portion.grams || '' : ''}
+                  onChange={e => setNewForm(fm => ({ ...fm, portion: { size: 'custom', grams: e.target.value } }))}
+                  style={{ ...styles.smallInput, width: '70px' }}
+                />
+                <span>g</span>
+                <button onClick={() => setShowPortionQuick(false)} style={{ ...styles.buttonSecondary('#1976d2'), padding: '4px 8px', fontSize: 12 }}>OK</button>
+              </div>
+            </div>
+          )}
+        </div>
         {showCategories &&
           [
             TAG_COLORS.PURPLE,
