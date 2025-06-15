@@ -216,7 +216,7 @@ export default function EntryCard({
                 value={editForm.symptomTime}
                 onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
                 onFocus={handleFocus}
-                style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
+                style={{ ...styles.smallInput, width: '120px', flexShrink: 0 }}
               >
                 {TIME_CHOICES.map(tc => (
                   <option key={tc.value} value={tc.value}>
@@ -228,7 +228,7 @@ export default function EntryCard({
                 value={editForm.newSymptomStrength}
                 onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
                 onFocus={handleFocus}
-                style={{ ...styles.smallInput, width: '100px', flexShrink: 0 }}
+                style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
               >
                 {[1, 2, 3].map(n => (
                   <option key={n} value={n}>
@@ -280,7 +280,7 @@ export default function EntryCard({
                       return { ...fm, symptoms: sortSymptomsByTime(updated) };
                     })
                   }
-                  style={{ ...styles.smallInput, width: '22px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '32px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {TIME_CHOICES.map(t => (
                     <option key={t.value} value={t.value}>
@@ -298,7 +298,7 @@ export default function EntryCard({
                       )
                     }))
                   }
-                  style={{ ...styles.smallInput, width: '15px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '25px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {[1, 2, 3].map(n => (
                     <option key={n} value={n}>
