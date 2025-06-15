@@ -324,7 +324,7 @@ const styles = {
     right: '38px',
     transform: 'translateY(-50%)',
     fontSize: '16px',
-    fontWeight: 'bold',
+    fontWeight: 600,
     cursor: 'pointer',
     color: size === 'S' ? '#8bc34a' : size === 'M' ? '#ffb74d' : '#e57373',
     zIndex: 6,

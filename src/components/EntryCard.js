@@ -115,21 +115,25 @@ export default function EntryCard({
           </svg>
         </div>
       </div>
-      <div
-        id={`portion-label-${idx}`}
-        style={styles.portionLabel(currentPortion.size === 'custom' ? 'M' : currentPortion.size)}
-        onClick={e => {
-          if (isExportingPdf) return;
-          e.stopPropagation();
-          setQuickGrams(
-            entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
-          );
-          setShowEditPortionQuick(s => !s);
-        }}
-        title={t('Portion wählen')}
-      >
-        {portionDisplay || 'M'}
-      </div>
+      {editingIdx !== idx && (
+        <div
+          id={`portion-label-${idx}`}
+          style={styles.portionLabel(
+            currentPortion.size === 'custom' ? 'M' : currentPortion.size
+          )}
+          onClick={e => {
+            if (isExportingPdf) return;
+            e.stopPropagation();
+            setQuickGrams(
+              entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
+            );
+            setShowEditPortionQuick(s => !s);
+          }}
+          title={t('Portion wählen')}
+        >
+          {portionDisplay || 'M'}
+        </div>
+      )}
       {editingIdx === idx && !isExportingPdf ? (
         <>
           <button
