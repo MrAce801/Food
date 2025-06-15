@@ -318,16 +318,21 @@ const styles = {
     overflow: 'visible',
     cursor: 'pointer',
   },
-  portionLabel: (size) => ({
+  portionContainer: () => ({
     position: 'absolute',
     top: '36px',
     right: '38px',
     transform: 'translateY(-50%)',
+    display: 'flex',
+    alignItems: 'center',
+    zIndex: 6,
+  }),
+  portionLabel: (size) => ({
+    position: 'relative',
     fontSize: '16px',
     fontWeight: 600,
     cursor: 'pointer',
     color: size === 'S' ? '#8bc34a' : size === 'M' ? '#ffb74d' : '#e57373',
-    zIndex: 6,
   }),
   portionPickerPopup: (dark, openLeft = false) => ({
     position: 'absolute',
