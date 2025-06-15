@@ -75,7 +75,17 @@ const translations = {
     'nach 45 min': 'after 45 min',
     'nach 60 min': 'after 60 min',
     'nach 1,5 h': 'after 1.5 h',
-    'nach 3 h': 'after 3 h'
+    'nach 3 h': 'after 3 h',
+    'Bauchschmerzen': 'Abdominal pain',
+    'Durchfall': 'Diarrhea',
+    'Blähungen': 'Bloating',
+    'Hautausschlag': 'Rash',
+    'Juckreiz': 'Itching',
+    'Schwellung am Gaumen': 'Palate swelling',
+    'Schleim im Hals': 'Mucus in throat',
+    'Niesen': 'Sneezing',
+    'Kopfschmerzen': 'Headaches',
+    'Rötung Haut': 'Skin redness'
   },
   de: {
     'Export': 'Exportieren',

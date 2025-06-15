@@ -16,7 +16,7 @@ const QuickMenu = React.forwardRef(function QuickMenu({ items, onSelect, style }
             onClick={() => onSelect(item)}
             style={{ padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap', color: '#222' }}
           >
-            {item}
+            {t(item)}
           </div>
         ))
       ) : (
