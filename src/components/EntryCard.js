@@ -80,10 +80,17 @@ export default function EntryCard({
     : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
-  const currentPortion = editingIdx === idx && editForm ? (editForm.portion || { size: null, grams: null }) : (entry.portion || { size: null, grams: null });
-  const portionDisplay = currentPortion.size === 'custom'
-    ? `${currentPortion.grams || ''}g`
-    : currentPortion.size;
+  const currentPortion =
+    editingIdx === idx && editForm
+      ? editForm.portion || { size: null, grams: null }
+      : entry.portion || { size: null, grams: null };
+  const portionDisplay =
+    currentPortion.size === 'custom'
+      ? `${currentPortion.grams || ''}g`
+      : currentPortion.size;
+  const showPortion =
+    [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) &&
+    (editingIdx === idx || (entry.portion && entry.portion.size));
 
   return (
     <div
@@ -117,7 +124,7 @@ export default function EntryCard({
           </svg>
         </div>
       </div>
-      {editingIdx !== idx && [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) && (
+      {showPortion && (
         <div style={styles.portionContainer()}>
           <div
             id={`portion-label-${idx}`}
