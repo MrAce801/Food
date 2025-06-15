@@ -1,6 +1,8 @@
 import React from 'react';
+import useTranslation from '../useTranslation';
 
 const FilterMenu = React.forwardRef(function FilterMenu({ options, selected, onToggle, sortMode, setSortMode, style }, ref) {
+  const t = useTranslation();
   return (
     <div
       ref={ref}
@@ -8,7 +10,7 @@ const FilterMenu = React.forwardRef(function FilterMenu({ options, selected, onT
       style={{ position: 'absolute', background: '#fff', border: '1px solid #ccc', borderRadius: 4, zIndex: 50, padding: 4, fontSize: 14, ...style }}
     >
       <div style={{ padding: '4px 8px', borderBottom: '1px solid #ddd', marginBottom: 4 }}>
-        <strong>Sortierung:</strong>
+        <strong>{t('Sortierung:')}</strong>
         <label style={{ marginLeft: 8, fontSize: 14 }}>
           <input
             type="radio"
@@ -17,7 +19,7 @@ const FilterMenu = React.forwardRef(function FilterMenu({ options, selected, onT
             onChange={() => setSortMode('date')}
             style={{ marginRight: 4 }}
           />
-          Datum
+          {t('Datum')}
         </label>
         <label style={{ marginLeft: 8, fontSize: 14 }}>
           <input
@@ -27,7 +29,7 @@ const FilterMenu = React.forwardRef(function FilterMenu({ options, selected, onT
             onChange={() => setSortMode('category')}
             style={{ marginRight: 4 }}
           />
-          Kategorie
+          {t('Kategorie')}
         </label>
       </div>
       {options.map(opt => (

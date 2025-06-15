@@ -1,6 +1,7 @@
 import React from 'react';
 import EntryCard from './EntryCard';
 import { formatCollapsedDay } from '../utils';
+import useTranslation from '../useTranslation';
 
 export default function DayGroup({
   day,
@@ -18,6 +19,7 @@ export default function DayGroup({
   TAG_COLOR_ICONS,
   language,
 }) {
+  const t = useTranslation();
   const colorCounts = entries.reduce((acc, { entry }) => {
     const color = entry.tagColor || TAG_COLORS.GREEN;
     acc[color] = (acc[color] || 0) + 1;
@@ -40,7 +42,7 @@ export default function DayGroup({
             <button
               onClick={e => { e.stopPropagation(); toggleDay(day); }}
               style={styles.collapseButton(dark)}
-              aria-label="Expand day"
+              aria-label={t('Expand day')}
             >
               ▶
             </button>
@@ -66,7 +68,7 @@ export default function DayGroup({
             <button
               onClick={e => { e.stopPropagation(); toggleDay(day); }}
               style={styles.collapseButton(dark)}
-              aria-label="Collapse day"
+              aria-label={t('Collapse day')}
             >
               ▼
             </button>

@@ -1,6 +1,8 @@
 import React from 'react';
+import useTranslation from '../useTranslation';
 
 const QuickMenu = React.forwardRef(function QuickMenu({ items, onSelect, style }, ref) {
+  const t = useTranslation();
   return (
     <div
       ref={ref}
@@ -18,7 +20,7 @@ const QuickMenu = React.forwardRef(function QuickMenu({ items, onSelect, style }
           </div>
         ))
       ) : (
-        <div style={{ padding: '4px 8px', color: '#444' }}>Keine Favoriten</div>
+        <div style={{ padding: '4px 8px', color: '#444' }}>{t('Keine Favoriten')}</div>
       )}
     </div>
   );

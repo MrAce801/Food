@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '../styles';
 import { useLanguage } from '../LanguageContext';
 
-const FLAG = { en: '🇺🇸', de: '🇩🇪' };
+const FLAG = { en: '🇬🇧', de: '🇩🇪' };
 
 const LanguageButton = ({ toggle, dark }) => {
   const lang = useLanguage();
