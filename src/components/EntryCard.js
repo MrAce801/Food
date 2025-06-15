@@ -519,7 +519,7 @@ export default function EntryCard({
             {!isExportingPdf && showEditPortionQuickIdx === idx && (
               <div
                 id="portion-picker-container"
-                style={styles.portionPickerPopup(dark)}
+                style={styles.portionPickerPopup(dark, true)}
                 onClick={e => e.stopPropagation()}
               >
                 {['S','M','L'].map(size => (

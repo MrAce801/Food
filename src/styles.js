@@ -329,10 +329,12 @@ const styles = {
     color: size === 'S' ? '#8bc34a' : size === 'M' ? '#ffb74d' : '#e57373',
     zIndex: 6,
   }),
-  portionPickerPopup: (dark) => ({
+  portionPickerPopup: (dark, openLeft = false) => ({
     position: 'absolute',
     top: '50%',
-    right: 'calc(100% + 4px)',
+    ...(openLeft
+      ? { right: 'calc(100% + 10px)' }
+      : { left: 'calc(100% + 4px)' }),
     transform: 'translateY(-50%)',
     background: dark ? '#4a4a52' : '#fff',
     padding: '8px',
