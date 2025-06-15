@@ -80,8 +80,17 @@ export default function EntryCard({
     : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
-  const currentPortion = editingIdx === idx && editForm ? (editForm.portion || { size: 'M', grams: null }) : (entry.portion || { size: 'M', grams: null });
-  const portionDisplay = currentPortion.size === 'custom' ? `${currentPortion.grams || ''}g` : currentPortion.size;
+  const currentPortion =
+    editingIdx === idx && editForm
+      ? editForm.portion || { size: null, grams: null }
+      : entry.portion || { size: null, grams: null };
+  const portionDisplay =
+    currentPortion.size === 'custom'
+      ? `${currentPortion.grams || ''}g`
+      : currentPortion.size;
+  const showPortion =
+    [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) &&
+    (editingIdx === idx || (entry.portion && entry.portion.size));
 
   return (
     <div
@@ -115,7 +124,7 @@ export default function EntryCard({
           </svg>
         </div>
       </div>
-      {editingIdx !== idx && [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) && (
+      {showPortion && (
         <div style={styles.portionContainer()}>
           <div
             id={`portion-label-${idx}`}
@@ -132,7 +141,7 @@ export default function EntryCard({
             }}
             title={t('Portion wählen')}
           >
-            {portionDisplay || 'M'}
+            {portionDisplay || t('Portion')}
           </div>
           {!isExportingPdf && showEditPortionQuickIdx === idx && (
             <div
@@ -145,7 +154,7 @@ export default function EntryCard({
                   key={size}
                   style={styles.portionPickerItem(
                     PORTION_COLORS[size],
-                    (editingIdx === idx ? editForm.portion : entry.portion || { size: 'M' }).size === size,
+                    (editingIdx === idx ? editForm.portion : entry.portion || { size: null }).size === size,
                     dark
                   )}
                   onClick={() => {
@@ -184,6 +193,20 @@ export default function EntryCard({
                 >
                   OK
                 </button>
+                <button
+                  onClick={() => {
+                    if (editingIdx === idx) {
+                      setEditForm(fm => ({ ...fm, portion: null }));
+                    } else {
+                      handlePortionChange(idx, null);
+                    }
+                    setShowEditPortionQuickIdx(null);
+                  }}
+                  style={{ ...styles.buttonSecondary('#d32f2f'), padding: '4px 8px', fontSize: 12 }}
+                  title={t('Portion entfernen')}
+                >
+                  ×
+                </button>
               </div>
             </div>
           )}
@@ -204,7 +227,13 @@ export default function EntryCard({
             type="datetime-local"
             value={editForm.date}
             onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
-            style={{ ...styles.input, marginBottom: '12px', width: '100%' }}
+            style={{
+              ...styles.input,
+              display: 'inline-block',
+              marginBottom: '12px',
+              width: 'fit-content',
+              marginRight: showPortion ? '70px' : 0
+            }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>

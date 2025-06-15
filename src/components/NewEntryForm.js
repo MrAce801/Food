@@ -202,10 +202,12 @@ export default function NewEntryForm({
               ...styles.glassyButton(dark),
               color: PORTION_COLORS[
                 newForm.portion.size === 'custom' ? 'M' : newForm.portion.size
-              ],
+              ] || '#aaa',
             }}
           >
-            {newForm.portion.size === 'custom' ? `${newForm.portion.grams || ''}g` : newForm.portion.size}
+            {newForm.portion.size === 'custom'
+              ? `${newForm.portion.grams || ''}g`
+              : newForm.portion.size || t('Portion')}
           </button>
           {showPortionQuick && (
             <div ref={portionMenuRef} style={styles.portionPickerPopup(dark)}>
@@ -227,6 +229,13 @@ export default function NewEntryForm({
                 />
                 <span>g</span>
                 <button onClick={() => setShowPortionQuick(false)} style={{ ...styles.buttonSecondary('#1976d2'), padding: '4px 8px', fontSize: 12 }}>OK</button>
+                <button
+                  onClick={() => { setNewForm(fm => ({ ...fm, portion: { size: null, grams: null } })); setShowPortionQuick(false); }}
+                  style={{ ...styles.buttonSecondary('#d32f2f'), padding: '4px 8px', fontSize: 12 }}
+                  title={t('Portion entfernen')}
+                >
+                  ×
+                </button>
               </div>
             </div>
           )}

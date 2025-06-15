@@ -332,7 +332,14 @@ const styles = {
     fontSize: '16px',
     fontWeight: 600,
     cursor: 'pointer',
-    color: size === 'S' ? '#8bc34a' : size === 'M' ? '#ffb74d' : '#e57373',
+    color:
+      size === 'S'
+        ? '#8bc34a'
+        : size === 'M'
+        ? '#ffb74d'
+        : size === 'L'
+        ? '#e57373'
+        : '#999',
   }),
   portionPickerPopup: (dark, openLeft = false) => ({
     position: 'absolute',
