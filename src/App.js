@@ -43,7 +43,7 @@ export default function App() {
             symptoms,
             tagColor: e.tagColor || TAG_COLORS.GREEN,
             tagColorManual: e.tagColorManual || false,
-            portion: e.portion || { size: 'M', grams: null },
+            portion: e.portion || { size: null, grams: null },
             linkId: typeof e.linkId === 'number'
               ? e.linkId
               : (e.linkId ? parseInt(e.linkId, 10) || null : null),
@@ -464,7 +464,7 @@ export default function App() {
         newSymptomStrength: 1,
         date: toDateTimePickerFormat(e.date),
         linkId: e.linkId || null,
-        portion: e.portion || { size: 'M', grams: null }
+        portion: e.portion || { size: null, grams: null }
     });
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);

@@ -7,7 +7,7 @@ export default function useNewEntryForm(setEntries, addToast) {
   const t = useTranslation();
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem('fd-form-new');
-    const initialForm = { food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false, portion: { size: 'M', grams: null } };
+    const initialForm = { food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false, portion: { size: null, grams: null } };
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -18,7 +18,7 @@ export default function useNewEntryForm(setEntries, addToast) {
           symptomStrength: strength,
           tagColor: parsed.tagColor || TAG_COLORS.GREEN,
           tagColorManual: parsed.tagColorManual || false,
-          portion: parsed.portion || { size: 'M', grams: null },
+          portion: parsed.portion || { size: null, grams: null },
         };
       } catch {
         return initialForm;
@@ -92,7 +92,7 @@ export default function useNewEntryForm(setEntries, addToast) {
       portion: newForm.portion,
     };
     setEntries(prev => [...prev, entry].sort(sortEntries));
-    setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false, portion: { size: 'M', grams: null } });
+    setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false, portion: { size: null, grams: null } });
     setNewSymptoms([]);
     addToast(t('Eintrag gespeichert'));
     vibrate(50);

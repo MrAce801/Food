@@ -80,8 +80,10 @@ export default function EntryCard({
     : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
-  const currentPortion = editingIdx === idx && editForm ? (editForm.portion || { size: 'M', grams: null }) : (entry.portion || { size: 'M', grams: null });
-  const portionDisplay = currentPortion.size === 'custom' ? `${currentPortion.grams || ''}g` : currentPortion.size;
+  const currentPortion = editingIdx === idx && editForm ? (editForm.portion || { size: null, grams: null }) : (entry.portion || { size: null, grams: null });
+  const portionDisplay = currentPortion.size === 'custom'
+    ? `${currentPortion.grams || ''}g`
+    : currentPortion.size;
 
   return (
     <div
@@ -132,7 +134,7 @@ export default function EntryCard({
             }}
             title={t('Portion wählen')}
           >
-            {portionDisplay || 'M'}
+            {portionDisplay || t('Portion')}
           </div>
           {!isExportingPdf && showEditPortionQuickIdx === idx && (
             <div
@@ -145,7 +147,7 @@ export default function EntryCard({
                   key={size}
                   style={styles.portionPickerItem(
                     PORTION_COLORS[size],
-                    (editingIdx === idx ? editForm.portion : entry.portion || { size: 'M' }).size === size,
+                    (editingIdx === idx ? editForm.portion : entry.portion || { size: null }).size === size,
                     dark
                   )}
                   onClick={() => {
@@ -183,6 +185,20 @@ export default function EntryCard({
                   style={{ ...styles.buttonSecondary('#1976d2'), padding: '4px 8px', fontSize: 12 }}
                 >
                   OK
+                </button>
+                <button
+                  onClick={() => {
+                    if (editingIdx === idx) {
+                      setEditForm(fm => ({ ...fm, portion: null }));
+                    } else {
+                      handlePortionChange(idx, null);
+                    }
+                    setShowEditPortionQuickIdx(null);
+                  }}
+                  style={{ ...styles.buttonSecondary('#d32f2f'), padding: '4px 8px', fontSize: 12 }}
+                  title={t('Portion entfernen')}
+                >
+                  ×
                 </button>
               </div>
             </div>
