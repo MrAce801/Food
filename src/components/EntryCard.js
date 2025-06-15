@@ -216,7 +216,7 @@ export default function EntryCard({
                 value={editForm.symptomTime}
                 onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
                 onFocus={handleFocus}
-                style={{ ...styles.smallInput, width: '120px', flexShrink: 0 }}
+                style={{ ...styles.smallInput, width: '130px', flexShrink: 0 }}
               >
                 {TIME_CHOICES.map(tc => (
                   <option key={tc.value} value={tc.value}>
@@ -228,7 +228,7 @@ export default function EntryCard({
                 value={editForm.newSymptomStrength}
                 onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
                 onFocus={handleFocus}
-                style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
+                style={{ ...styles.smallInput, width: '120px', flexShrink: 0 }}
               >
                 {[1, 2, 3].map(n => (
                   <option key={n} value={n}>

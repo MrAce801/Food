@@ -248,7 +248,7 @@ export default function NewEntryForm({
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
             onFocus={handleFocus}
-            style={{ ...styles.smallInput, width: '120px', flexShrink: 0 }}
+            style={{ ...styles.smallInput, width: '130px', flexShrink: 0 }}
           >
             {TIME_CHOICES.map(tc => (
               <option key={tc.value} value={tc.value}>
@@ -260,7 +260,7 @@ export default function NewEntryForm({
             value={newForm.symptomStrength}
             onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
             onFocus={handleFocus}
-            style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
+            style={{ ...styles.smallInput, width: '120px', flexShrink: 0 }}
           >
             {[1, 2, 3].map(n => (
               <option key={n} value={n}>
