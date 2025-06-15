@@ -85,7 +85,11 @@ const translations = {
     'Schleim im Hals': 'Mucus in throat',
     'Niesen': 'Sneezing',
     'Kopfschmerzen': 'Headaches',
-    'Rötung Haut': 'Skin redness'
+    'Rötung Haut': 'Skin redness',
+    'Portion': 'Portion',
+    'Portion wählen': 'Select portion',
+    'Benutzerdefiniert': 'Custom',
+    'Gramm': 'grams'
   },
   de: {
     'Export': 'Exportieren',

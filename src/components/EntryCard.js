@@ -1,5 +1,6 @@
 import React from 'react';
 import useTranslation from '../useTranslation';
+import { PORTION_COLORS } from '../constants';
 
 export default function EntryCard({
   entry,
@@ -52,6 +53,8 @@ export default function EntryCard({
   setShowEditFoodQuick,
   showEditSymptomQuick,
   setShowEditSymptomQuick,
+  showEditPortionQuick,
+  setShowEditPortionQuick,
   marginBottom = 16
 }) {
   const t = useTranslation();
@@ -68,6 +71,8 @@ export default function EntryCard({
     : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
+  const currentPortion = editingIdx === idx && editForm ? (editForm.portion || { size: 'M', grams: null }) : (entry.portion || { size: 'M', grams: null });
+  const portionDisplay = currentPortion.size === 'custom' ? `${currentPortion.grams || ''}g` : currentPortion.size;
 
   return (
     <div
@@ -100,6 +105,18 @@ export default function EntryCard({
             </g>
           </svg>
         </div>
+      </div>
+      <div
+        id={`portion-label-${idx}`}
+        style={styles.portionLabel(currentPortion.size === 'custom' ? 'M' : currentPortion.size)}
+        onClick={e => {
+          if (isExportingPdf) return;
+          e.stopPropagation();
+          setShowEditPortionQuick(showEditPortionQuick ? false : true);
+        }}
+        title={t('Portion wählen')}
+      >
+        {portionDisplay || 'M'}
       </div>
       {editingIdx === idx && !isExportingPdf ? (
         <>
@@ -480,6 +497,36 @@ export default function EntryCard({
                     {TAG_COLOR_ICONS[colorValue]}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {!isExportingPdf && showEditPortionQuick && editingIdx === idx && (
+              <div
+                id="portion-picker-container"
+                style={styles.portionPickerPopup(dark)}
+                onClick={e => e.stopPropagation()}
+              >
+                {['S','M','L'].map(size => (
+                  <div
+                    key={size}
+                    style={styles.portionPickerItem(PORTION_COLORS[size], portion.size === size, dark)}
+                    onClick={() => { setEditForm(fm => ({ ...fm, portion: { size, grams: null } })); setShowEditPortionQuick(false); }}
+                  >
+                    {size}
+                  </div>
+                ))}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="number"
+                    value={editForm.portion?.size === 'custom' ? editForm.portion.grams || '' : ''}
+                    onChange={e => setEditForm(fm => ({ ...fm, portion: { size: 'custom', grams: e.target.value } }))}
+                    style={{ ...styles.smallInput, width: '70px' }}
+                  />
+                  <span>g</span>
+                  <button onClick={() => setShowEditPortionQuick(false)} style={{ ...styles.buttonSecondary('#1976d2'), padding: '4px 8px', fontSize: 12 }}>
+                    OK
+                  </button>
+                </div>
               </div>
             )}
           </>

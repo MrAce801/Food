@@ -7,7 +7,7 @@ export default function useNewEntryForm(setEntries, addToast) {
   const t = useTranslation();
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem('fd-form-new');
-    const initialForm = { food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false };
+    const initialForm = { food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false, portion: { size: 'M', grams: null } };
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -18,6 +18,7 @@ export default function useNewEntryForm(setEntries, addToast) {
           symptomStrength: strength,
           tagColor: parsed.tagColor || TAG_COLORS.GREEN,
           tagColorManual: parsed.tagColorManual || false,
+          portion: parsed.portion || { size: 'M', grams: null },
         };
       } catch {
         return initialForm;
@@ -30,6 +31,7 @@ export default function useNewEntryForm(setEntries, addToast) {
   const fileRefNew = useRef();
   const [showFoodQuick, setShowFoodQuick] = useState(false);
   const [showSymptomQuick, setShowSymptomQuick] = useState(false);
+  const [showPortionQuick, setShowPortionQuick] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('fd-form-new', JSON.stringify(newForm));
@@ -87,9 +89,10 @@ export default function useNewEntryForm(setEntries, addToast) {
       tagColorManual: newForm.tagColorManual,
       linkId: null,
       createdAt: Date.now(),
+      portion: newForm.portion,
     };
     setEntries(prev => [...prev, entry].sort(sortEntries));
-    setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false });
+    setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false, portion: { size: 'M', grams: null } });
     setNewSymptoms([]);
     addToast(t('Eintrag gespeichert'));
     vibrate(50);
@@ -108,6 +111,8 @@ export default function useNewEntryForm(setEntries, addToast) {
     showFoodQuick,
     setShowFoodQuick,
     showSymptomQuick,
-    setShowSymptomQuick
+    setShowSymptomQuick,
+    showPortionQuick,
+    setShowPortionQuick
   };
 }
