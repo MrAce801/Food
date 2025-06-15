@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { resizeToJpeg, now, vibrate, determineTagColor, sortSymptomsByTime, sortEntries } from '../utils';
+import useTranslation from '../useTranslation';
 import { TAG_COLORS } from '../constants';
 
 export default function useNewEntryForm(setEntries, addToast) {
+  const t = useTranslation();
   const [newForm, setNewForm] = useState(() => {
     const saved = localStorage.getItem('fd-form-new');
     const initialForm = { food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false };
@@ -89,7 +91,7 @@ export default function useNewEntryForm(setEntries, addToast) {
     setEntries(prev => [...prev, entry].sort(sortEntries));
     setNewForm({ food: '', imgs: [], symptomInput: '', symptomTime: 0, symptomStrength: 1, tagColor: TAG_COLORS.GREEN, tagColorManual: false });
     setNewSymptoms([]);
-    addToast('Eintrag gespeichert');
+    addToast(t('Eintrag gespeichert'));
     vibrate(50);
   };
 

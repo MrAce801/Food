@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import useTranslation from '../useTranslation';
 
 export default function NewEntryForm({
   newForm,
@@ -51,6 +52,7 @@ export default function NewEntryForm({
   const filterBtnRef = useRef(null);
   const filterMenuRef = useRef(null);
   const [showCategories, setShowCategories] = useState(false);
+  const t = useTranslation();
 
   useEffect(() => {
     const handler = e => {
@@ -110,7 +112,7 @@ export default function NewEntryForm({
     <div ref={formRef} className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
         <input
-          placeholder={TAG_COLOR_NAMES[newForm.tagColor] ? `${TAG_COLOR_NAMES[newForm.tagColor]}...` : "Eintrag..."}
+          placeholder={TAG_COLOR_NAMES[newForm.tagColor] ? `${t(TAG_COLOR_NAMES[newForm.tagColor])}...` : t('Eintrag...')}
           value={newForm.food}
           onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
           onFocus={handleFocus}
@@ -129,7 +131,7 @@ export default function NewEntryForm({
             transform: 'translateY(-50%)',
             color: '#333'
           }}
-          title="Favoriten"
+          title={t('Favoriten')}
         >
           ▼
         </button>
@@ -172,7 +174,7 @@ export default function NewEntryForm({
           onClick={() => setShowCategories(s => !s)}
           style={styles.glassyButton(dark)}
         >
-          Kategorien {showCategories ? '▼' : '▶'}
+          {t('Kategorien')} {showCategories ? '▼' : '▶'}
         </button>
         {showCategories &&
           [
@@ -196,7 +198,7 @@ export default function NewEntryForm({
                 newForm.tagColorManual && newForm.tagColor === colorValue,
                 dark
               )}
-              title={TAG_COLOR_NAMES[colorValue] || colorValue}
+              title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
             >
               {TAG_COLOR_ICONS[colorValue]}
             </button>
@@ -206,7 +208,7 @@ export default function NewEntryForm({
       <div style={{ marginBottom: 8 }}>
       <div id="symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
         <input
-          placeholder="Symptom..."
+          placeholder={t('Symptom...')}
           value={newForm.symptomInput}
           onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
           onFocus={handleFocus}
@@ -225,7 +227,7 @@ export default function NewEntryForm({
             transform: 'translateY(-50%)',
             color: '#333'
           }}
-          title="Favoriten"
+          title={t('Favoriten')}
         >
           ▼
         </button>
@@ -246,11 +248,11 @@ export default function NewEntryForm({
             value={newForm.symptomTime}
             onChange={e => setNewForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
             onFocus={handleFocus}
-            style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
+            style={{ ...styles.smallInput, width: '130px', flexShrink: 0 }}
           >
-            {TIME_CHOICES.map(t => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {TIME_CHOICES.map(tc => (
+              <option key={tc.value} value={tc.value}>
+                {t(tc.label)}
               </option>
             ))}
           </select>
@@ -258,11 +260,11 @@ export default function NewEntryForm({
             value={newForm.symptomStrength}
             onChange={e => setNewForm(fm => ({ ...fm, symptomStrength: Number(e.target.value) }))}
             onFocus={handleFocus}
-            style={{ ...styles.smallInput, width: '100px', flexShrink: 0 }}
+            style={{ ...styles.smallInput, width: '120px', flexShrink: 0 }}
           >
             {[1, 2, 3].map(n => (
               <option key={n} value={n}>
-                Stärke {n}
+                {t('Stärke')} {n}
               </option>
             ))}
           </select>
@@ -288,17 +290,17 @@ export default function NewEntryForm({
         disabled={!newForm.food.trim() && newSymptoms.length === 0}
         style={{ ...styles.buttonPrimary, opacity: newForm.food.trim() || newSymptoms.length > 0 ? 1 : 0.5 }}
       >
-        Eintrag hinzufügen
+        {t('Eintrag hinzufügen')}
       </button>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 16, alignItems: 'center' }}>
-        <button onClick={() => setShowSearch(s => !s)} style={{ ...styles.glassyIconButton(dark), padding: '6px' }} title="Suche">
+        <button onClick={() => setShowSearch(s => !s)} style={{ ...styles.glassyIconButton(dark), padding: '6px' }} title={t('Suche')}>
           🔍
         </button>
         {showSearch && (
           <input
             ref={searchInputRef}
-            placeholder="Suche..."
+            placeholder={t('Suche...')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             style={{ ...styles.smallInput, flexGrow: 1 }}
@@ -309,14 +311,14 @@ export default function NewEntryForm({
             ref={filterBtnRef}
             onClick={() => setFilterMenuOpen(o => !o)}
             style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
-            title="Filter"
+            title={t('Filter')}
           >
             ⚙️
           </button>
           {filterMenuOpen && (
             <FilterMenu
               ref={filterMenuRef}
-              options={Object.values(TAG_COLORS).map(val => ({ value: val, label: TAG_COLOR_NAMES[val] || val }))}
+              options={Object.values(TAG_COLORS).map(val => ({ value: val, label: t(TAG_COLOR_NAMES[val] || val) }))}
               selected={filterTags}
               onToggle={tag => setFilterTags(t => t.includes(tag) ? t.filter(x => x !== tag) : [...t, tag])}
               sortMode={sortMode}

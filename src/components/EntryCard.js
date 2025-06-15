@@ -1,4 +1,5 @@
 import React from 'react';
+import useTranslation from '../useTranslation';
 
 export default function EntryCard({
   entry,
@@ -53,6 +54,7 @@ export default function EntryCard({
   setShowEditSymptomQuick,
   marginBottom = 16
 }) {
+  const t = useTranslation();
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
     (entry.symptoms || []).map(s => ({
@@ -103,10 +105,10 @@ export default function EntryCard({
         <>
           <button
             onClick={() => {
-              if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) deleteEntry(idx);
+              if (window.confirm(t('Möchten Sie diesen Eintrag wirklich löschen?'))) deleteEntry(idx);
             }}
             style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 8 }}
-            title="Eintrag löschen"
+            title={t('Eintrag löschen')}
           >
             ×
           </button>
@@ -119,7 +121,7 @@ export default function EntryCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
               <input
-                placeholder="Eintrag..."
+                placeholder={t('Eintrag...')}
                 value={editForm.food}
                 onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
                 onFocus={handleFocus}
@@ -137,7 +139,7 @@ export default function EntryCard({
                   transform: 'translateY(-50%)',
                   color: '#333'
                 }}
-                title="Favoriten"
+                title={t('Favoriten')}
               >
                 ▼
               </button>
@@ -154,7 +156,7 @@ export default function EntryCard({
             </div>
             <button
               onClick={() => toggleFavoriteFood(editForm.food.trim())}
-              title="Favorit"
+              title={t('Favorit')}
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, color: favoriteFoods.includes(editForm.food.trim()) ? '#FBC02D' : '#aaa' }}
             >
               ★
@@ -176,7 +178,7 @@ export default function EntryCard({
             <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
               <input
                 className="hide-datalist-arrow"
-                placeholder="Symptom hinzufügen..."
+                placeholder={t('Symptom hinzufügen...')}
                 value={editForm.symptomInput}
                 onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
                 onFocus={handleFocus}
@@ -194,7 +196,7 @@ export default function EntryCard({
                   transform: 'translateY(-50%)',
                   color: '#333'
                 }}
-                title="Favoriten"
+                title={t('Favoriten')}
               >
                 ▼
               </button>
@@ -214,11 +216,11 @@ export default function EntryCard({
                 value={editForm.symptomTime}
                 onChange={e => setEditForm(fm => ({ ...fm, symptomTime: Number(e.target.value) }))}
                 onFocus={handleFocus}
-                style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
+                style={{ ...styles.smallInput, width: '130px', flexShrink: 0 }}
               >
-                {TIME_CHOICES.map(t => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {TIME_CHOICES.map(tc => (
+                  <option key={tc.value} value={tc.value}>
+                    {t(tc.label)}
                   </option>
                 ))}
               </select>
@@ -226,11 +228,11 @@ export default function EntryCard({
                 value={editForm.newSymptomStrength}
                 onChange={e => setEditForm(fm => ({ ...fm, newSymptomStrength: Number(e.target.value) }))}
                 onFocus={handleFocus}
-                style={{ ...styles.smallInput, width: '100px', flexShrink: 0 }}
+                style={{ ...styles.smallInput, width: '120px', flexShrink: 0 }}
               >
                 {[1, 2, 3].map(n => (
                   <option key={n} value={n}>
-                    Stärke {n}
+                    {t('Stärke')} {n}
                   </option>
                 ))}
               </select>
@@ -263,7 +265,7 @@ export default function EntryCard({
                 />
                 <button
                   onClick={() => toggleFavoriteSymptom(s.txt)}
-                  title="Favorit"
+                  title={t('Favorit')}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
                 >
                   ★
@@ -278,7 +280,7 @@ export default function EntryCard({
                       return { ...fm, symptoms: sortSymptomsByTime(updated) };
                     })
                   }
-                  style={{ ...styles.smallInput, width: '22px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '32px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {TIME_CHOICES.map(t => (
                     <option key={t.value} value={t.value}>
@@ -296,7 +298,7 @@ export default function EntryCard({
                       )
                     }))
                   }
-                  style={{ ...styles.smallInput, width: '15px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
+                  style={{ ...styles.smallInput, width: '25px', flexShrink: 0, fontSize: '16px', padding: '6px 2px' }}
                 >
                   {[1, 2, 3].map(n => (
                     <option key={n} value={n}>
@@ -306,7 +308,7 @@ export default function EntryCard({
                 </select>
                 <button
                   onClick={() => removeEditSymptom(j)}
-                  title="Symptom löschen"
+                  title={t('Symptom löschen')}
                   style={{ ...styles.deleteIcon, position: 'static', fontSize: '20px' }}
                 >
                   ×
@@ -316,10 +318,10 @@ export default function EntryCard({
           </div>
           <div style={{ display: 'flex', gap: 5, marginTop: '16px', alignItems: 'center' }}>
             <button onClick={saveEdit} style={styles.buttonSecondary('#1976d2')}>
-              Speichern
+              {t('Speichern')}
             </button>
             <button onClick={cancelEdit} style={styles.buttonSecondary('#888')}>
-              Abbrechen
+              {t('Abbrechen')}
             </button>
             <button
               id={`note-icon-button-${idx}`}
@@ -328,7 +330,7 @@ export default function EntryCard({
                 toggleNote(idx);
               }}
               style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
-              title="Notiz"
+              title={t('Notiz')}
             >
               🗒️
             </button>
@@ -344,7 +346,7 @@ export default function EntryCard({
                   e.target.style.height = 'auto';
                   e.target.style.height = `${e.target.scrollHeight}px`;
                 }}
-                placeholder="Notiz..."
+                placeholder={t('Notiz...')}
                 style={{ ...styles.textarea, fontSize: '16px' }}
               />
               <button
@@ -352,7 +354,7 @@ export default function EntryCard({
                 onClick={() => saveNote(idx)}
                 style={{ ...styles.buttonSecondary(dark ? '#555' : '#FBC02D'), color: dark ? '#fff' : '#333', marginTop: 8 }}
               >
-                Notiz speichern
+                {t('Notiz speichern')}
               </button>
             </div>
           )}
@@ -387,7 +389,7 @@ export default function EntryCard({
               whiteSpace: 'normal'
             }}
           >
-            {entry.food || (isSymptomOnlyEntry ? 'Nur Symptome' : '(Kein Essen)')}
+            {entry.food || (isSymptomOnlyEntry ? t('Nur Symptome') : t('(Kein Essen)'))}
           </div>
 
           {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
@@ -407,7 +409,7 @@ export default function EntryCard({
                   e.target.style.height = 'auto';
                   e.target.style.height = `${e.target.scrollHeight}px`;
                 }}
-                placeholder="Notiz..."
+                placeholder={t('Notiz...')}
                 style={{ ...styles.textarea, fontSize: '16px' }}
               />
               <button
@@ -415,7 +417,7 @@ export default function EntryCard({
                 onClick={() => saveNote(idx)}
                 style={{ ...styles.buttonSecondary(dark ? '#555' : '#FBC02D'), color: dark ? '#fff' : '#333', marginTop: 8 }}
               >
-                Notiz speichern
+                {t('Notiz speichern')}
               </button>
             </div>
           )}
@@ -455,8 +457,8 @@ export default function EntryCard({
               }}
               title={
                 !isExportingPdf
-                  ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`
-                  : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`
+                  ? `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}. ${t('Klicken zum Ändern.')}`
+                  : `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}`
               }
             >
               {TAG_COLOR_ICONS[currentTagColor]}
@@ -472,7 +474,7 @@ export default function EntryCard({
                   <div
                     key={colorValue}
                     style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
-                    title={TAG_COLOR_NAMES[colorValue] || colorValue}
+                    title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
                     onClick={() => handleTagColorChange(idx, colorValue)}
                   >
                     {TAG_COLOR_ICONS[colorValue]}

@@ -6,8 +6,8 @@ import { exportTableToPdf } from "./utils/pdf";
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
-import PdfButton from "./components/PdfButton";
-import PrintButton from "./components/PrintButton";
+import ExportButton from "./components/ExportButton";
+import LanguageButton from "./components/LanguageButton";
 import PersonButton from "./components/PersonButton";
 import CameraButton from "./components/CameraButton";
 import ImgStack from "./components/ImgStack";
@@ -16,6 +16,8 @@ import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
 import DayGroup from "./components/DayGroup";
+import { LanguageContext } from './LanguageContext';
+import useTranslation from './useTranslation';
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
 
@@ -23,6 +25,8 @@ import { sortEntries, sortEntriesByCategory } from "./utils";
 export default function App() {
   // --- STATE VARIABLEN ---
   const [dark, setDark] = useState(false);
+  const [language, setLanguage] = useState(() => localStorage.getItem('fd-lang') || 'de');
+  const t = useTranslation();
   const [entries, setEntries] = useState(() => {
     try {
       const initialArr = JSON.parse(localStorage.getItem("fd-entries") || "[]");
@@ -174,10 +178,10 @@ export default function App() {
           e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
           (e.code && (e.code === 22 || e.code === 1014))) {
         console.error("LocalStorage Quota Exceeded:", e);
-        addToast("Speicherlimit erreicht! Neue Einträge können evtl. nicht gespeichert werden.");
+        addToast(t('Speicherlimit erreicht! Neue Einträge können evtl. nicht gespeichert werden.'));
       } else {
         console.error("Fehler beim Speichern der Einträge in localStorage:", e);
-        addToast("Ein Fehler ist beim Speichern der Daten aufgetreten.");
+        addToast(t('Ein Fehler ist beim Speichern der Daten aufgetreten.'));
       }
     }
   }, [entries]);
@@ -346,7 +350,7 @@ export default function App() {
     if (pdfExportTriggered.current) {
       exportTableToPdf(el)
         .then(ok => {
-          addToast(ok ? 'PDF erfolgreich exportiert!' : 'Fehler beim PDF-Export.');
+          addToast(ok ? t('PDF erfolgreich exportiert!') : t('Fehler beim PDF-Export.'));
         })
         .finally(cleanup);
     } else if (printTriggered.current) {
@@ -394,7 +398,7 @@ export default function App() {
     pdfExportTriggered.current = true;
     printTriggered.current = false;
     setExportStatus('preparing');
-    addToast("PDF Export wird vorbereitet...");
+    addToast(t('PDF Export wird vorbereitet...'));
   };
 
   const handlePrint = () => {
@@ -402,6 +406,14 @@ export default function App() {
     printTriggered.current = true;
     pdfExportTriggered.current = false;
     setExportStatus('preparing');
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(lang => {
+      const newLang = lang === 'de' ? 'en' : 'de';
+      localStorage.setItem('fd-lang', newLang);
+      return newLang;
+    });
   };
 
   const handlePersonChange = (field, value) => {
@@ -417,17 +429,17 @@ export default function App() {
         if (file.size > 5 * 1024 * 1024) throw new Error("Datei zu groß (max 5MB)");
         const smallB64 = await resizeToJpeg(file, 800);
         setEditForm(fm => ({ ...fm, imgs: [...fm.imgs, smallB64] }));
-        addToast("Foto hinzugefügt (verkleinert)");
+        addToast(t('Foto hinzugefügt (verkleinert)'));
       } catch (err) {
         console.error("Fehler beim Hinzufügen des Bildes (Eintrag bearbeiten):", err);
-        addToast(err.message || "Ungültiges oder zu großes Bild");
+        addToast(err.message || t('Ungültiges oder zu großes Bild'));
       }
     }
     if (e.target) e.target.value = "";
   };
   const removeEditImg = idx => {
     setEditForm(fm => ({ ...fm, imgs: fm.imgs.filter((_, i) => i !== idx) }));
-    addToast("Foto gelöscht");
+    addToast(t('Foto gelöscht'));
   };
 
   // addEntry and symptom handlers provided by useNewEntryForm
@@ -508,7 +520,7 @@ export default function App() {
   const saveEdit = () => {
     if (!editForm) return;
     const displayDateToSave = fromDateTimePickerFormat(editForm.date);
-    if (!displayDateToSave) { addToast("Ungültiges Datum/Zeit Format. Bitte prüfen."); return; }
+    if (!displayDateToSave) { addToast(t('Ungültiges Datum/Zeit Format. Bitte prüfen.')); return; }
 
     const pendingSymptom = editForm.symptomInput.trim()
       ? {
@@ -545,7 +557,7 @@ export default function App() {
         .sort(sortEntries)
     );
     cancelEdit();
-    addToast("Eintrag aktualisiert");
+    addToast(t('Eintrag aktualisiert'));
     vibrate(30);
   };
   const deleteEntry = i => {
@@ -553,7 +565,7 @@ export default function App() {
     if (editingIdx === i) cancelEdit();
     setColorPickerOpenForIdx(null);
     setNoteOpenIdx(null);
-    addToast("Eintrag gelöscht");
+    addToast(t('Eintrag gelöscht'));
     vibrate(100);
   };
 
@@ -571,7 +583,7 @@ export default function App() {
   const saveNote = idx => {
     setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
     setNoteOpenIdx(null);
-    addToast("Notiz gespeichert");
+    addToast(t('Notiz gespeichert'));
   };
 
   const handleTagColorChange = (entryIdx, newColor) => {
@@ -581,7 +593,12 @@ export default function App() {
         )
     );
     const colorName = TAG_COLOR_NAMES[newColor] || newColor;
-    addToast(`Markierung auf "${colorName}" geändert.`);
+    addToast(
+      t('Markierung auf "{{color}}" geändert.').replace(
+        '{{color}}',
+        t(colorName)
+      )
+    );
     setColorPickerOpenForIdx(null);
   };
 
@@ -591,7 +608,7 @@ export default function App() {
     if (!linkingInfoRef.current) {
       const currentId = entries[idx].linkId;
       if (currentId) {
-        if (window.confirm('Verknüpfung entfernen?')) {
+        if (window.confirm(t('Verknüpfung entfernen?'))) {
           const count = entries.filter(
             e => e.linkId === currentId && dayOf(e) === day
           ).length;
@@ -825,19 +842,20 @@ export default function App() {
   // --- JSX RENDERING LOGIK ---
 
   return (
+    <LanguageContext.Provider value={language}>
     <div ref={containerRef} style={styles.container(isMobile)} onMouseDownCapture={handleRootMouseDown} onClick={handleContainerClick}>
       {toasts.map(t => <div key={t.id} className="toast-fade" style={styles.toast}>{t.msg}</div>)}
       <div style={styles.topBar} className="top-bar">
-        <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title="Theme wechseln">
+        <button onClick={() => setDark(d => !d)} style={{ ...styles.buttonSecondary("transparent"), fontSize: 24, color: dark ? '#f0f0f8' : '#111' }} title={t('Theme wechseln')}>
           {dark ? "🌙" : "☀️"}
         </button>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <PersonButton onClick={() => setShowPerson(true)} dark={dark} />
-          <PdfButton onClick={handleExportPDF} dark={dark} />
-          <PrintButton onClick={handlePrint} dark={dark} />
+          <ExportButton onExportPdf={handleExportPDF} onPrint={handlePrint} dark={dark} />
+          <LanguageButton toggle={toggleLanguage} dark={dark} />
         </div>
       </div>
-      <h2 style={styles.title}>Food Diary</h2>
+      <h2 style={styles.title}>{t('Food Diary')}</h2>
 
       {/* Neuer Eintrag Formular */}
 
@@ -963,6 +981,7 @@ export default function App() {
             styles={styles}
             TAG_COLORS={TAG_COLORS}
             TAG_COLOR_ICONS={TAG_COLOR_ICONS}
+            language={language}
           />
         ))}
       </div>
@@ -987,17 +1006,17 @@ export default function App() {
             style={{ background: dark ? '#333' : '#fff', padding: 24, borderRadius: 8, minWidth: 200 }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ marginBottom: 8 }}>Link-ID wählen</div>
+            <div style={{ marginBottom: 8 }}>{t('Link-ID wählen')}</div>
             {linkChoice.options.map(id => (
               <button key={id} style={{ margin: 6, padding: '6px 12px', fontSize: 16 }} onClick={() => chooseLink(id)}>
                 {id}
               </button>
             ))}
             <button style={{ margin: 6, padding: '6px 12px', fontSize: 16 }} onClick={() => chooseLink('new')}>
-              Neu
+              {t('Neu')}
             </button>
             <button style={{ margin: 6, padding: '6px 12px', fontSize: 16 }} onClick={() => chooseLink(null)}>
-              Abbrechen
+              {t('Abbrechen')}
             </button>
           </div>
         </div>
@@ -1022,28 +1041,28 @@ export default function App() {
             style={{ background: dark ? '#333' : '#fff', padding: 24, borderRadius: 8, minWidth: 250 }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ marginBottom: 8 }}>Persönliche Daten</div>
+            <div style={{ marginBottom: 8 }}>{t('Persönliche Daten')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <input
-                placeholder="Alter"
+                placeholder={t('Alter')}
                 value={personInfo.age}
                 onChange={e => handlePersonChange('age', e.target.value)}
                 style={styles.input}
               />
               <input
-                placeholder="Geschlecht"
+                placeholder={t('Geschlecht')}
                 value={personInfo.gender}
                 onChange={e => handlePersonChange('gender', e.target.value)}
                 style={styles.input}
               />
               <input
-                placeholder="Größe (cm)"
+                placeholder={t('Größe (cm)')}
                 value={personInfo.height}
                 onChange={e => handlePersonChange('height', e.target.value)}
                 style={styles.input}
               />
               <input
-                placeholder="Gewicht (kg)"
+                placeholder={t('Gewicht (kg)')}
                 value={personInfo.weight}
                 onChange={e => handlePersonChange('weight', e.target.value)}
                 style={styles.input}
@@ -1052,12 +1071,13 @@ export default function App() {
                 onClick={closePerson}
                 style={{ ...styles.buttonSecondary('#1976d2'), marginTop: 8 }}
               >
-                Schließen
+                {t('Schließen')}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
+    </LanguageContext.Provider>
   );
 }
