@@ -593,7 +593,12 @@ export default function App() {
         )
     );
     const colorName = TAG_COLOR_NAMES[newColor] || newColor;
-    addToast(t('Markierung auf "{{color}}" geändert.').replace('{{color}}', colorName));
+    addToast(
+      t('Markierung auf "{{color}}" geändert.').replace(
+        '{{color}}',
+        t(colorName)
+      )
+    );
     setColorPickerOpenForIdx(null);
   };
 

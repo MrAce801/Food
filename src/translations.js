@@ -57,9 +57,34 @@ const translations = {
     'Theme wechseln': 'Toggle theme',
     'Favorit': 'Favorite',
     'Expand day': 'Expand day',
-    'Collapse day': 'Collapse day'
+    'Collapse day': 'Collapse day',
+    'Klicken zum Ändern.': 'Click to change',
+    'Markierung': 'Tag',
+    'Unbekannt': 'Unknown',
+    'Essen': 'Food',
+    'Symptome': 'Symptoms',
+    'Medikamente': 'Medication',
+    'Stuhlgang': 'Bowel movement',
+    'Vorgeschichte': 'History',
+    'Exercise': 'Exercise',
+    'sofort': 'immediately',
+    'nach 5 min': 'after 5 min',
+    'nach 10 min': 'after 10 min',
+    'nach 15 min': 'after 15 min',
+    'nach 30 min': 'after 30 min',
+    'nach 45 min': 'after 45 min',
+    'nach 60 min': 'after 60 min',
+    'nach 1,5 h': 'after 1.5 h',
+    'nach 3 h': 'after 3 h'
   },
-  de: {}
+  de: {
+    'Export': 'Exportieren',
+    'Print': 'Drucken',
+    'PDF': 'PDF',
+    'Language': 'Sprache',
+    'Exercise': 'Übung',
+    'Favorite': 'Favorit'
+  }
 };
 
 export default translations;

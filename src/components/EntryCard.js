@@ -218,9 +218,9 @@ export default function EntryCard({
                 onFocus={handleFocus}
                 style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
               >
-                {TIME_CHOICES.map(t => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {TIME_CHOICES.map(tc => (
+                  <option key={tc.value} value={tc.value}>
+                    {t(tc.label)}
                   </option>
                 ))}
               </select>
@@ -232,7 +232,7 @@ export default function EntryCard({
               >
                 {[1, 2, 3].map(n => (
                   <option key={n} value={n}>
-                    Stärke {n}
+                    {t('Stärke')} {n}
                   </option>
                 ))}
               </select>
@@ -265,7 +265,7 @@ export default function EntryCard({
                 />
                 <button
                   onClick={() => toggleFavoriteSymptom(s.txt)}
-                  title="Favorit"
+                  title={t('Favorit')}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
                 >
                   ★
@@ -457,8 +457,8 @@ export default function EntryCard({
               }}
               title={
                 !isExportingPdf
-                  ? `${t('Markierung')}: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. ${t('Klicken zum Ändern.')}`
-                  : `${t('Markierung')}: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`
+                  ? `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}. ${t('Klicken zum Ändern.')}`
+                  : `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}`
               }
             >
               {TAG_COLOR_ICONS[currentTagColor]}
@@ -474,7 +474,7 @@ export default function EntryCard({
                   <div
                     key={colorValue}
                     style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
-                    title={TAG_COLOR_NAMES[colorValue] || colorValue}
+                    title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
                     onClick={() => handleTagColorChange(idx, colorValue)}
                   >
                     {TAG_COLOR_ICONS[colorValue]}

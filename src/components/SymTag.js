@@ -1,8 +1,10 @@
 import React from "react";
 import { TIME_CHOICES } from "../constants";
 import { getStrengthColor } from "../utils";
+import useTranslation from '../useTranslation';
 
 const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
+  const t = useTranslation();
   const tagBackgroundColor = "#fafafa";
   const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
@@ -40,7 +42,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       )}
       {txt}
       <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
-        {TIME_CHOICES.find(t => t.value === time)?.label || `${time} min`}
+        {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{

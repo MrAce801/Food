@@ -112,7 +112,7 @@ export default function NewEntryForm({
     <div ref={formRef} className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
         <input
-          placeholder={TAG_COLOR_NAMES[newForm.tagColor] ? `${TAG_COLOR_NAMES[newForm.tagColor]}...` : t('Eintrag...')}
+          placeholder={TAG_COLOR_NAMES[newForm.tagColor] ? `${t(TAG_COLOR_NAMES[newForm.tagColor])}...` : t('Eintrag...')}
           value={newForm.food}
           onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
           onFocus={handleFocus}
@@ -198,7 +198,7 @@ export default function NewEntryForm({
                 newForm.tagColorManual && newForm.tagColor === colorValue,
                 dark
               )}
-              title={TAG_COLOR_NAMES[colorValue] || colorValue}
+              title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
             >
               {TAG_COLOR_ICONS[colorValue]}
             </button>
@@ -250,9 +250,9 @@ export default function NewEntryForm({
             onFocus={handleFocus}
             style={{ ...styles.smallInput, width: '110px', flexShrink: 0 }}
           >
-            {TIME_CHOICES.map(t => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {TIME_CHOICES.map(tc => (
+              <option key={tc.value} value={tc.value}>
+                {t(tc.label)}
               </option>
             ))}
           </select>
@@ -318,7 +318,7 @@ export default function NewEntryForm({
           {filterMenuOpen && (
             <FilterMenu
               ref={filterMenuRef}
-              options={Object.values(TAG_COLORS).map(val => ({ value: val, label: TAG_COLOR_NAMES[val] || val }))}
+              options={Object.values(TAG_COLORS).map(val => ({ value: val, label: t(TAG_COLOR_NAMES[val] || val) }))}
               selected={filterTags}
               onToggle={tag => setFilterTags(t => t.includes(tag) ? t.filter(x => x !== tag) : [...t, tag])}
               sortMode={sortMode}

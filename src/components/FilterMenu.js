@@ -40,7 +40,7 @@ const FilterMenu = React.forwardRef(function FilterMenu({ options, selected, onT
             onChange={() => onToggle(opt.value)}
             style={{ marginRight: 4 }}
           />
-          {opt.label}
+          {t(opt.label)}
         </label>
       ))}
     </div>
