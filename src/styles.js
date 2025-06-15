@@ -278,7 +278,8 @@ const styles = {
   }),
   categoryIcon: {
     position: 'absolute',
-    top: '50%',
+    // Align icon with main text line instead of overall card height
+    top: '36px',
     right: '6px',
     transform: 'translateY(-50%)',
     fontSize: '20px',
