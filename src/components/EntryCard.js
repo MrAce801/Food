@@ -229,8 +229,10 @@ export default function EntryCard({
             onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
             style={{
               ...styles.input,
+              display: 'inline-block',
               marginBottom: '12px',
-              width: showPortion ? 'calc(100% - 70px)' : '100%'
+              width: 'fit-content',
+              marginRight: showPortion ? '70px' : 0
             }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
