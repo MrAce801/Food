@@ -99,7 +99,7 @@ export default function App() {
   });
   const [showEditFoodQuick, setShowEditFoodQuick] = useState(false);
   const [showEditSymptomQuick, setShowEditSymptomQuick] = useState(false);
-  const [showEditPortionQuick, setShowEditPortionQuick] = useState(false);
+  const [showEditPortionQuickIdx, setShowEditPortionQuickIdx] = useState(null);
   const [filterTags, setFilterTags] = useState([]);
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [sortMode, setSortMode] = useState('date');
@@ -245,9 +245,9 @@ export default function App() {
         const area = document.getElementById('edit-symptom-input-container');
         if (area && !area.contains(e.target)) setShowEditSymptomQuick(false);
       }
-      if (showEditPortionQuick) {
+      if (showEditPortionQuickIdx !== null) {
         const area = document.getElementById('portion-picker-container');
-        if (area && !area.contains(e.target)) setShowEditPortionQuick(false);
+        if (area && !area.contains(e.target)) setShowEditPortionQuickIdx(null);
       }
       if (filterMenuOpen) {
         const area = document.getElementById('filter-menu-container');
@@ -256,7 +256,7 @@ export default function App() {
     };
     document.addEventListener('mousedown', handleQuickClose);
     return () => document.removeEventListener('mousedown', handleQuickClose);
-  }, [showEditFoodQuick, showEditSymptomQuick, showEditPortionQuick, filterMenuOpen]);
+  }, [showEditFoodQuick, showEditSymptomQuick, showEditPortionQuickIdx, filterMenuOpen]);
 
   const knownDaysRef = useRef(new Set());
 
@@ -476,7 +476,7 @@ export default function App() {
     setEditForm(null);
     setShowEditFoodQuick(false);
     setShowEditSymptomQuick(false);
-    setShowEditPortionQuick(false);
+    setShowEditPortionQuickIdx(null);
   };
 
   const addEditSymptom = () => {
@@ -620,7 +620,7 @@ export default function App() {
       )
     );
     addToast(t('Portion geändert'));
-    setShowEditPortionQuick(false);
+    setShowEditPortionQuickIdx(null);
   };
 
   const handlePinClick = (idx) => {
@@ -1001,8 +1001,8 @@ export default function App() {
               setShowEditFoodQuick,
               showEditSymptomQuick,
               setShowEditSymptomQuick,
-              showEditPortionQuick,
-              setShowEditPortionQuick,
+              showEditPortionQuickIdx,
+              setShowEditPortionQuickIdx,
             }}
             styles={styles}
             TAG_COLORS={TAG_COLORS}

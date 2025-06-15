@@ -332,7 +332,7 @@ const styles = {
   portionPickerPopup: (dark) => ({
     position: 'absolute',
     top: '50%',
-    left: 'calc(100% + 4px)',
+    right: 'calc(100% + 4px)',
     transform: 'translateY(-50%)',
     background: dark ? '#4a4a52' : '#fff',
     padding: '8px',

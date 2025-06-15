@@ -54,8 +54,8 @@ export default function EntryCard({
   setShowEditFoodQuick,
   showEditSymptomQuick,
   setShowEditSymptomQuick,
-  showEditPortionQuick,
-  setShowEditPortionQuick,
+  showEditPortionQuickIdx,
+  setShowEditPortionQuickIdx,
   marginBottom = 16
 }) {
   const t = useTranslation();
@@ -115,7 +115,7 @@ export default function EntryCard({
           </svg>
         </div>
       </div>
-      {editingIdx !== idx && (
+      {editingIdx !== idx && [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) && (
         <div
           id={`portion-label-${idx}`}
           style={styles.portionLabel(
@@ -127,7 +127,7 @@ export default function EntryCard({
             setQuickGrams(
               entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
             );
-            setShowEditPortionQuick(s => !s);
+            setShowEditPortionQuickIdx(prev => prev === idx ? null : idx);
           }}
           title={t('Portion wählen')}
         >
@@ -516,7 +516,7 @@ export default function EntryCard({
               </div>
             )}
 
-            {!isExportingPdf && showEditPortionQuick && (
+            {!isExportingPdf && showEditPortionQuickIdx === idx && (
               <div
                 id="portion-picker-container"
                 style={styles.portionPickerPopup(dark)}
@@ -560,7 +560,7 @@ export default function EntryCard({
                       if (editingIdx !== idx) {
                         handlePortionChange(idx, { size: 'custom', grams: quickGrams });
                       }
-                      setShowEditPortionQuick(false);
+                      setShowEditPortionQuickIdx(null);
                     }}
                     style={{ ...styles.buttonSecondary('#1976d2'), padding: '4px 8px', fontSize: 12 }}
                   >
