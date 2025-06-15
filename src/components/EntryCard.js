@@ -360,34 +360,53 @@ export default function EntryCard({
       ) : (
         <>
 
-          <div
-            style={{
-              fontSize: 12,
-              opacity: 0.7,
-              marginBottom: 4,
-              marginRight: '65px',
-              color: isExportingPdf
-                ? dark
-                  ? '#ffffff'
-                  : '#444444'
-                : dark
-                ? '#cccccc'
-                : '#444444'
-            }}
-          >
-            {(entry.date && entry.date.split(' ')[1]) || entry.date}
-          </div>
-          <div
-            style={{
-              fontSize: 18,
-              fontWeight: 600,
-              marginBottom: 8,
-              marginRight: '65px',
-              overflowWrap: 'break-word',
-              whiteSpace: 'normal'
-            }}
-          >
-            {entry.food || (isSymptomOnlyEntry ? 'Nur Symptome' : '(Kein Essen)')}
+          <div style={styles.entryHeaderRow}>
+            <div style={{ flexGrow: 1 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  opacity: 0.7,
+                  marginBottom: 4,
+                  color: isExportingPdf
+                    ? dark
+                      ? '#ffffff'
+                      : '#444444'
+                    : dark
+                    ? '#cccccc'
+                    : '#444444'
+                }}
+              >
+                {(entry.date && entry.date.split(' ')[1]) || entry.date}
+              </div>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  marginBottom: 8,
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal'
+                }}
+              >
+                {entry.food || (isSymptomOnlyEntry ? 'Nur Symptome' : '(Kein Essen)')}
+              </div>
+            </div>
+            <div
+              id={`tag-marker-${idx}`}
+              style={styles.categoryIcon}
+              onClick={e => {
+                if (isExportingPdf) return;
+                e.stopPropagation();
+                setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
+                setNoteOpenIdx(null);
+              }}
+              title={
+                !isExportingPdf
+                  ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`
+                  : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`
+              }
+            >
+              {TAG_COLOR_ICONS[currentTagColor]}
+            </div>
           </div>
 
           {entry.imgs.length > 0 && <ImgStack imgs={entry.imgs} />}
@@ -443,26 +462,7 @@ export default function EntryCard({
             </div>
           )}
 
-          <>
-            <div
-              id={`tag-marker-${idx}`}
-              style={styles.categoryIcon}
-              onClick={e => {
-                if (isExportingPdf) return;
-                e.stopPropagation();
-                setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                setNoteOpenIdx(null);
-              }}
-              title={
-                !isExportingPdf
-                  ? `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}. Klicken zum Ändern.`
-                  : `Markierung: ${TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt'}`
-              }
-            >
-              {TAG_COLOR_ICONS[currentTagColor]}
-            </div>
-
-            {!isExportingPdf && colorPickerOpenForIdx === idx && (
+          {!isExportingPdf && colorPickerOpenForIdx === idx && (
               <div
                 id={`color-picker-popup-${idx}`}
                 style={styles.colorPickerPopup(dark)}
@@ -480,7 +480,6 @@ export default function EntryCard({
                 ))}
               </div>
             )}
-          </>
         </>
       )}
     </div>

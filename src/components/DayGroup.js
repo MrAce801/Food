@@ -42,7 +42,7 @@ export default function DayGroup({
             >
               ▶
             </button>
-            {day}
+            {day.split('.').slice(0, 2).join('.')}
           </div>
           <div style={styles.dayCoverCounts}>
             {orderedColors.map(color => (

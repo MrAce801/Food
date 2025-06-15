@@ -91,6 +91,10 @@ const styles = {
     pageBreakInside: 'avoid',
     breakInside: 'avoid'
   }),
+  entryHeaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+  },
   dayGroupContainer: (isPdf) => ({
     pageBreakInside: isPdf ? 'auto' : 'avoid',
     breakInside: isPdf ? 'auto' : 'avoid',
@@ -277,13 +281,12 @@ const styles = {
     color: dark ? '#f0f0f8' : '#333',
   }),
   categoryIcon: {
-    position: 'absolute',
-    top: '50%',
-    right: '6px',
-    transform: 'translateY(-50%)',
     fontSize: '20px',
-    zIndex: 6,
+    marginLeft: '8px',
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pinContainer: {
     position: 'absolute',
