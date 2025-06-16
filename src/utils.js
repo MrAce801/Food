@@ -82,20 +82,6 @@ const vibrate = (pattern) => {
   } catch {}
 };
 
-const adjustTextareaHeight = (el, maxRows = 4) => {
-  if (!el) return;
-  el.style.height = 'auto';
-  const computed = window.getComputedStyle(el);
-  const lineHeight = parseFloat(computed.lineHeight) || 16;
-  const paddingTop = parseFloat(computed.paddingTop) || 0;
-  const paddingBottom = parseFloat(computed.paddingBottom) || 0;
-  const borderTop = parseFloat(computed.borderTopWidth) || 0;
-  const borderBottom = parseFloat(computed.borderBottomWidth) || 0;
-  const maxHeight = lineHeight * maxRows + paddingTop + paddingBottom + borderTop + borderBottom;
-  el.style.height = Math.min(el.scrollHeight, maxHeight) + 'px';
-  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
-};
-
 
 const getTodayDateString = () => {
   const d = new Date();
@@ -192,4 +178,4 @@ const sortEntriesByCategory = (a, b) => {
 };
 
 
-export { resizeToJpeg, getStrengthColor, now, vibrate, adjustTextareaHeight, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory , formatCollapsedDay };
+export { resizeToJpeg, getStrengthColor, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor, sortEntries, sortEntriesByCategory , formatCollapsedDay };

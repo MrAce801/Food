@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
-import { adjustTextareaHeight } from '../utils';
 
 function lightenColor(color, factor = 0.3) {
   const nameMap = {
@@ -63,6 +62,20 @@ function getBorderColor(tagColor) {
   const [c1, c2] = pairs[tagColor] || [tagColor, tagColor];
   const mixed = mixHexColors(c1, c2);
   return lightenColor(mixed, 0.3);
+}
+
+function adjustTextareaHeight(el, maxRows = 4) {
+  if (!el) return;
+  el.style.height = 'auto';
+  const computed = window.getComputedStyle(el);
+  const lineHeight = parseFloat(computed.lineHeight) || 16;
+  const paddingTop = parseFloat(computed.paddingTop) || 0;
+  const paddingBottom = parseFloat(computed.paddingBottom) || 0;
+  const borderTop = parseFloat(computed.borderTopWidth) || 0;
+  const borderBottom = parseFloat(computed.borderBottomWidth) || 0;
+  const maxHeight = lineHeight * maxRows + paddingTop + paddingBottom + borderTop + borderBottom;
+  el.style.height = Math.min(el.scrollHeight, maxHeight) + 'px';
+  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
 }
 
 export default function EntryCard({
@@ -627,10 +640,10 @@ export default function EntryCard({
               <textarea
                 id={`note-textarea-${idx}`}
                 value={noteDraft}
-                  onChange={e => {
-                    setNoteDraft(e.target.value);
-                    adjustTextareaHeight(e.target);
-                  }}
+                onChange={e => {
+                  setNoteDraft(e.target.value);
+                  adjustTextareaHeight(e.target);
+                }}
                 placeholder={t('Notiz...')}
                 style={{ ...styles.textarea, fontSize: '16px' }}
               />
@@ -690,10 +703,11 @@ export default function EntryCard({
               <textarea
                 id={`note-textarea-${idx}`}
                 value={noteDraft}
-                  onChange={e => {
-                    setNoteDraft(e.target.value);
-                    adjustTextareaHeight(e.target);
-                  }}
+                onChange={e => {
+                  setNoteDraft(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
                 placeholder={t('Notiz...')}
                 style={{ ...styles.textarea, fontSize: '16px' }}
               />

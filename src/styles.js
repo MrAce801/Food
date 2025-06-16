@@ -43,7 +43,7 @@ const styles = {
     border: "1px solid #ccc",
     marginTop: 8,
     resize: "none",
-    overflowY: "hidden",
+    overflow: "hidden",
     overflowWrap: "break-word",
     whiteSpace: "pre-wrap",
     boxSizing: "border-box"

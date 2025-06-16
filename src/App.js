@@ -5,7 +5,7 @@ import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
-import { resizeToJpeg, now, vibrate, adjustTextareaHeight, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
+import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import ExportButton from "./components/ExportButton";
 import LanguageButton from "./components/LanguageButton";
 import PersonButton from "./components/PersonButton";
@@ -321,10 +321,23 @@ export default function App() {
     if (noteOpenIdx !== null) {
       const ta = document.getElementById(`note-textarea-${noteOpenIdx}`);
       if (ta) {
-        adjustTextareaHeight(ta);
+        ta.style.height = 'auto';
+        if (editingIdx !== null && editingIdx === noteOpenIdx) {
+          const computed = window.getComputedStyle(ta);
+          const lineHeight = parseFloat(computed.lineHeight) || 16;
+          const paddingTop = parseFloat(computed.paddingTop) || 0;
+          const paddingBottom = parseFloat(computed.paddingBottom) || 0;
+          const borderTop = parseFloat(computed.borderTopWidth) || 0;
+          const borderBottom = parseFloat(computed.borderBottomWidth) || 0;
+          const maxHeight = lineHeight * 4 + paddingTop + paddingBottom + borderTop + borderBottom;
+          ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px';
+          ta.style.overflowY = ta.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        } else {
+          ta.style.height = `${ta.scrollHeight}px`;
+        }
       }
     }
-  }, [noteOpenIdx, noteDraft]);
+  }, [noteOpenIdx, noteDraft, editingIdx]);
 
   // When layout is ready, advance export status
   useEffect(() => {
