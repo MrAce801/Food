@@ -288,16 +288,16 @@ const styles = {
     boxSizing: 'border-box',
     color: dark ? '#f0f0f8' : '#333',
   }),
-  categoryIcon: {
+  categoryIcon: (top = '36px') => ({
     position: 'absolute',
     // Align icon with main text line instead of overall card height
-    top: '36px',
+    top,
     right: '6px',
     transform: 'translateY(-50%)',
     fontSize: '20px',
     zIndex: 6,
     cursor: 'pointer',
-  },
+  }),
   pinContainer: {
     position: 'absolute',
     left: '0px',
@@ -330,9 +330,9 @@ const styles = {
     overflow: 'visible',
     cursor: 'pointer',
   },
-  portionContainer: (editing = false) => ({
+  portionContainer: (editing = false, top = '36px') => ({
     position: 'absolute',
-    top: editing ? '31px' : '36px',
+    top: editing ? '31px' : top,
     right: editing ? '12px' : '33px',
     transform: 'translateY(-50%)',
     display: 'flex',
