@@ -651,7 +651,7 @@ export default function EntryCard({
           <div
             id={`tag-marker-${idx}`}
             style={styles.categoryIcon(
-              editingIdx === idx ? '31px' : `${iconTop - 4}px`
+              editingIdx === idx ? '31px' : `${iconTop - 1}px`
             )}
             onClick={e => {
               if (isExportingPdf) return;
