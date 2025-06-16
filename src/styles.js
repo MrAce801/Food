@@ -368,7 +368,7 @@ const styles = {
   editForm: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
+    gap: '10px',
     marginTop: '8px',
   },
   editRow: {
