@@ -328,13 +328,6 @@ export default function EntryCard({
                 />
               )}
             </div>
-            <button
-              onClick={() => toggleFavoriteFood(editForm.food.trim())}
-              title={t('Favorit')}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, color: favoriteFoods.includes(editForm.food.trim()) ? '#FBC02D' : '#aaa' }}
-            >
-              ★
-            </button>
             <CameraButton onClick={() => fileRefEdit.current?.click()} dark={dark} />
             <input
               ref={fileRefEdit}
@@ -439,13 +432,6 @@ export default function EntryCard({
                   onFocus={handleFocus}
                   style={{ ...styles.smallInput, flexGrow: 1, marginRight: '6px' }}
                 />
-                <button
-                  onClick={() => toggleFavoriteSymptom(s.txt)}
-                  title={t('Favorit')}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
-                >
-                  ★
-                </button>
                 <select
                   value={s.time}
                   onChange={e_select =>
