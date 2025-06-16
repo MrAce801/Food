@@ -27,7 +27,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       flexWrap: "wrap"
     }}>
       <span style={{
-        flex: '1 1 auto',
+        flex: '0 1 auto',
         minWidth: 0,
         overflowWrap: 'break-word',
         wordBreak: 'break-word',
