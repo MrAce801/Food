@@ -319,10 +319,10 @@ const styles = {
     pointerEvents: 'auto',
     zIndex: 5,
     display: 'flex',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'flex-start',
     paddingLeft: '2px',
-    paddingBottom: '2px',
+    paddingBottom: '0px',
     fontSize: '14px',
   }),
   connectionSvg: {
