@@ -128,6 +128,7 @@ export default function EntryCard({
   const [showDateInput, setShowDateInput] = useState(false);
   const dateInputRef = useRef(null);
   const foodTextareaRef = useRef(null);
+  const symptomTextareaRef = useRef(null);
   const lastFoodTapRef = useRef(0);
   const lastSymptomInputTapRef = useRef(0);
   const lastSymptomTapRefs = useRef({});
@@ -157,6 +158,16 @@ export default function EntryCard({
       }
     }
   }, [editingIdx, editForm ? editForm.food : null]);
+
+  useEffect(() => {
+    if (editingIdx === idx) {
+      const el = symptomTextareaRef.current;
+      if (el) {
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+      }
+    }
+  }, [editingIdx, editForm ? editForm.symptomInput : null]);
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
     (entry.symptoms || []).map(s => ({
@@ -494,14 +505,19 @@ export default function EntryCard({
 
           <div style={{ marginBottom: 40 }}>
             <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
-              <input
-                className="hide-datalist-arrow"
+              <textarea
+                ref={symptomTextareaRef}
+                rows={1}
                 placeholder={t('Symptom hinzufügen...')}
                 value={editForm.symptomInput}
-                onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                onChange={e => {
+                  setEditForm(fm => ({ ...fm, symptomInput: e.target.value }));
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
                 onClick={handleNewSymptomTap}
                 onFocus={handleFocus}
-                style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
+                style={{ ...styles.textarea, fontSize: 16, width: '100%', paddingRight: '30px', marginTop: 0 }}
               />
               <button
                 className="quick-arrow"
