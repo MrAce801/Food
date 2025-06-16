@@ -370,7 +370,6 @@ const styles = {
     flexDirection: 'column',
     gap: '8px',
     marginTop: '8px',
-    paddingLeft: '36px',
   },
   editRow: {
     display: 'flex',

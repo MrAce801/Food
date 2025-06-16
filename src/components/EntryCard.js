@@ -258,17 +258,17 @@ export default function EntryCard({
           >
             ×
           </button>
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              setShowDateInput(s => !s);
-            }}
-            style={{ ...styles.glassyIconButton(dark), position: 'absolute', top: 8, left: 8, padding: '6px' }}
-            title={t('Datum / Zeit ändern')}
-          >
-            📅
-          </button>
           <div style={styles.editForm}>
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                setShowDateInput(s => !s);
+              }}
+              style={{ ...styles.glassyIconButton(dark), alignSelf: 'flex-start', padding: '6px', marginBottom: '8px' }}
+              title={t('Datum / Zeit ändern')}
+            >
+              📅
+            </button>
             {showDateInput && (
               <input
                 type="datetime-local"
