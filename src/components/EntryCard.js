@@ -188,7 +188,7 @@ export default function EntryCard({
           <button
             id={`portion-label-${idx}`}
             style={{
-              ...styles.glassyIconButton(dark),
+              ...(editingIdx === idx ? styles.glassyIconButton(dark) : styles.plainIconButton),
               ...styles.portionLabel(
                 currentPortion.size === 'custom' ? 'M' : currentPortion.size
               ),
