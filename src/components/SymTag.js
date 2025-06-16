@@ -34,11 +34,11 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       }}>
         {txt}
       </span>
-      {' '}
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        whiteSpace: 'nowrap'
+        whiteSpace: 'nowrap',
+        marginLeft: 8
       }}>
         <span style={{ fontSize: 12, opacity: 0.8 }}>
           {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
