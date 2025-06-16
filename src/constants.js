@@ -20,6 +20,7 @@ const TAG_COLORS = {
   BROWN: '#c19a6b', // light brown for bowel movement
   BLUE: '#64b5f6',  // for medication
   PURPLE: '#ba68c8', // for exercise
+  GRAY: 'gray', // for questions
 };
 const TAG_COLOR_NAMES = {
   [TAG_COLORS.GREEN]: 'Essen',
@@ -27,7 +28,8 @@ const TAG_COLOR_NAMES = {
   [TAG_COLORS.RED]: 'Symptome',
   [TAG_COLORS.BLUE]: 'Medikamente',
   [TAG_COLORS.BROWN]: 'Stuhlgang',
-  [TAG_COLORS.YELLOW]: 'Vorgeschichte',
+  [TAG_COLORS.YELLOW]: 'Info',
+  [TAG_COLORS.GRAY]: 'Fragen',
 };
 
 const TAG_COLOR_ICONS = {
@@ -37,6 +39,7 @@ const TAG_COLOR_ICONS = {
   [TAG_COLORS.BLUE]: '💊',
   [TAG_COLORS.BROWN]: '🚽',
   [TAG_COLORS.YELLOW]: '📋',
+  [TAG_COLORS.GRAY]: '❔',
 };
 
 const PORTION_COLORS = {

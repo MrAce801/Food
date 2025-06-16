@@ -246,6 +246,7 @@ export default function NewEntryForm({
             TAG_COLORS.BLUE,
             TAG_COLORS.BROWN,
             TAG_COLORS.YELLOW,
+            TAG_COLORS.GRAY,
           ].map(colorValue => (
             <button
               key={colorValue}

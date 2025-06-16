@@ -27,6 +27,7 @@ export default function DayGroup({
   }, {});
 
   const orderedColors = [
+    TAG_COLORS.GRAY,
     TAG_COLORS.YELLOW,
     TAG_COLORS.BLUE,
     TAG_COLORS.BROWN,
