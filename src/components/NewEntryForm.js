@@ -48,6 +48,7 @@ export default function NewEntryForm({
 }) {
   const categoryRowRef = useRef(null);
   const formRef = useRef(null);
+  const foodTextareaRef = useRef(null);
   const foodQuickBtnRef = useRef(null);
   const foodQuickMenuRef = useRef(null);
   const symptomQuickBtnRef = useRef(null);
@@ -125,15 +126,29 @@ export default function NewEntryForm({
     filterMenuOpen,
     setFilterMenuOpen,
   ]);
+
+  useEffect(() => {
+    const el = foodTextareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [newForm.food]);
   return (
     <div ref={formRef} className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <input
+        <textarea
+          ref={foodTextareaRef}
+          rows={1}
           placeholder={TAG_COLOR_NAMES[newForm.tagColor] ? `${t(TAG_COLOR_NAMES[newForm.tagColor])}...` : t('Eintrag...')}
           value={newForm.food}
-          onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
+          onChange={e => {
+            setNewForm(fm => ({ ...fm, food: e.target.value }));
+            e.target.style.height = 'auto';
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
           onFocus={handleFocus}
-          style={{ ...styles.input, flexGrow: 1, paddingRight: '32px' }}
+          style={{ ...styles.textarea, fontSize: 16, paddingRight: '32px', marginTop: 0 }}
         />
         <button
           ref={foodQuickBtnRef}

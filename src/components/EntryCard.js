@@ -127,6 +127,7 @@ export default function EntryCard({
   );
   const [showDateInput, setShowDateInput] = useState(false);
   const dateInputRef = useRef(null);
+  const foodTextareaRef = useRef(null);
   const lastFoodTapRef = useRef(0);
   const lastSymptomInputTapRef = useRef(0);
   const lastSymptomTapRefs = useRef({});
@@ -146,6 +147,16 @@ export default function EntryCard({
       input?.showPicker?.();
     }
   }, [showDateInput]);
+
+  useEffect(() => {
+    if (editingIdx === idx) {
+      const el = foodTextareaRef.current;
+      if (el) {
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+      }
+    }
+  }, [editForm.food, editingIdx]);
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
     (entry.symptoms || []).map(s => ({
@@ -428,13 +439,19 @@ export default function EntryCard({
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '40px', marginTop: '4px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
-              <input
+              <textarea
+                ref={foodTextareaRef}
+                rows={1}
                 placeholder={t('Eintrag...')}
                 value={editForm.food}
-                onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                onChange={e => {
+                  setEditForm(fm => ({ ...fm, food: e.target.value }));
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
                 onClick={handleFoodTap}
                 onFocus={handleFocus}
-                style={{ ...styles.input, flexGrow: 1, width: '100%', paddingRight: '30px' }}
+                style={{ ...styles.textarea, fontSize: 16, width: '100%', paddingRight: '30px', marginTop: 0 }}
               />
               <button
                 className="quick-arrow"
