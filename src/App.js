@@ -515,14 +515,18 @@ export default function App() {
 
   const toggleFavoriteFood = (food) => {
     setFavoriteFoods(favs => {
-      const newSet = favs.includes(food) ? favs.filter(f => f !== food) : [...favs, food];
+      const exists = favs.includes(food);
+      const newSet = exists ? favs.filter(f => f !== food) : [...favs, food];
+      if (!exists) addToast(t('Zu Favoriten hinzugefügt'));
       return newSet.sort((a, b) => a.localeCompare(b));
     });
   };
 
   const toggleFavoriteSymptom = (sym) => {
     setFavoriteSymptoms(favs => {
-      const newSet = favs.includes(sym) ? favs.filter(s => s !== sym) : [...favs, sym];
+      const exists = favs.includes(sym);
+      const newSet = exists ? favs.filter(s => s !== sym) : [...favs, sym];
+      if (!exists) addToast(t('Zu Favoriten hinzugefügt'));
       return newSet.sort((a, b) => a.localeCompare(b));
     });
   };
