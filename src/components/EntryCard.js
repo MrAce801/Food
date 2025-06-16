@@ -22,6 +22,48 @@ function lightenColor(color, factor = 0.3) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function hexToRgb(hex) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16);
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255,
+  };
+}
+
+function rgbToHex({ r, g, b }) {
+  const toHex = n => n.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function mixHexColors(c1, c2) {
+  const rgb1 = hexToRgb(c1);
+  const rgb2 = hexToRgb(c2);
+  const mixed = {
+    r: Math.round((rgb1.r + rgb2.r) / 2),
+    g: Math.round((rgb1.g + rgb2.g) / 2),
+    b: Math.round((rgb1.b + rgb2.b) / 2),
+  };
+  return rgbToHex(mixed);
+}
+
+function getBorderColor(tagColor) {
+  const pairs = {
+    green: ['#4caf50', '#8bc34a'],
+    red: ['#f44336', '#b71c1c'],
+    yellow: ['#fbc02d', '#fff176'],
+    '#c19a6b': ['#c19a6b', '#8d6e63'],
+    '#64b5f6': ['#64b5f6', '#1e88e5'],
+    '#ba68c8': ['#ba68c8', '#9c27b0'],
+    gray: ['#9e9e9e', '#bdbdbd'],
+  };
+  const [c1, c2] = pairs[tagColor] || [tagColor, tagColor];
+  const mixed = mixHexColors(c1, c2);
+  return lightenColor(mixed, 0.3);
+}
+
 export default function EntryCard({
   entry,
   idx,
@@ -116,7 +158,7 @@ export default function EntryCard({
     : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
-  const borderColor = lightenColor(currentTagColor, 0.3);
+  const borderColor = getBorderColor(currentTagColor);
   const currentPortion =
     editingIdx === idx && editForm
       ? editForm.portion || { size: null, grams: null }
