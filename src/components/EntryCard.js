@@ -282,7 +282,7 @@ export default function EntryCard({
             onClick={() => {
               if (window.confirm(t('Möchten Sie diesen Eintrag wirklich löschen?'))) deleteEntry(idx);
             }}
-            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 8 }}
+            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 12 }}
             title={t('Eintrag löschen')}
           >
             ×
