@@ -320,7 +320,7 @@ export default function EntryCard({
               }}
             />
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '40px', marginTop: '4px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
               <input
                 placeholder={t('Eintrag...')}
@@ -369,7 +369,7 @@ export default function EntryCard({
             {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
           </div>
 
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 40 }}>
             <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
               <input
                 className="hide-datalist-arrow"
@@ -516,7 +516,7 @@ export default function EntryCard({
           </div>
 
           {noteOpenIdx === idx && !isExportingPdf && (
-            <div onClick={e => e.stopPropagation()} style={{ marginTop: '8px', zIndex: 15 }}>
+            <div onClick={e => e.stopPropagation()} style={{ marginTop: '12px', zIndex: 15 }}>
               <textarea
                 id={`note-textarea-${idx}`}
                 value={noteDraft}
