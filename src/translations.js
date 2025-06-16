@@ -57,6 +57,7 @@ const translations = {
     'Theme wechseln': 'Toggle theme',
     'Favorit': 'Favorite',
     'Zu Favoriten hinzugefügt': 'Added to favorites',
+    'Aus Favoriten entfernt': 'Removed from favorites',
     'Expand day': 'Expand day',
     'Collapse day': 'Collapse day',
     'Klicken zum Ändern.': 'Click to change',
@@ -107,7 +108,8 @@ const translations = {
     'Gramm': 'Gramm',
     'Portion geändert': 'Portion geändert',
     'Portion entfernen': 'Portion entfernen',
-    'Zu Favoriten hinzugefügt': 'Zu Favoriten hinzugefügt'
+    'Zu Favoriten hinzugefügt': 'Zu Favoriten hinzugefügt',
+    'Aus Favoriten entfernt': 'Aus Favoriten entfernt'
   }
 };
 
