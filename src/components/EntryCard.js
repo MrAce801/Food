@@ -674,7 +674,7 @@ export default function EntryCard({
                 style={styles.colorPickerPopup(dark)}
                 onClick={e => e.stopPropagation()}
               >
-                {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW].map(colorValue => (
+                {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW, TAG_COLORS.GRAY].map(colorValue => (
                   <div
                     key={colorValue}
                     style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}

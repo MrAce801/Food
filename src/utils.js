@@ -167,6 +167,7 @@ const CATEGORY_ORDER = [
   TAG_COLORS.BLUE,
   TAG_COLORS.BROWN,
   TAG_COLORS.YELLOW,
+  TAG_COLORS.GRAY,
 ];
 
 const sortEntriesByCategory = (a, b) => {
