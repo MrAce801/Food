@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
 
@@ -62,6 +62,35 @@ export default function EntryCard({
   const [quickGrams, setQuickGrams] = useState(
     entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
   );
+  const [showDateInput, setShowDateInput] = useState(false);
+  const lastFoodTapRef = useRef(0);
+  const lastSymptomInputTapRef = useRef(0);
+  const lastSymptomTapRefs = useRef({});
+  const DOUBLE_TAP_MS = 350;
+
+  const handleFoodTap = () => {
+    const now = Date.now();
+    if (now - lastFoodTapRef.current < DOUBLE_TAP_MS) {
+      toggleFavoriteFood(editForm.food.trim());
+    }
+    lastFoodTapRef.current = now;
+  };
+
+  const handleNewSymptomTap = () => {
+    const now = Date.now();
+    if (now - lastSymptomInputTapRef.current < DOUBLE_TAP_MS) {
+      toggleFavoriteSymptom(editForm.symptomInput.trim());
+    }
+    lastSymptomInputTapRef.current = now;
+  };
+
+  const handleSymptomTap = (j, text) => {
+    const now = Date.now();
+    if (now - (lastSymptomTapRefs.current[j] || 0) < DOUBLE_TAP_MS) {
+      toggleFavoriteSymptom(text.trim());
+    }
+    lastSymptomTapRefs.current[j] = now;
+  };
   useEffect(() => {
     setQuickGrams(
       entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
@@ -223,19 +252,32 @@ export default function EntryCard({
           >
             ×
           </button>
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setShowDateInput(s => !s);
+            }}
+            style={{ ...styles.glassyIconButton(dark), position: 'absolute', top: 8, left: 8, padding: '6px' }}
+            title={t('Datum / Zeit ändern')}
+          >
+            📅
+          </button>
           <div style={styles.editForm}>
-            <input
-              type="datetime-local"
-              value={editForm.date}
-              onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
-              style={{ ...styles.input, width: 'fit-content', marginRight: showPortion ? '70px' : 0 }}
-            />
+            {showDateInput && (
+              <input
+                type="datetime-local"
+                value={editForm.date}
+                onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
+                style={{ ...styles.input, width: 'fit-content', marginRight: showPortion ? '70px' : 0 }}
+              />
+            )}
             <div style={styles.editRow}>
               <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
                 <input
                   placeholder={t('Eintrag...')}
                   value={editForm.food}
                   onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                  onClick={handleFoodTap}
                   onFocus={handleFocus}
                   style={{ ...styles.input, flexGrow: 1, width: '100%', paddingRight: '30px' }}
                 />
@@ -293,6 +335,7 @@ export default function EntryCard({
                   placeholder={t('Symptom hinzufügen...')}
                   value={editForm.symptomInput}
                   onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                  onClick={handleNewSymptomTap}
                   onFocus={handleFocus}
                   style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
                 />
@@ -370,6 +413,7 @@ export default function EntryCard({
                         )
                       }))
                     }
+                    onClick={() => handleSymptomTap(j, s.txt)}
                     onFocus={handleFocus}
                     style={{ ...styles.smallInput, flexGrow: 1, marginRight: '6px' }}
                   />
