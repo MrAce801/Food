@@ -184,7 +184,7 @@ export default function EntryCard({
             }}
             title={t('Portion wählen')}
           >
-            {portionDisplay || t('Portion')}
+            {portionDisplay || '📏'}
           </div>
           {!isExportingPdf && showEditPortionQuickIdx === idx && (
             <div
