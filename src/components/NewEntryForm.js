@@ -48,6 +48,8 @@ export default function NewEntryForm({
 }) {
   const categoryRowRef = useRef(null);
   const formRef = useRef(null);
+  const foodTextareaRef = useRef(null);
+  const symptomTextareaRef = useRef(null);
   const foodQuickBtnRef = useRef(null);
   const foodQuickMenuRef = useRef(null);
   const symptomQuickBtnRef = useRef(null);
@@ -125,15 +127,37 @@ export default function NewEntryForm({
     filterMenuOpen,
     setFilterMenuOpen,
   ]);
+
+  useEffect(() => {
+    const el = foodTextareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [newForm.food]);
+
+  useEffect(() => {
+    const el = symptomTextareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [newForm.symptomInput]);
   return (
     <div ref={formRef} className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <input
+        <textarea
+          ref={foodTextareaRef}
+          rows={1}
           placeholder={TAG_COLOR_NAMES[newForm.tagColor] ? `${t(TAG_COLOR_NAMES[newForm.tagColor])}...` : t('Eintrag...')}
           value={newForm.food}
-          onChange={e => setNewForm(fm => ({ ...fm, food: e.target.value }))}
+          onChange={e => {
+            setNewForm(fm => ({ ...fm, food: e.target.value }));
+            e.target.style.height = 'auto';
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
           onFocus={handleFocus}
-          style={{ ...styles.input, flexGrow: 1, paddingRight: '32px' }}
+          style={{ ...styles.textarea, fontSize: 16, paddingRight: '32px', marginTop: 0 }}
         />
         <button
           ref={foodQuickBtnRef}
@@ -272,12 +296,18 @@ export default function NewEntryForm({
 
       <div style={{ marginBottom: 8 }}>
       <div id="symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
-        <input
+        <textarea
+          ref={symptomTextareaRef}
+          rows={1}
           placeholder={t('Symptom...')}
           value={newForm.symptomInput}
-          onChange={e => setNewForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+          onChange={e => {
+            setNewForm(fm => ({ ...fm, symptomInput: e.target.value }));
+            e.target.style.height = 'auto';
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
           onFocus={handleFocus}
-          style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
+          style={{ ...styles.textarea, fontSize: 16, width: '100%', paddingRight: '30px', marginTop: 0 }}
         />
         <button
           ref={symptomQuickBtnRef}

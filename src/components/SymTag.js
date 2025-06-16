@@ -9,44 +9,91 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
+  const containerRef = React.useRef(null);
+  const timeRef = React.useRef(null);
+  const [wrapped, setWrapped] = React.useState(false);
+
+  React.useLayoutEffect(() => {
+    const update = () => {
+      const c = containerRef.current;
+      const tEl = timeRef.current;
+      if (c && tEl) {
+        setWrapped(tEl.offsetTop > c.offsetTop);
+      }
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [txt, time, strength]);
+
   return (
-    <div onClick={onClick} style={{
-      display: "inline-flex", alignItems: "center",
+    <div ref={containerRef} onClick={onClick} style={{
+      display: "inline-flex",
+      alignItems: "center",
       background: tagBackgroundColor,
       color: tagTextColor,
-      borderRadius: 6, padding: "6px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14,
+      borderRadius: 6,
+      padding: "6px 10px",
+      margin: "3px 4px 3px 0",
+      fontSize: 14,
       cursor: onClick ? "pointer" : "default",
-      overflowWrap: "break-word", whiteSpace: "normal"
+      overflowWrap: "break-word",
+      whiteSpace: "normal",
+      wordBreak: "break-word",
+      maxWidth: "100%",
+      flexWrap: "wrap"
     }}>
-      {strength && (
-        <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '16px',
-            height: '16px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            color: '#333333',
-            fontSize: '10px',
-            fontWeight: 'bold',
-            marginRight: '5px',
-            lineHeight: 1,
-            flexShrink: 0,
-            border: `2px solid ${getStrengthColor(displayStrength)}`,
-            boxSizing: 'border-box',
-        }}>
-            {displayStrength}
+      <span style={{
+        flex: '0 1 auto',
+        minWidth: 0,
+        overflowWrap: 'break-word',
+        wordBreak: 'break-word',
+        whiteSpace: 'normal',
+        maxWidth: '100%'
+      }}>
+        {txt}
+      </span>
+      <span
+        ref={timeRef}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          whiteSpace: 'nowrap',
+          marginLeft: wrapped ? 0 : 8,
+          flexShrink: 0,
+          flexBasis: wrapped ? '100%' : 'auto',
+          marginTop: wrapped ? 2 : 0
+        }}
+      >
+        <span style={{ fontSize: 12, opacity: 0.8 }}>
+          {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
         </span>
-      )}
-      {txt}
-      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
-        {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
+        {strength && (
+          <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: '#333333',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              marginLeft: '5px',
+              lineHeight: 1,
+              flexShrink: 0,
+              border: `2px solid ${getStrengthColor(displayStrength)}`,
+              boxSizing: 'border-box',
+          }}>
+              {displayStrength}
+          </span>
+        )}
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
-          marginLeft: 8, cursor: "pointer",
+          marginLeft: 8,
+          cursor: "pointer",
           fontSize: 16,
           color: "#c00",
           fontWeight: 700
