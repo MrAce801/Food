@@ -303,7 +303,7 @@ const styles = {
   }),
   pinContainer: {
     position: 'absolute',
-    left: '-2px',
+    left: '-10px',
     top: 0,
     bottom: 0,
     width: '20px',
