@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
 
-function lightenColor(color, factor = 0.5) {
+function lightenColor(color, factor = 0.3) {
   const nameMap = {
     green: '#4caf50',
     red: '#f44336',
@@ -116,7 +116,7 @@ export default function EntryCard({
     : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
-  const borderColor = lightenColor(currentTagColor, 0.5);
+  const borderColor = lightenColor(currentTagColor, 0.3);
   const currentPortion =
     editingIdx === idx && editForm
       ? editForm.portion || { size: null, grams: null }
