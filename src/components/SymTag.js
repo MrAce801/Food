@@ -17,7 +17,8 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       borderRadius: 6, padding: "6px 10px",
       margin: "3px 4px 3px 0", fontSize: 14,
       cursor: onClick ? "pointer" : "default",
-      overflowWrap: "break-word", whiteSpace: "normal"
+      overflowWrap: "break-word", whiteSpace: "normal",
+      wordBreak: "break-word", maxWidth: "100%", flexWrap: "wrap"
     }}>
       {strength && (
         <span style={{
