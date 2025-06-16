@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
 
@@ -62,11 +62,24 @@ export default function EntryCard({
   const [quickGrams, setQuickGrams] = useState(
     entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
   );
+  const [showDateInput, setShowDateInput] = useState(false);
+  const dateInputRef = useRef(null);
+  const lastFoodTapRef = useRef(0);
+  const lastSymptomInputTapRef = useRef(0);
+  const lastSymptomTapRefs = useRef({});
+  const DOUBLE_TAP_MS = 350;
   useEffect(() => {
     setQuickGrams(
       entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
     );
   }, [entry.portion]);
+  useEffect(() => {
+    if (showDateInput) {
+      const input = dateInputRef.current;
+      input?.focus();
+      input?.showPicker?.();
+    }
+  }, [showDateInput]);
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
     (entry.symptoms || []).map(s => ({
@@ -91,6 +104,36 @@ export default function EntryCard({
   const showPortion =
     [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) &&
     (editingIdx === idx || (entry.portion && entry.portion.size));
+
+  const handleFoodTap = e => {
+    const now = Date.now();
+    if (now - lastFoodTapRef.current < DOUBLE_TAP_MS) {
+      toggleFavoriteFood(editForm.food.trim());
+      e.target.blur();
+      e.preventDefault();
+    }
+    lastFoodTapRef.current = now;
+  };
+
+  const handleNewSymptomTap = e => {
+    const now = Date.now();
+    if (now - lastSymptomInputTapRef.current < DOUBLE_TAP_MS) {
+      toggleFavoriteSymptom(editForm.symptomInput.trim());
+      e.target.blur();
+      e.preventDefault();
+    }
+    lastSymptomInputTapRef.current = now;
+  };
+
+  const handleSymptomTap = (e, j, text) => {
+    const now = Date.now();
+    if (now - (lastSymptomTapRefs.current[j] || 0) < DOUBLE_TAP_MS) {
+      toggleFavoriteSymptom(text.trim());
+      e.target.blur();
+      e.preventDefault();
+    }
+    lastSymptomTapRefs.current[j] = now;
+  };
 
   return (
     <div
@@ -125,7 +168,7 @@ export default function EntryCard({
         </div>
       </div>
       {showPortion && (
-        <div style={styles.portionContainer()}>
+        <div style={styles.portionContainer(editingIdx === idx)}>
           <div
             id={`portion-label-${idx}`}
             style={styles.portionLabel(
@@ -223,24 +266,38 @@ export default function EntryCard({
           >
             ×
           </button>
-          <input
-            type="datetime-local"
-            value={editForm.date}
-            onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
-            style={{
-              ...styles.input,
-              display: 'inline-block',
-              marginBottom: '12px',
-              width: 'fit-content',
-              marginRight: showPortion ? '70px' : 0
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setShowDateInput(s => !s);
             }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
+            style={{ ...styles.glassyIconButton(dark), alignSelf: 'flex-start', padding: '6px', marginBottom: '8px' }}
+            title={t('Datum / Zeit ändern')}
+          >
+            📅
+          </button>
+          {showDateInput && (
+            <input
+              ref={dateInputRef}
+              type="datetime-local"
+              value={editForm.date}
+              onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
+              style={{
+                ...styles.input,
+                display: 'inline-block',
+                marginBottom: '12px',
+                width: 'fit-content',
+                marginRight: showPortion ? '70px' : 0
+              }}
+            />
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '40px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
               <input
                 placeholder={t('Eintrag...')}
                 value={editForm.food}
                 onChange={e => setEditForm(fm => ({ ...fm, food: e.target.value }))}
+                onClick={handleFoodTap}
                 onFocus={handleFocus}
                 style={{ ...styles.input, flexGrow: 1, width: '100%', paddingRight: '30px' }}
               />
@@ -271,13 +328,6 @@ export default function EntryCard({
                 />
               )}
             </div>
-            <button
-              onClick={() => toggleFavoriteFood(editForm.food.trim())}
-              title={t('Favorit')}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, color: favoriteFoods.includes(editForm.food.trim()) ? '#FBC02D' : '#aaa' }}
-            >
-              ★
-            </button>
             <CameraButton onClick={() => fileRefEdit.current?.click()} dark={dark} />
             <input
               ref={fileRefEdit}
@@ -298,6 +348,7 @@ export default function EntryCard({
                 placeholder={t('Symptom hinzufügen...')}
                 value={editForm.symptomInput}
                 onChange={e => setEditForm(fm => ({ ...fm, symptomInput: e.target.value }))}
+                onClick={handleNewSymptomTap}
                 onFocus={handleFocus}
                 style={{ ...styles.smallInput, width: '100%', paddingRight: '30px' }}
               />
@@ -377,16 +428,10 @@ export default function EntryCard({
                       )
                     }))
                   }
+                  onClick={e => handleSymptomTap(e, j, s.txt)}
                   onFocus={handleFocus}
                   style={{ ...styles.smallInput, flexGrow: 1, marginRight: '6px' }}
                 />
-                <button
-                  onClick={() => toggleFavoriteSymptom(s.txt)}
-                  title={t('Favorit')}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, color: favoriteSymptoms.includes(s.txt) ? '#FBC02D' : '#aaa' }}
-                >
-                  ★
-                </button>
                 <select
                   value={s.time}
                   onChange={e_select =>

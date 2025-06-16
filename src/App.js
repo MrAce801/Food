@@ -513,16 +513,20 @@ export default function App() {
     });
   };
 
-  const toggleFavoriteFood = (food) => {
+  const toggleFavoriteFood = food => {
     setFavoriteFoods(favs => {
-      const newSet = favs.includes(food) ? favs.filter(f => f !== food) : [...favs, food];
+      const exists = favs.includes(food);
+      const newSet = exists ? favs.filter(f => f !== food) : [...favs, food];
+      addToast(t(exists ? 'Aus Favoriten entfernt' : 'Zu Favoriten hinzugefügt'));
       return newSet.sort((a, b) => a.localeCompare(b));
     });
   };
 
-  const toggleFavoriteSymptom = (sym) => {
+  const toggleFavoriteSymptom = sym => {
     setFavoriteSymptoms(favs => {
-      const newSet = favs.includes(sym) ? favs.filter(s => s !== sym) : [...favs, sym];
+      const exists = favs.includes(sym);
+      const newSet = exists ? favs.filter(s => s !== sym) : [...favs, sym];
+      addToast(t(exists ? 'Aus Favoriten entfernt' : 'Zu Favoriten hinzugefügt'));
       return newSet.sort((a, b) => a.localeCompare(b));
     });
   };

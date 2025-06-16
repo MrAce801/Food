@@ -318,10 +318,10 @@ const styles = {
     overflow: 'visible',
     cursor: 'pointer',
   },
-  portionContainer: () => ({
+  portionContainer: (editing = false) => ({
     position: 'absolute',
-    top: '36px',
-    right: '38px',
+    top: editing ? '31px' : '36px',
+    right: editing ? '33px' : '38px',
     transform: 'translateY(-50%)',
     display: 'flex',
     alignItems: 'center',
