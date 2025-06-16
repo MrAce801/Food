@@ -303,7 +303,7 @@ const styles = {
   }),
   pinContainer: {
     position: 'absolute',
-    left: '0px',
+    left: '-2px',
     top: 0,
     bottom: 0,
     width: '20px',
@@ -321,7 +321,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingLeft: '2px',
+    paddingLeft: '0px',
     paddingBottom: '0px',
     fontSize: '14px',
   }),
