@@ -365,18 +365,6 @@ const styles = {
     background: isActive ? (dark ? '#555' : '#eee') : 'transparent',
     color,
   }),
-  editForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    marginTop: '8px',
-  },
-  editRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: '6px',
-  },
   personInfoBox: (dark) => ({
     display: 'flex',
     flexWrap: 'wrap',
