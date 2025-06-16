@@ -88,7 +88,7 @@ export default function DayGroup({
               firstInGroup: inGroup && !prevSame,
               lastInGroup: inGroup && !nextSame,
             };
-            const marginBottom = inGroup && nextSame ? 2 : 16;
+            const marginBottom = inGroup && nextSame ? 0 : 16;
             return (
               <EntryCard
                 key={idx}
