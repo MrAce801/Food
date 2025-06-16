@@ -63,6 +63,7 @@ export default function EntryCard({
     entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
   );
   const [showDateInput, setShowDateInput] = useState(false);
+  const dateInputRef = useRef(null);
   const lastFoodTapRef = useRef(0);
   const lastSymptomInputTapRef = useRef(0);
   const lastSymptomTapRefs = useRef({});
@@ -102,6 +103,12 @@ export default function EntryCard({
       entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
     );
   }, [entry.portion]);
+
+  useEffect(() => {
+    if (showDateInput) {
+      dateInputRef.current?.focus();
+    }
+  }, [showDateInput]);
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
     (entry.symptoms || []).map(s => ({
@@ -271,6 +278,7 @@ export default function EntryCard({
             </button>
             {showDateInput && (
               <input
+                ref={dateInputRef}
                 type="datetime-local"
                 value={editForm.date}
                 onChange={e => setEditForm(fm => ({ ...fm, date: e.target.value }))}
