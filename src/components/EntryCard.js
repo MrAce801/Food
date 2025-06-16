@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
+import { adjustTextareaHeight } from '../utils';
 
 function lightenColor(color, factor = 0.3) {
   const nameMap = {
@@ -626,11 +627,10 @@ export default function EntryCard({
               <textarea
                 id={`note-textarea-${idx}`}
                 value={noteDraft}
-                onChange={e => {
-                  setNoteDraft(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = `${e.target.scrollHeight}px`;
-                }}
+                  onChange={e => {
+                    setNoteDraft(e.target.value);
+                    adjustTextareaHeight(e.target);
+                  }}
                 placeholder={t('Notiz...')}
                 style={{ ...styles.textarea, fontSize: '16px' }}
               />
@@ -690,11 +690,10 @@ export default function EntryCard({
               <textarea
                 id={`note-textarea-${idx}`}
                 value={noteDraft}
-                onChange={e => {
-                  setNoteDraft(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = `${e.target.scrollHeight}px`;
-                }}
+                  onChange={e => {
+                    setNoteDraft(e.target.value);
+                    adjustTextareaHeight(e.target);
+                  }}
                 placeholder={t('Notiz...')}
                 style={{ ...styles.textarea, fontSize: '16px' }}
               />

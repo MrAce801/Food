@@ -5,7 +5,7 @@ import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
-import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
+import { resizeToJpeg, now, vibrate, adjustTextareaHeight, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import ExportButton from "./components/ExportButton";
 import LanguageButton from "./components/LanguageButton";
 import PersonButton from "./components/PersonButton";
@@ -321,8 +321,7 @@ export default function App() {
     if (noteOpenIdx !== null) {
       const ta = document.getElementById(`note-textarea-${noteOpenIdx}`);
       if (ta) {
-        ta.style.height = 'auto';
-        ta.style.height = `${ta.scrollHeight}px`;
+        adjustTextareaHeight(ta);
       }
     }
   }, [noteOpenIdx, noteDraft]);
