@@ -648,14 +648,16 @@ export default function EntryCard({
           )}
 
           <>
-            <div
-              id={`tag-marker-${idx}`}
-              style={styles.categoryIcon(editingIdx === idx ? '31px' : `${iconTop}px`)}
-              onClick={e => {
-                if (isExportingPdf) return;
-                e.stopPropagation();
-                setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                setNoteOpenIdx(null);
+          <div
+            id={`tag-marker-${idx}`}
+            style={styles.categoryIcon(
+              editingIdx === idx ? '31px' : `${iconTop - 4}px`
+            )}
+            onClick={e => {
+              if (isExportingPdf) return;
+              e.stopPropagation();
+              setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
+              setNoteOpenIdx(null);
               }}
               title={
                 !isExportingPdf
