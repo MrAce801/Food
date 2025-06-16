@@ -8,17 +8,24 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagBackgroundColor = "#fafafa";
   const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
+  const indentLeft = strength ? 21 : 0; // align "time" text with symptom text
 
   return (
     <div onClick={onClick} style={{
-      display: "inline-flex", alignItems: "center",
+      display: "inline-flex",
+      alignItems: "flex-start",
       background: tagBackgroundColor,
       color: tagTextColor,
-      borderRadius: 6, padding: "6px 10px",
-      margin: "3px 4px 3px 0", fontSize: 14,
+      borderRadius: 6,
+      padding: "6px 10px",
+      margin: "3px 4px 3px 0",
+      fontSize: 14,
       cursor: onClick ? "pointer" : "default",
-      overflowWrap: "break-word", whiteSpace: "normal",
-      wordBreak: "break-word", maxWidth: "100%", flexWrap: "wrap"
+      overflowWrap: "break-word",
+      whiteSpace: "normal",
+      wordBreak: "break-word",
+      maxWidth: "100%",
+      flexWrap: "wrap"
     }}>
       {strength && (
         <span style={{
@@ -41,13 +48,27 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
             {displayStrength}
         </span>
       )}
-      {txt}
-      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8, flexShrink: 0 }}>
+      <span style={{
+        overflowWrap: 'break-word',
+        wordBreak: 'break-word',
+        whiteSpace: 'normal',
+        maxWidth: '100%'
+      }}>
+        {txt}
+      </span>
+      <span style={{
+        flexBasis: '100%',
+        paddingLeft: `${indentLeft}px`,
+        marginTop: 2,
+        fontSize: 12,
+        opacity: 0.8
+      }}>
         {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
-          marginLeft: 8, cursor: "pointer",
+          marginLeft: 8,
+          cursor: "pointer",
           fontSize: 16,
           color: "#c00",
           fontWeight: 700
