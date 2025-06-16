@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
 
@@ -67,6 +67,9 @@ export default function EntryCard({
   const lastFoodTapRef = useRef(0);
   const lastSymptomInputTapRef = useRef(0);
   const lastSymptomTapRefs = useRef({});
+  const cardRef = useRef(null);
+  const firstRowRef = useRef(null);
+  const [iconTop, setIconTop] = useState(36);
   const DOUBLE_TAP_MS = 350;
   useEffect(() => {
     setQuickGrams(
@@ -105,6 +108,22 @@ export default function EntryCard({
     [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) &&
     (editingIdx === idx || (entry.portion && entry.portion.size));
 
+  useLayoutEffect(() => {
+    const update = () => {
+      if (editingIdx === idx) return;
+      const cardEl = cardRef.current;
+      const rowEl = firstRowRef.current;
+      if (cardEl && rowEl) {
+        const cardRect = cardEl.getBoundingClientRect();
+        const firstLine = rowEl.getClientRects()[0] || rowEl.getBoundingClientRect();
+        setIconTop(firstLine.top - cardRect.top + firstLine.height / 2);
+      }
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [editingIdx, entry.date, entry.food]);
+
   const handleFoodTap = e => {
     const now = Date.now();
     if (now - lastFoodTapRef.current < DOUBLE_TAP_MS) {
@@ -137,7 +156,10 @@ export default function EntryCard({
 
   return (
     <div
-      ref={refCallback}
+      ref={el => {
+        cardRef.current = el;
+        refCallback(el);
+      }}
       id={`entry-card-${idx}`}
       style={{ ...styles.entryCard(dark, isSymptomOnlyEntry), marginBottom }}
       onClick={e => {
@@ -168,7 +190,7 @@ export default function EntryCard({
         </div>
       </div>
       {showPortion && (
-        <div style={styles.portionContainer(editingIdx === idx)}>
+        <div style={styles.portionContainer(editingIdx === idx, `${iconTop}px`)}>
           {editingIdx === idx && !isExportingPdf && (
             <>
               <button
@@ -188,7 +210,7 @@ export default function EntryCard({
           <button
             id={`portion-label-${idx}`}
             style={{
-              ...styles.glassyIconButton(dark),
+              ...(editingIdx === idx ? styles.glassyIconButton(dark) : styles.plainIconButton),
               ...styles.portionLabel(
                 currentPortion.size === 'custom' ? 'M' : currentPortion.size
               ),
@@ -559,6 +581,7 @@ export default function EntryCard({
             {(entry.date && entry.date.split(' ')[1]) || entry.date}
           </div>
           <div
+            ref={firstRowRef}
             style={{
               fontSize: 18,
               fontWeight: 600,
@@ -625,14 +648,16 @@ export default function EntryCard({
           )}
 
           <>
-            <div
-              id={`tag-marker-${idx}`}
-              style={styles.categoryIcon}
-              onClick={e => {
-                if (isExportingPdf) return;
-                e.stopPropagation();
-                setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-                setNoteOpenIdx(null);
+          <div
+            id={`tag-marker-${idx}`}
+            style={styles.categoryIcon(
+              editingIdx === idx ? '31px' : `${iconTop - 4}px`
+            )}
+            onClick={e => {
+              if (isExportingPdf) return;
+              e.stopPropagation();
+              setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
+              setNoteOpenIdx(null);
               }}
               title={
                 !isExportingPdf

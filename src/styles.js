@@ -170,6 +170,18 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   }),
+  plainIconButton: {
+    background: 'transparent',
+    border: 'none',
+    borderRadius: 6,
+    padding: '6px 8px',
+    cursor: 'pointer',
+    fontSize: 16,
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   glassyButton: (dark) => ({
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
@@ -276,16 +288,16 @@ const styles = {
     boxSizing: 'border-box',
     color: dark ? '#f0f0f8' : '#333',
   }),
-  categoryIcon: {
+  categoryIcon: (top = '36px') => ({
     position: 'absolute',
     // Align icon with main text line instead of overall card height
-    top: '36px',
+    top,
     right: '6px',
     transform: 'translateY(-50%)',
     fontSize: '20px',
     zIndex: 6,
     cursor: 'pointer',
-  },
+  }),
   pinContainer: {
     position: 'absolute',
     left: '0px',
@@ -318,10 +330,10 @@ const styles = {
     overflow: 'visible',
     cursor: 'pointer',
   },
-  portionContainer: (editing = false) => ({
+  portionContainer: (editing = false, top = '36px') => ({
     position: 'absolute',
-    top: editing ? '31px' : '36px',
-    right: editing ? '12px' : '38px',
+    top: editing ? '31px' : top,
+    right: editing ? '12px' : '33px',
     transform: 'translateY(-50%)',
     display: 'flex',
     alignItems: 'center',
