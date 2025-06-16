@@ -168,7 +168,7 @@ export default function EntryCard({
         </div>
       </div>
       {showPortion && (
-        <div style={styles.portionContainer()}>
+        <div style={styles.portionContainer(editingIdx === idx)}>
           <div
             id={`portion-label-${idx}`}
             style={styles.portionLabel(
