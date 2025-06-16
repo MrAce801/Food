@@ -116,7 +116,11 @@ export default function EntryCard({
       if (cardEl && rowEl) {
         const cardRect = cardEl.getBoundingClientRect();
         const rowRect = rowEl.getBoundingClientRect();
-        setIconTop(rowRect.top - cardRect.top + rowRect.height / 2);
+        const firstLine = rowEl.getClientRects()[0] || rowRect;
+        const lineHeight = parseFloat(
+          window.getComputedStyle(rowEl).lineHeight || firstLine.height
+        );
+        setIconTop(firstLine.top - cardRect.top + lineHeight / 2);
       }
     };
     update();
