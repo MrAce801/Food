@@ -68,26 +68,32 @@ export default function EntryCard({
   const lastSymptomTapRefs = useRef({});
   const DOUBLE_TAP_MS = 350;
 
-  const handleFoodTap = () => {
+  const handleFoodTap = e => {
     const now = Date.now();
     if (now - lastFoodTapRef.current < DOUBLE_TAP_MS) {
       toggleFavoriteFood(editForm.food.trim());
+      e.target.blur();
+      e.preventDefault();
     }
     lastFoodTapRef.current = now;
   };
 
-  const handleNewSymptomTap = () => {
+  const handleNewSymptomTap = e => {
     const now = Date.now();
     if (now - lastSymptomInputTapRef.current < DOUBLE_TAP_MS) {
       toggleFavoriteSymptom(editForm.symptomInput.trim());
+      e.target.blur();
+      e.preventDefault();
     }
     lastSymptomInputTapRef.current = now;
   };
 
-  const handleSymptomTap = (j, text) => {
+  const handleSymptomTap = (e, j, text) => {
     const now = Date.now();
     if (now - (lastSymptomTapRefs.current[j] || 0) < DOUBLE_TAP_MS) {
       toggleFavoriteSymptom(text.trim());
+      e.target.blur();
+      e.preventDefault();
     }
     lastSymptomTapRefs.current[j] = now;
   };
@@ -413,7 +419,7 @@ export default function EntryCard({
                         )
                       }))
                     }
-                    onClick={() => handleSymptomTap(j, s.txt)}
+                    onClick={e => handleSymptomTap(e, j, s.txt)}
                     onFocus={handleFocus}
                     style={{ ...styles.smallInput, flexGrow: 1, marginRight: '6px' }}
                   />
