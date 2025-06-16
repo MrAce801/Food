@@ -12,7 +12,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   return (
     <div onClick={onClick} style={{
       display: "inline-flex",
-      alignItems: "flex-start",
+      alignItems: "center",
       background: tagBackgroundColor,
       color: tagTextColor,
       borderRadius: 6,
@@ -27,6 +27,8 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       flexWrap: "wrap"
     }}>
       <span style={{
+        flex: '1 1 auto',
+        minWidth: 0,
         overflowWrap: 'break-word',
         wordBreak: 'break-word',
         whiteSpace: 'normal',
@@ -38,7 +40,8 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
         display: 'inline-flex',
         alignItems: 'center',
         whiteSpace: 'nowrap',
-        marginLeft: 8
+        marginLeft: 8,
+        flexShrink: 0
       }}>
         <span style={{ fontSize: 12, opacity: 0.8 }}>
           {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
