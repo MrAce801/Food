@@ -169,23 +169,44 @@ export default function EntryCard({
       </div>
       {showPortion && (
         <div style={styles.portionContainer(editingIdx === idx)}>
-          <div
+          {editingIdx === idx && !isExportingPdf && (
+            <>
+              <button
+                id={`note-icon-button-${idx}`}
+                onClick={e => {
+                  e.stopPropagation();
+                  toggleNote(idx);
+                }}
+                style={{ ...styles.glassyIconButton(dark), width: 40, height: 40 }}
+                title={t('Notiz')}
+              >
+                🗒️
+              </button>
+              <CameraButton onClick={() => fileRefEdit.current?.click()} dark={dark} />
+            </>
+          )}
+          <button
             id={`portion-label-${idx}`}
-            style={styles.portionLabel(
-              currentPortion.size === 'custom' ? 'M' : currentPortion.size
-            )}
+            style={{
+              ...styles.glassyIconButton(dark),
+              ...styles.portionLabel(
+                currentPortion.size === 'custom' ? 'M' : currentPortion.size
+              ),
+              width: 40,
+              height: 40,
+            }}
             onClick={e => {
               if (isExportingPdf) return;
               e.stopPropagation();
               setQuickGrams(
                 entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
               );
-              setShowEditPortionQuickIdx(prev => prev === idx ? null : idx);
+              setShowEditPortionQuickIdx(prev => (prev === idx ? null : idx));
             }}
             title={t('Portion wählen')}
           >
-            {portionDisplay || t('Portion')}
-          </div>
+            {portionDisplay || '📏'}
+          </button>
           {!isExportingPdf && showEditPortionQuickIdx === idx && (
             <div
               id="portion-picker-container"
@@ -261,7 +282,7 @@ export default function EntryCard({
             onClick={() => {
               if (window.confirm(t('Möchten Sie diesen Eintrag wirklich löschen?'))) deleteEntry(idx);
             }}
-            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 8 }}
+            style={{ ...styles.buttonSecondary('#d32f2f'), position: 'absolute', bottom: 8, right: 12 }}
             title={t('Eintrag löschen')}
           >
             ×
@@ -271,7 +292,15 @@ export default function EntryCard({
               e.stopPropagation();
               setShowDateInput(s => !s);
             }}
-            style={{ ...styles.glassyIconButton(dark), alignSelf: 'flex-start', padding: '6px', marginBottom: '8px' }}
+            style={{
+              ...styles.glassyIconButton(dark),
+              alignSelf: 'flex-start',
+              padding: '6px',
+              marginBottom: '8px',
+              marginRight: '8px',
+              width: 40,
+              height: 40,
+            }}
             title={t('Datum / Zeit ändern')}
           >
             📅
@@ -291,7 +320,7 @@ export default function EntryCard({
               }}
             />
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '40px', marginTop: '4px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
               <input
                 placeholder={t('Eintrag...')}
@@ -328,7 +357,6 @@ export default function EntryCard({
                 />
               )}
             </div>
-            <CameraButton onClick={() => fileRefEdit.current?.click()} dark={dark} />
             <input
               ref={fileRefEdit}
               type="file"
@@ -341,7 +369,7 @@ export default function EntryCard({
             {editForm.imgs.length > 0 && <ImgStack imgs={editForm.imgs} onDelete={removeEditImg} />}
           </div>
 
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 40 }}>
             <div id="edit-symptom-input-container" style={{ position: 'relative', marginBottom: '8px' }}>
               <input
                 className="hide-datalist-arrow"
@@ -485,21 +513,10 @@ export default function EntryCard({
             <button onClick={cancelEdit} style={styles.buttonSecondary('#888')}>
               {t('Abbrechen')}
             </button>
-            <button
-              id={`note-icon-button-${idx}`}
-              onClick={e => {
-                e.stopPropagation();
-                toggleNote(idx);
-              }}
-              style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
-              title={t('Notiz')}
-            >
-              🗒️
-            </button>
           </div>
 
           {noteOpenIdx === idx && !isExportingPdf && (
-            <div onClick={e => e.stopPropagation()} style={{ marginTop: '8px', zIndex: 15 }}>
+            <div onClick={e => e.stopPropagation()} style={{ marginTop: '12px', zIndex: 15 }}>
               <textarea
                 id={`note-textarea-${idx}`}
                 value={noteDraft}

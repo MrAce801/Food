@@ -9,7 +9,7 @@ const CameraButton = ({ onClick, dark }) => {
       onClick={onClick}
       className="haptic"
       title={t('Foto')}
-      style={{ ...styles.glassyIconButton(dark), width: 36, height: 36, fontSize: 20 }}
+      style={{ ...styles.glassyIconButton(dark), width: 40, height: 40, fontSize: 20 }}
     >
       📷
     </button>

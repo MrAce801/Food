@@ -207,7 +207,7 @@ export default function NewEntryForm({
           >
             {newForm.portion.size === 'custom'
               ? `${newForm.portion.grams || ''}g`
-              : newForm.portion.size || t('Portion')}
+              : newForm.portion.size || '📏'}
           </button>
           {showPortionQuick && (
             <div ref={portionMenuRef} style={styles.portionPickerPopup(dark)}>
