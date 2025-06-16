@@ -8,7 +8,6 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagBackgroundColor = "#fafafa";
   const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
-  const indentLeft = strength ? 21 : 0; // align "time" text with symptom text
 
   return (
     <div onClick={onClick} style={{
@@ -27,27 +26,6 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       maxWidth: "100%",
       flexWrap: "wrap"
     }}>
-      {strength && (
-        <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '16px',
-            height: '16px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            color: '#333333',
-            fontSize: '10px',
-            fontWeight: 'bold',
-            marginRight: '5px',
-            lineHeight: 1,
-            flexShrink: 0,
-            border: `2px solid ${getStrengthColor(displayStrength)}`,
-            boxSizing: 'border-box',
-        }}>
-            {displayStrength}
-        </span>
-      )}
       <span style={{
         overflowWrap: 'break-word',
         wordBreak: 'break-word',
@@ -56,14 +34,36 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       }}>
         {txt}
       </span>
+      {' '}
       <span style={{
-        flexBasis: '100%',
-        paddingLeft: `${indentLeft}px`,
-        marginTop: 2,
-        fontSize: 12,
-        opacity: 0.8
+        display: 'inline-flex',
+        alignItems: 'center',
+        whiteSpace: 'nowrap'
       }}>
-        {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
+        <span style={{ fontSize: 12, opacity: 0.8 }}>
+          {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
+        </span>
+        {strength && (
+          <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: '#333333',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              marginLeft: '5px',
+              lineHeight: 1,
+              flexShrink: 0,
+              border: `2px solid ${getStrengthColor(displayStrength)}`,
+              boxSizing: 'border-box',
+          }}>
+              {displayStrength}
+          </span>
+        )}
       </span>
       {onDel && (
         <span onClick={e => { e.stopPropagation(); onDel(); }} style={{
