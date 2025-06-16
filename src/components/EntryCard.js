@@ -2,6 +2,26 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
 
+function lightenColor(color, factor = 0.5) {
+  const nameMap = {
+    green: '#4caf50',
+    red: '#f44336',
+    yellow: '#fbc02d',
+    gray: '#9e9e9e',
+  };
+  let hex = nameMap[color] || color;
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16);
+  let r = (num >> 16) & 255;
+  let g = (num >> 8) & 255;
+  let b = num & 255;
+  r = Math.round(r + (255 - r) * factor);
+  g = Math.round(g + (255 - g) * factor);
+  b = Math.round(b + (255 - b) * factor);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 export default function EntryCard({
   entry,
   idx,
@@ -96,6 +116,7 @@ export default function EntryCard({
     : (dark ? styles.entryCard(dark, false).background : styles.entryCard(false, false).background);
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
+  const borderColor = lightenColor(currentTagColor, 0.5);
   const currentPortion =
     editingIdx === idx && editForm
       ? editForm.portion || { size: null, grams: null }
@@ -161,7 +182,10 @@ export default function EntryCard({
         refCallback(el);
       }}
       id={`entry-card-${idx}`}
-      style={{ ...styles.entryCard(dark, isSymptomOnlyEntry), marginBottom }}
+      style={{
+        ...styles.entryCard(dark, isSymptomOnlyEntry, borderColor),
+        marginBottom,
+      }}
       onClick={e => {
         if (isExportingPdf) return;
         e.stopPropagation();
