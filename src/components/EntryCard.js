@@ -169,23 +169,44 @@ export default function EntryCard({
       </div>
       {showPortion && (
         <div style={styles.portionContainer(editingIdx === idx)}>
-          <div
+          {editingIdx === idx && !isExportingPdf && (
+            <>
+              <button
+                id={`note-icon-button-${idx}`}
+                onClick={e => {
+                  e.stopPropagation();
+                  toggleNote(idx);
+                }}
+                style={{ ...styles.glassyIconButton(dark), width: 36, height: 36 }}
+                title={t('Notiz')}
+              >
+                🗒️
+              </button>
+              <CameraButton onClick={() => fileRefEdit.current?.click()} dark={dark} />
+            </>
+          )}
+          <button
             id={`portion-label-${idx}`}
-            style={styles.portionLabel(
-              currentPortion.size === 'custom' ? 'M' : currentPortion.size
-            )}
+            style={{
+              ...styles.glassyIconButton(dark),
+              ...styles.portionLabel(
+                currentPortion.size === 'custom' ? 'M' : currentPortion.size
+              ),
+              width: 36,
+              height: 36,
+            }}
             onClick={e => {
               if (isExportingPdf) return;
               e.stopPropagation();
               setQuickGrams(
                 entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
               );
-              setShowEditPortionQuickIdx(prev => prev === idx ? null : idx);
+              setShowEditPortionQuickIdx(prev => (prev === idx ? null : idx));
             }}
             title={t('Portion wählen')}
           >
             {portionDisplay || '📏'}
-          </div>
+          </button>
           {!isExportingPdf && showEditPortionQuickIdx === idx && (
             <div
               id="portion-picker-container"
@@ -328,7 +349,6 @@ export default function EntryCard({
                 />
               )}
             </div>
-            <CameraButton onClick={() => fileRefEdit.current?.click()} dark={dark} />
             <input
               ref={fileRefEdit}
               type="file"
@@ -484,17 +504,6 @@ export default function EntryCard({
             </button>
             <button onClick={cancelEdit} style={styles.buttonSecondary('#888')}>
               {t('Abbrechen')}
-            </button>
-            <button
-              id={`note-icon-button-${idx}`}
-              onClick={e => {
-                e.stopPropagation();
-                toggleNote(idx);
-              }}
-              style={{ ...styles.glassyIconButton(dark), padding: '6px' }}
-              title={t('Notiz')}
-            >
-              🗒️
             </button>
           </div>
 

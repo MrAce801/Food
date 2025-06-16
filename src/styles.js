@@ -325,6 +325,7 @@ const styles = {
     transform: 'translateY(-50%)',
     display: 'flex',
     alignItems: 'center',
+    gap: '6px',
     zIndex: 6,
   }),
   portionLabel: (size) => ({
