@@ -291,7 +291,7 @@ export default function EntryCard({
               }}
             />
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '15px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '40px' }}>
             <div id="edit-food-input-container" style={{ position: 'relative', flexGrow: 1 }}>
               <input
                 placeholder={t('Eintrag...')}
