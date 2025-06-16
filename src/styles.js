@@ -321,7 +321,7 @@ const styles = {
   portionContainer: (editing = false) => ({
     position: 'absolute',
     top: editing ? '31px' : '36px',
-    right: editing ? '33px' : '38px',
+    right: editing ? '8px' : '38px',
     transform: 'translateY(-50%)',
     display: 'flex',
     alignItems: 'center',

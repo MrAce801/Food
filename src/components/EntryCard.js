@@ -177,7 +177,7 @@ export default function EntryCard({
                   e.stopPropagation();
                   toggleNote(idx);
                 }}
-                style={{ ...styles.glassyIconButton(dark), width: 36, height: 36 }}
+                style={{ ...styles.glassyIconButton(dark), width: 40, height: 40 }}
                 title={t('Notiz')}
               >
                 🗒️
@@ -192,8 +192,8 @@ export default function EntryCard({
               ...styles.portionLabel(
                 currentPortion.size === 'custom' ? 'M' : currentPortion.size
               ),
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
             }}
             onClick={e => {
               if (isExportingPdf) return;
@@ -292,7 +292,15 @@ export default function EntryCard({
               e.stopPropagation();
               setShowDateInput(s => !s);
             }}
-            style={{ ...styles.glassyIconButton(dark), alignSelf: 'flex-start', padding: '6px', marginBottom: '8px' }}
+            style={{
+              ...styles.glassyIconButton(dark),
+              alignSelf: 'flex-start',
+              padding: '6px',
+              marginBottom: '8px',
+              marginRight: '8px',
+              width: 40,
+              height: 40,
+            }}
             title={t('Datum / Zeit ändern')}
           >
             📅
