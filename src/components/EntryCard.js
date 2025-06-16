@@ -106,7 +106,10 @@ export default function EntryCard({
 
   useEffect(() => {
     if (showDateInput) {
-      dateInputRef.current?.focus();
+      const input = dateInputRef.current;
+      input?.focus();
+      // open the browser picker immediately when revealing the input
+      input?.showPicker?.();
     }
   }, [showDateInput]);
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
