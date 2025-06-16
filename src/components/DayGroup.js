@@ -76,9 +76,19 @@ export default function DayGroup({
             {day}
           </div>
           {entries.map(({ entry, idx }, i) => {
+            const prev = entries[i - 1];
             const next = entries[i + 1];
-            const linkedLen = entry.linkId && groups[entry.linkId] ? groups[entry.linkId].length : 0;
-            const marginBottom = linkedLen >= 2 && next && next.entry.linkId === entry.linkId ? 2 : 16;
+            const group = entry.linkId && groups[entry.linkId] ? groups[entry.linkId] : null;
+            const linkedLen = group ? group.length : 0;
+            const inGroup = linkedLen >= 2;
+            const prevSame = inGroup && prev && prev.entry.linkId === entry.linkId;
+            const nextSame = inGroup && next && next.entry.linkId === entry.linkId;
+            const linkPosition = {
+              inGroup,
+              firstInGroup: inGroup && !prevSame,
+              lastInGroup: inGroup && !nextSame,
+            };
+            const marginBottom = inGroup && nextSame ? 2 : 16;
             return (
               <EntryCard
                 key={idx}
@@ -86,6 +96,7 @@ export default function DayGroup({
                 entry={entry}
                 idx={idx}
                 marginBottom={marginBottom}
+                linkPosition={linkPosition}
                 {...entryCardProps}
               />
             );

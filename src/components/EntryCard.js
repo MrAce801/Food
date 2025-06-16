@@ -118,7 +118,8 @@ export default function EntryCard({
   setShowEditSymptomQuick,
   showEditPortionQuickIdx,
   setShowEditPortionQuickIdx,
-  marginBottom = 16
+  marginBottom = 16,
+  linkPosition = null
 }) {
   const t = useTranslation();
   const [quickGrams, setQuickGrams] = useState(
@@ -159,6 +160,20 @@ export default function EntryCard({
 
   const currentTagColor = entry.tagColor || TAG_COLORS.GREEN;
   const borderColor = getBorderColor(currentTagColor);
+  const inGroup = linkPosition && linkPosition.inGroup;
+  const firstInGroup = linkPosition && linkPosition.firstInGroup;
+  const lastInGroup = linkPosition && linkPosition.lastInGroup;
+  const borderTopWidth = inGroup && !firstInGroup ? 0 : 2;
+  const borderBottomWidth = inGroup && !lastInGroup ? 0 : 2;
+  const borderRadius = !inGroup
+    ? 8
+    : firstInGroup && lastInGroup
+    ? 8
+    : firstInGroup
+    ? '8px 8px 0 0'
+    : lastInGroup
+    ? '0 0 8px 8px'
+    : 0;
   const currentPortion =
     editingIdx === idx && editForm
       ? editForm.portion || { size: null, grams: null }
@@ -227,6 +242,9 @@ export default function EntryCard({
       style={{
         ...styles.entryCard(dark, isSymptomOnlyEntry, borderColor),
         marginBottom,
+        borderTopWidth,
+        borderBottomWidth,
+        borderRadius,
       }}
       onClick={e => {
         if (isExportingPdf) return;

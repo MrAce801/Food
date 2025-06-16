@@ -84,7 +84,9 @@ const styles = {
     marginLeft: 5,
     padding: 12,
     borderRadius: 8,
-    border: `2px solid ${borderColor}`,
+    borderStyle: 'solid',
+    borderColor,
+    borderWidth: 2,
     background: isSymptomOnly
       ? (dark ? "#3c3c46" : "#f0f0f5")
       : (dark ? "#2a2a32" : "#fff"),
