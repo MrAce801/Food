@@ -156,7 +156,7 @@ export default function EntryCard({
         el.style.height = `${el.scrollHeight}px`;
       }
     }
-  }, [editForm.food, editingIdx]);
+  }, [editingIdx, editForm ? editForm.food : null]);
   const isSymptomOnlyEntry = !entry.food && (entry.symptoms || []).length > 0;
   const sortedAllDisplay = sortSymptomsByTime(
     (entry.symptoms || []).map(s => ({
