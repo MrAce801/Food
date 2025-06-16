@@ -266,7 +266,7 @@ export default function EntryCard({
           style={styles.pin(linkingInfo && linkingInfo.baseIdx === idx)}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-            <g transform="rotate(45 8 8)">
+            <g transform="rotate(90 8 8)">
               <ellipse cx="5" cy="8" rx="4" ry="2.5" stroke={entry.linkId || (linkingInfo && linkingInfo.baseIdx === idx) ? '#FBC02D' : '#6EC1FF'} strokeWidth="2" fill="none" />
               <ellipse cx="11" cy="8" rx="4" ry="2.5" stroke={entry.linkId || (linkingInfo && linkingInfo.baseIdx === idx) ? '#FBC02D' : '#B8E0FF'} strokeWidth="2" fill="none" />
             </g>
