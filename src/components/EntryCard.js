@@ -115,12 +115,8 @@ export default function EntryCard({
       const rowEl = firstRowRef.current;
       if (cardEl && rowEl) {
         const cardRect = cardEl.getBoundingClientRect();
-        const rowRect = rowEl.getBoundingClientRect();
-        const firstLine = rowEl.getClientRects()[0] || rowRect;
-        const lineHeight = parseFloat(
-          window.getComputedStyle(rowEl).lineHeight || firstLine.height
-        );
-        setIconTop(firstLine.top - cardRect.top + lineHeight / 2);
+        const firstLine = rowEl.getClientRects()[0] || rowEl.getBoundingClientRect();
+        setIconTop(firstLine.top - cardRect.top + firstLine.height / 2);
       }
     };
     update();
