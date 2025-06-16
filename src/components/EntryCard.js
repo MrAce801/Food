@@ -564,7 +564,6 @@ export default function EntryCard({
         <>
 
           <div
-            ref={firstRowRef}
             style={{
               fontSize: 12,
               opacity: 0.7,
@@ -582,6 +581,7 @@ export default function EntryCard({
             {(entry.date && entry.date.split(' ')[1]) || entry.date}
           </div>
           <div
+            ref={firstRowRef}
             style={{
               fontSize: 18,
               fontWeight: 600,
