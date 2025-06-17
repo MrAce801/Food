@@ -410,7 +410,7 @@ export default function EntryCard({
           )}
         </div>
       )}
-      <div style={{ filter: isBlurred ? 'blur(6px)' : 'none', overflow: 'hidden', borderRadius: 6 }}>
+      <div style={{ filter: isBlurred ? 'blur(6px)' : 'none', overflow: editingIdx === idx ? 'visible' : 'hidden', borderRadius: 6 }}>
       {editingIdx === idx && !isExportingPdf ? (
         <>
           <button
@@ -774,43 +774,45 @@ export default function EntryCard({
         </>
       )}
       </div>
-      <div
-        id={`tag-marker-${idx}`}
-        style={styles.categoryIcon(
-          editingIdx === idx ? '31px' : `${iconTop - 1}px`
-        )}
-        onClick={e => {
-          if (isExportingPdf) return;
-          e.stopPropagation();
-          setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
-          setNoteOpenIdx(null);
-        }}
-        title={
-          !isExportingPdf
-            ? `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}. ${t('Klicken zum Ändern.')}`
-            : `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}`
-        }
-      >
-        {TAG_COLOR_ICONS[currentTagColor]}
-      </div>
+      {editingIdx !== idx && (
+        <>
+          <div
+            id={`tag-marker-${idx}`}
+            style={styles.categoryIcon(`${iconTop - 1}px`)}
+            onClick={e => {
+              if (isExportingPdf) return;
+              e.stopPropagation();
+              setColorPickerOpenForIdx(colorPickerOpenForIdx === idx ? null : idx);
+              setNoteOpenIdx(null);
+            }}
+            title={
+              !isExportingPdf
+                ? `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}. ${t('Klicken zum Ändern.')}`
+                : `${t('Markierung')}: ${t(TAG_COLOR_NAMES[currentTagColor] || 'Unbekannt')}`
+            }
+          >
+            {TAG_COLOR_ICONS[currentTagColor]}
+          </div>
 
-      {!isExportingPdf && colorPickerOpenForIdx === idx && (
-        <div
-          id={`color-picker-popup-${idx}`}
-          style={styles.colorPickerPopup(dark)}
-          onClick={e => e.stopPropagation()}
-        >
-          {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW, TAG_COLORS.GRAY].map(colorValue => (
+          {!isExportingPdf && colorPickerOpenForIdx === idx && (
             <div
-              key={colorValue}
-              style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
-              title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
-              onClick={() => handleTagColorChange(idx, colorValue)}
+              id={`color-picker-popup-${idx}`}
+              style={styles.colorPickerPopup(dark)}
+              onClick={e => e.stopPropagation()}
             >
-              {TAG_COLOR_ICONS[colorValue]}
+              {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW, TAG_COLORS.GRAY].map(colorValue => (
+                <div
+                  key={colorValue}
+                  style={styles.colorPickerItem(colorValue, currentTagColor === colorValue, dark)}
+                  title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
+                  onClick={() => handleTagColorChange(idx, colorValue)}
+                >
+                  {TAG_COLOR_ICONS[colorValue]}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
     </div>
