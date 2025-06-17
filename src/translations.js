@@ -94,7 +94,8 @@ const translations = {
     'Benutzerdefiniert': 'Custom',
     'Gramm': 'grams',
     'Portion geändert': 'Portion updated',
-    'Portion entfernen': 'Remove portion'
+    'Portion entfernen': 'Remove portion',
+    'Blur': 'Blur'
   },
   de: {
     'Export': 'Exportieren',
@@ -110,7 +111,8 @@ const translations = {
     'Portion geändert': 'Portion geändert',
     'Portion entfernen': 'Portion entfernen',
     'Zu Favoriten hinzugefügt': 'Zu Favoriten hinzugefügt',
-    'Aus Favoriten entfernt': 'Aus Favoriten entfernt'
+    'Aus Favoriten entfernt': 'Aus Favoriten entfernt',
+    'Blur': 'Unschärfe'
   }
 };
 
