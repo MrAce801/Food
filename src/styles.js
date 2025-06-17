@@ -185,6 +185,18 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  textFieldIconButton: {
+    background: 'transparent',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
+    fontSize: 18,
+    lineHeight: 1,
+    color: '#555',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   glassyButton: (dark) => ({
     background: dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     border: dark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
