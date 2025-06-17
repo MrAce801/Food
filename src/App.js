@@ -120,6 +120,30 @@ export default function App() {
     }
   });
 
+  const [blurCategories, setBlurCategories] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fd-blur-cats'));
+      if (Array.isArray(saved)) return saved;
+    } catch {}
+    return [TAG_COLORS.BROWN];
+  });
+
+  const toggleBlurCategory = cat => {
+    setBlurCategories(prev => {
+      const updated = prev.includes(cat)
+        ? prev.filter(c => c !== cat)
+        : [...prev, cat];
+      localStorage.setItem('fd-blur-cats', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('fd-blur-cats', JSON.stringify(blurCategories));
+    } catch {}
+  }, [blurCategories]);
+
   const dayOf = (entry) => entry.date.split(' ')[0];
 
   const entriesForDay = (currentEntries, day) =>
@@ -1007,6 +1031,7 @@ export default function App() {
               setShowEditSymptomQuick,
               showEditPortionQuickIdx,
               setShowEditPortionQuickIdx,
+              blurCategories,
             }}
             styles={styles}
             TAG_COLORS={TAG_COLORS}
@@ -1097,6 +1122,19 @@ export default function App() {
                 onChange={e => handlePersonChange('weight', e.target.value)}
                 style={styles.input}
               />
+              <div style={{ marginTop: 8, fontWeight: 600 }}>{t('Blur')}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW, TAG_COLORS.GRAY].map(colorValue => (
+                  <button
+                    key={colorValue}
+                    onClick={() => toggleBlurCategory(colorValue)}
+                    style={styles.categoryButton(colorValue, blurCategories.includes(colorValue), dark)}
+                    title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
+                  >
+                    {TAG_COLOR_ICONS[colorValue]}
+                  </button>
+                ))}
+              </div>
               <button
                 onClick={closePerson}
                 style={{ ...styles.buttonSecondary('#1976d2'), marginTop: 8 }}
