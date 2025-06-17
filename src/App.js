@@ -20,6 +20,7 @@ import { LanguageContext } from './LanguageContext';
 import useTranslation from './useTranslation';
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
+import { useEntriesContext } from './context/EntriesContext';
 
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
@@ -27,36 +28,22 @@ export default function App() {
   const [dark, setDark] = useState(false);
   const [language, setLanguage] = useState(() => localStorage.getItem('fd-lang') || 'de');
   const t = useTranslation();
-  const [entries, setEntries] = useState(() => {
-    try {
-      const initialArr = JSON.parse(localStorage.getItem("fd-entries") || "[]");
-      const loadedEntries = initialArr
-        .map((e, i) => {
-          const symptoms = (e.symptoms || []).map(s => ({
-            ...s,
-            strength: Math.min(parseInt(s.strength) || 1, 3),
-          }));
-          const base = {
-            ...e,
-            comment: e.comment || "",
-            food: e.food || "",
-            symptoms,
-            tagColor: e.tagColor || TAG_COLORS.GREEN,
-            tagColorManual: e.tagColorManual || false,
-            portion: e.portion || { size: null, grams: null },
-            linkId: typeof e.linkId === 'number'
-              ? e.linkId
-              : (e.linkId ? parseInt(e.linkId, 10) || null : null),
-            createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
-          };
-          if (!base.tagColorManual) {
-            base.tagColor = determineTagColor(base.food, base.symptoms);
-          }
-          return base;
-        });
-      return loadedEntries.sort(sortEntries);
-    } catch { return []; }
-  });
+  const {
+    entries,
+    setEntries,
+    linkingInfo,
+    linkChoice,
+    linkingInfoRef,
+    setLinkChoice,
+    saveEdit,
+    deleteEntry,
+    saveNote,
+    handleTagColorChange,
+    handlePortionChange,
+    handlePinClick,
+    cancelLinking,
+    chooseLink
+  } = useEntriesContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef(null);
@@ -74,9 +61,6 @@ export default function App() {
   const isExporting = exportStatus !== 'idle';
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
-  const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
-  const linkingInfoRef = useRef(null);
-  const [linkChoice, setLinkChoice] = useState(null); // { idx, options, day }
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
   const [favoriteFoods, setFavoriteFoods] = useState(() => {
@@ -555,216 +539,6 @@ export default function App() {
     });
   };
 
-  const saveEdit = () => {
-    if (!editForm) return;
-    const displayDateToSave = fromDateTimePickerFormat(editForm.date);
-    if (!displayDateToSave) { addToast(t('Ungültiges Datum/Zeit Format. Bitte prüfen.')); return; }
-
-    const pendingSymptom = editForm.symptomInput.trim()
-      ? {
-          txt: editForm.symptomInput.trim(),
-          time: editForm.symptomTime,
-          strength: editForm.newSymptomStrength,
-        }
-      : null;
-
-    const symptomsToSave = [
-      ...editForm.symptoms,
-      ...(pendingSymptom ? [pendingSymptom] : [])
-    ].map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }));
-
-    const manual = entries[editingIdx]?.tagColorManual;
-    const newColor = manual
-      ? entries[editingIdx].tagColor
-      : determineTagColor(editForm.food.trim(), symptomsToSave);
-    setEntries(prevEntries =>
-      prevEntries
-        .map((ent, j) =>
-          j === editingIdx
-            ? {
-                ...ent,
-                food: editForm.food.trim(),
-                imgs: editForm.imgs,
-                symptoms: sortSymptomsByTime(symptomsToSave),
-                date: displayDateToSave,
-                linkId: editForm.linkId || null,
-                tagColor: newColor,
-                portion: editForm.portion,
-              }
-            : ent
-        )
-        .sort(sortEntries)
-    );
-    cancelEdit();
-    addToast(t('Eintrag aktualisiert'));
-    vibrate(30);
-  };
-  const deleteEntry = i => {
-    setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit();
-    setColorPickerOpenForIdx(null);
-    setNoteOpenIdx(null);
-    addToast(t('Eintrag gelöscht'));
-    vibrate(100);
-  };
-
-  const toggleNote = idx => {
-    setNoteOpenIdx(prevOpenIdx => {
-        if (prevOpenIdx === idx) {
-            return null;
-        } else {
-            setNoteDraft(entries[idx].comment || "");
-            setColorPickerOpenForIdx(null);
-            return idx;
-        }
-    });
-  };
-  const saveNote = idx => {
-    setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
-    addToast(t('Notiz gespeichert'));
-  };
-
-  const handleTagColorChange = (entryIdx, newColor) => {
-    setEntries(prevEntries =>
-        prevEntries.map((entry, i) =>
-            i === entryIdx ? { ...entry, tagColor: newColor, tagColorManual: true } : entry
-        )
-    );
-    const colorName = TAG_COLOR_NAMES[newColor] || newColor;
-    addToast(
-      t('Markierung auf "{{color}}" geändert.').replace(
-        '{{color}}',
-        t(colorName)
-      )
-    );
-    setColorPickerOpenForIdx(null);
-  };
-
-  const handlePortionChange = (entryIdx, portion) => {
-    setEntries(prevEntries =>
-      prevEntries.map((entry, i) =>
-        i === entryIdx ? { ...entry, portion } : entry
-      )
-    );
-    addToast(t('Portion geändert'));
-    setShowEditPortionQuickIdx(null);
-  };
-
-  const handlePinClick = (idx) => {
-    const day = dayOf(entries[idx]);
-
-    if (!linkingInfoRef.current) {
-      const currentId = entries[idx].linkId;
-      if (currentId) {
-        if (window.confirm(t('Verknüpfung entfernen?'))) {
-          const count = entries.filter(
-            e => e.linkId === currentId && dayOf(e) === day
-          ).length;
-          setEntries(prev =>
-            prev
-              .map((e, i) => {
-                if (dayOf(e) === day && e.linkId === currentId) {
-                  if (count === 2) {
-                    return { ...e, linkId: null };
-                  }
-                  if (i === idx) {
-                    return { ...e, linkId: null };
-                  }
-                }
-                return e;
-              })
-              .sort(sortEntries)
-          );
-        }
-      } else {
-        const existing = getExistingIdsForDay(entries, day);
-        if (existing.length === 0) {
-          const newId = getNextLinkId(entries, day);
-          setEntries(prev => prev.map((e,i) =>
-            dayOf(e) === day && i === idx ? { ...e, linkId: newId } : e
-          ));
-          linkingInfoRef.current = { baseIdx: idx, id: newId };
-          setLinkingInfo(linkingInfoRef.current);
-        } else {
-          setLinkChoice({ idx, options: existing, day });
-        }
-      }
-    } else {
-      if (idx === linkingInfoRef.current.baseIdx) {
-        cancelLinking();
-        return;
-      }
-      const baseGroupId = linkingInfoRef.current.id;
-      const targetGroupId = entries[idx].linkId;
-      const baseDay = dayOf(entries[linkingInfoRef.current.baseIdx]);
-      if (day !== baseDay) {
-        cancelLinking();
-        return;
-      }
-      if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
-        cancelLinking();
-        return;
-      }
-      if (targetGroupId) {
-        setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
-      } else {
-        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: baseGroupId } : e));
-      }
-      linkingInfoRef.current = null;
-      setLinkingInfo(null);
-    }
-  };
-
-  const cancelLinking = () => {
-    // Check if there is an active linking process.
-    if (linkingInfoRef.current) {
-      const { baseIdx, id } = linkingInfoRef.current;
-
-      // A non-null 'baseIdx' indicates that the linking process was started
-      // by clicking a specific pin to create a *new* chain.
-      // This is the scenario that needs cleaning up on cancellation.
-      if (baseIdx !== null) {
-        // We know this link was temporary. Remove the linkId from any entry
-        // that has it. Using the functional update form `setEntries(prev => ...)`
-        // guarantees this logic runs on the latest state, resolving the race condition.
-        setEntries(prev =>
-          prev.map(e => (e.linkId === id ? { ...e, linkId: null } : e))
-        );
-      }
-
-      // For all cancellation scenarios (whether from a new link or from
-      // deselecting an existing one), we must reset the linking state to exit
-      // "linking mode".
-      linkingInfoRef.current = null;
-      setLinkingInfo(null);
-    }
-  };
-
-  const chooseLink = (choice) => {
-    if (!linkChoice) return;
-    const { idx, options, day } = linkChoice;
-    if (choice === null) {
-      setLinkChoice(null);
-      return;
-    }
-    if (choice === 'new') {
-      const newId = getNextLinkId(entries, day);
-      setEntries(prev => prev.map((e,i) =>
-        i === idx && dayOf(e) === day ? { ...e, linkId: newId } : e
-      ));
-      linkingInfoRef.current = { baseIdx: idx, id: newId };
-      setLinkingInfo(linkingInfoRef.current);
-    } else {
-      const id = choice;
-      if (options.includes(id)) {
-        setEntries(prev => prev.map((e,i) =>
-          i === idx && dayOf(e) === day ? { ...e, linkId: id } : e
-        ));
-      }
-    }
-    setLinkChoice(null);
-  };
 
   const handleRootMouseDown = (e) => {
     if (linkingInfoRef.current !== null) {
