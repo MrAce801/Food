@@ -267,6 +267,7 @@ export default function NewEntryForm({
               setNewForm(fm => ({ ...fm, food: item }));
               setShowFoodQuick(false);
             }}
+            anchorRef={foodTextareaRef}
             style={{ top: '40px', right: '48px' }}
           />
         )}
@@ -379,6 +380,7 @@ export default function NewEntryForm({
                 setNewForm(fm => ({ ...fm, symptomInput: sym }));
                 setShowSymptomQuick(false);
               }}
+              anchorRef={symptomTextareaRef}
               style={{ top: '32px', right: '6px' }}
             />
           )}

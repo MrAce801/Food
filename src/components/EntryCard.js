@@ -492,6 +492,7 @@ export default function EntryCard({
                     setEditForm(fm => ({ ...fm, food: f }));
                     setShowEditFoodQuick(false);
                   }}
+                  anchorRef={foodTextareaRef}
                   style={{ top: '32px', right: '6px' }}
                 />
               )}
@@ -545,6 +546,7 @@ export default function EntryCard({
                     setEditForm(fm => ({ ...fm, symptomInput: sym }));
                     setShowEditSymptomQuick(false);
                   }}
+                  anchorRef={symptomTextareaRef}
                   style={{ top: '32px', right: '6px' }}
                 />
               )}
