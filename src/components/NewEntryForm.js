@@ -267,7 +267,7 @@ export default function NewEntryForm({
               setNewForm(fm => ({ ...fm, food: item }));
               setShowFoodQuick(false);
             }}
-            style={{ top: '40px', right: '48px' }}
+            anchorRef={foodTextareaRef}
           />
         )}
         <CameraButton onClick={() => fileRefNew.current?.click()} dark={dark} />
@@ -379,7 +379,7 @@ export default function NewEntryForm({
                 setNewForm(fm => ({ ...fm, symptomInput: sym }));
                 setShowSymptomQuick(false);
               }}
-              style={{ top: '32px', right: '6px' }}
+              anchorRef={symptomTextareaRef}
             />
           )}
         </div>
