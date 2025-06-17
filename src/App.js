@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
-import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
+import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS, PORTION_COLORS} from "./constants";
 import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import ExportButton from "./components/ExportButton";
 import LanguageButton from "./components/LanguageButton";
@@ -15,7 +15,7 @@ import SymTag from "./components/SymTag";
 import NewEntryForm from "./components/NewEntryForm";
 import QuickMenu from "./components/QuickMenu";
 import FilterMenu from "./components/FilterMenu";
-import DayGroup from "./components/DayGroup";
+import Legend from './components/Legend';
 import { LanguageContext } from './LanguageContext';
 import useTranslation from './useTranslation';
 import useNewEntryForm from "./hooks/useNewEntryForm";
@@ -1039,6 +1039,7 @@ export default function App() {
             language={language}
           />
         ))}
+        {isExporting && <Legend TAG_COLOR_ICONS={TAG_COLOR_ICONS} TAG_COLOR_NAMES={TAG_COLOR_NAMES} PORTION_COLORS={PORTION_COLORS} dark={dark} />}
       </div>
       {linkChoice && (
         <div

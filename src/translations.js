@@ -95,7 +95,12 @@ const translations = {
     'Gramm': 'grams',
     'Portion geändert': 'Portion updated',
     'Portion entfernen': 'Remove portion',
-    'Blur': 'Blur'
+    'Blur': 'Blur',
+    'Legende': 'Legend',
+    'Portionsgrößen': 'Portion sizes',
+    'Small': 'Small',
+    'Medium': 'Medium',
+    'Large': 'Large'
   },
   de: {
     'Export': 'Exportieren',
@@ -112,7 +117,12 @@ const translations = {
     'Portion entfernen': 'Portion entfernen',
     'Zu Favoriten hinzugefügt': 'Zu Favoriten hinzugefügt',
     'Aus Favoriten entfernt': 'Aus Favoriten entfernt',
-    'Blur': 'Unschärfe'
+    'Blur': 'Unschärfe',
+    'Legende': 'Legende',
+    'Portionsgrößen': 'Portionsgrößen',
+    'Small': 'Klein',
+    'Medium': 'Mittel',
+    'Large': 'Groß'
   }
 };
 

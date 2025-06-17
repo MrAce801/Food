@@ -1,4 +1,4 @@
-import html2pdf from 'html2pdf.js';
+import { jsPDF } from 'jspdf';
 
 export async function exportTableToPdf(el) {
   if (!el) return;
@@ -42,12 +42,9 @@ export async function exportTableToPdf(el) {
     const bodyBg = getComputedStyle(document.body).backgroundColor;
     el.style.backgroundColor = bodyBg;
 
-    await html2pdf().from(el).set({
-      margin: 10,
-      filename: 'FoodDiary.pdf',
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg },
-      jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-    }).save();
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    await doc.html(el, { margin: 10, html2canvas: { scale: 2, useCORS: true, backgroundColor: bodyBg } });
+    doc.save('FoodDiary.pdf');
     el.style.backgroundColor = prevBackground;
     return true;
   } catch (error) {
