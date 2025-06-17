@@ -249,13 +249,11 @@ export default function NewEntryForm({
           className="quick-arrow"
           onClick={() => setShowFoodQuick(s => !s)}
           style={{
-            ...styles.glassyIconButton(dark),
-            padding: '4px',
+            ...styles.textFieldIconButton,
             position: 'absolute',
             top: 'calc(50% - 2px)',
             right: '48px',
-            transform: 'translateY(-50%)',
-            color: '#333'
+            transform: 'translateY(-50%)'
           }}
           title={t('Favoriten')}
         >
@@ -269,7 +267,7 @@ export default function NewEntryForm({
               setNewForm(fm => ({ ...fm, food: item }));
               setShowFoodQuick(false);
             }}
-            style={{ top: '40px', left: 0 }}
+            style={{ top: '40px', right: '48px' }}
           />
         )}
         <CameraButton onClick={() => fileRefNew.current?.click()} dark={dark} />
@@ -363,13 +361,11 @@ export default function NewEntryForm({
           className="quick-arrow"
           onClick={() => setShowSymptomQuick(s => !s)}
           style={{
-            ...styles.glassyIconButton(dark),
-            padding: '4px',
+            ...styles.textFieldIconButton,
             position: 'absolute',
             top: '50%',
             right: '6px',
-            transform: 'translateY(-50%)',
-            color: '#333'
+            transform: 'translateY(-50%)'
           }}
           title={t('Favoriten')}
         >
@@ -383,7 +379,7 @@ export default function NewEntryForm({
                 setNewForm(fm => ({ ...fm, symptomInput: sym }));
                 setShowSymptomQuick(false);
               }}
-              style={{ top: '32px', left: 0 }}
+              style={{ top: '32px', right: '6px' }}
             />
           )}
         </div>
