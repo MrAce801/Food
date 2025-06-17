@@ -46,7 +46,6 @@ export default function NewEntryForm({
   sortMode,
   setSortMode
 }) {
-  const categoryRowRef = useRef(null);
   const formRef = useRef(null);
   const foodTextareaRef = useRef(null);
   const symptomTextareaRef = useRef(null);
@@ -58,8 +57,15 @@ export default function NewEntryForm({
   const portionMenuRef = useRef(null);
   const filterBtnRef = useRef(null);
   const filterMenuRef = useRef(null);
-  const [showCategories, setShowCategories] = useState(false);
+  const categoryBtnRef = useRef(null);
+  const categoryMenuRef = useRef(null);
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const t = useTranslation();
+
+  const handleTagSelect = color => {
+    setNewForm(fm => ({ ...fm, tagColor: color, tagColorManual: true }));
+    setShowCategoryMenu(false);
+  };
 
   useEffect(() => {
     const handler = e => {
@@ -113,6 +119,16 @@ export default function NewEntryForm({
       ) {
         setFilterMenuOpen(false);
       }
+
+      if (
+        showCategoryMenu &&
+        categoryMenuRef.current &&
+        !categoryMenuRef.current.contains(target) &&
+        categoryBtnRef.current &&
+        !categoryBtnRef.current.contains(target)
+      ) {
+        setShowCategoryMenu(false);
+      }
     };
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
@@ -126,6 +142,8 @@ export default function NewEntryForm({
     setShowPortionQuick,
     filterMenuOpen,
     setFilterMenuOpen,
+    showCategoryMenu,
+    setShowCategoryMenu,
   ]);
 
   useEffect(() => {
@@ -146,10 +164,71 @@ export default function NewEntryForm({
   return (
     <div ref={formRef} className="new-entry-form" style={{ marginBottom: 24 }}>
       <div id="food-input-container" style={{ position: 'relative', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button
+          ref={categoryBtnRef}
+          type="button"
+          onClick={() => setShowCategoryMenu(s => !s)}
+          style={{
+            position: 'absolute',
+            left: '8px',
+            top: '0',
+            bottom: '0',
+            background: 'transparent',
+            border: 'none',
+            padding: '0 8px 0 0',
+            cursor: 'pointer',
+            fontSize: 14,
+            color: '#555',
+            textAlign: 'left',
+            width: '110px',
+          }}
+          title={t('Klicken zum Ändern.')}
+        >
+          {t(TAG_COLOR_NAMES[newForm.tagColor] || newForm.tagColor)}
+        </button>
+        <div
+          style={{
+            position: 'absolute',
+            left: '120px',
+            top: '8px',
+            bottom: '8px',
+            width: '1px',
+            background: '#ccc',
+          }}
+        />
+        {showCategoryMenu && (
+          <div
+            ref={categoryMenuRef}
+            style={{
+              position: 'absolute',
+              left: '8px',
+              top: 'calc(100% + 4px)',
+              background: dark ? '#4a4a52' : '#fff',
+              padding: '8px',
+              borderRadius: '6px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+              zIndex: 30,
+              display: 'flex',
+              gap: '8px',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {[TAG_COLORS.GREEN, TAG_COLORS.PURPLE, TAG_COLORS.RED, TAG_COLORS.BLUE, TAG_COLORS.BROWN, TAG_COLORS.YELLOW, TAG_COLORS.GRAY].map(colorValue => (
+              <div
+                key={colorValue}
+                style={styles.colorPickerItem(colorValue, newForm.tagColor === colorValue, dark)}
+                title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
+                onClick={() => handleTagSelect(colorValue)}
+              >
+                {TAG_COLOR_ICONS[colorValue]}
+              </div>
+            ))}
+          </div>
+        )}
         <textarea
           ref={foodTextareaRef}
           rows={1}
-          placeholder={TAG_COLOR_NAMES[newForm.tagColor] ? `${t(TAG_COLOR_NAMES[newForm.tagColor])}...` : t('Eintrag...')}
+          placeholder={t('Eintrag...')}
           value={newForm.food}
           onChange={e => {
             setNewForm(fm => ({ ...fm, food: e.target.value }));
@@ -157,7 +236,13 @@ export default function NewEntryForm({
             e.target.style.height = `${e.target.scrollHeight}px`;
           }}
           onFocus={handleFocus}
-          style={{ ...styles.textarea, fontSize: 16, paddingRight: '32px', marginTop: 0 }}
+          style={{
+            ...styles.textarea,
+            fontSize: 16,
+            paddingRight: '32px',
+            paddingLeft: '130px',
+            marginTop: 0,
+          }}
         />
         <button
           ref={foodQuickBtnRef}
@@ -201,7 +286,6 @@ export default function NewEntryForm({
       {newForm.imgs.length > 0 && <ImgStack imgs={newForm.imgs} onDelete={removeNewImg} />}
 
       <div
-        ref={categoryRowRef}
         style={{
           display: 'flex',
           gap: '8px',
@@ -210,14 +294,7 @@ export default function NewEntryForm({
           alignItems: 'center',
         }}
       >
-        <button
-          type="button"
-          onClick={() => setShowCategories(s => !s)}
-          style={styles.glassyButton(dark)}
-        >
-          {t('Kategorien')} {showCategories ? '▼' : '▶'}
-        </button>
-        <div style={{ position: 'relative', marginLeft: 4 }}>
+        <div style={{ position: 'relative', marginLeft: 0 }}>
           <button
             ref={portionBtnRef}
             type="button"
@@ -264,34 +341,6 @@ export default function NewEntryForm({
             </div>
           )}
         </div>
-        {showCategories &&
-          [
-            TAG_COLORS.PURPLE,
-            TAG_COLORS.BLUE,
-            TAG_COLORS.BROWN,
-            TAG_COLORS.YELLOW,
-            TAG_COLORS.GRAY,
-          ].map(colorValue => (
-            <button
-              key={colorValue}
-              type="button"
-              onClick={() =>
-                setNewForm(fm =>
-                  fm.tagColorManual && fm.tagColor === colorValue
-                    ? { ...fm, tagColor: TAG_COLORS.GREEN, tagColorManual: false }
-                    : { ...fm, tagColor: colorValue, tagColorManual: true }
-                )
-              }
-              style={styles.categoryButton(
-                colorValue,
-                newForm.tagColorManual && newForm.tagColor === colorValue,
-                dark
-              )}
-              title={t(TAG_COLOR_NAMES[colorValue] || colorValue)}
-            >
-              {TAG_COLOR_ICONS[colorValue]}
-            </button>
-          ))}
       </div>
 
       <div style={{ marginBottom: 8 }}>
