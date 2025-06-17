@@ -475,13 +475,11 @@ export default function EntryCard({
                 className="quick-arrow"
                 onClick={() => setShowEditFoodQuick(s => !s)}
                 style={{
-                  ...styles.glassyIconButton(dark),
-                  padding: '4px',
+                  ...styles.textFieldIconButton,
                   position: 'absolute',
                   top: 'calc(50% - 2px)',
                   right: '6px',
-                  transform: 'translateY(-50%)',
-                  color: '#333'
+                  transform: 'translateY(-50%)'
                 }}
                 title={t('Favoriten')}
               >
@@ -530,13 +528,11 @@ export default function EntryCard({
                 className="quick-arrow"
                 onClick={() => setShowEditSymptomQuick(s => !s)}
                 style={{
-                  ...styles.glassyIconButton(dark),
-                  padding: '4px',
+                  ...styles.textFieldIconButton,
                   position: 'absolute',
                   top: '50%',
                   right: '6px',
-                  transform: 'translateY(-50%)',
-                  color: '#333'
+                  transform: 'translateY(-50%)'
                 }}
                 title={t('Favoriten')}
               >
