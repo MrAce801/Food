@@ -118,6 +118,7 @@ export default function EntryCard({
   setShowEditSymptomQuick,
   showEditPortionQuickIdx,
   setShowEditPortionQuickIdx,
+  blurCategories = [],
   marginBottom = 16,
   linkPosition = null
 }) {
@@ -208,6 +209,11 @@ export default function EntryCard({
     [TAG_COLORS.GREEN, TAG_COLORS.RED].includes(entry.tagColor || TAG_COLORS.GREEN) &&
     (editingIdx === idx || (entry.portion && entry.portion.size));
 
+  const isBlurred =
+    blurCategories.includes(currentTagColor) &&
+    !(isExportingPdf || isPrinting) &&
+    editingIdx !== idx;
+
   useLayoutEffect(() => {
     const update = () => {
       if (editingIdx === idx) return;
@@ -267,6 +273,7 @@ export default function EntryCard({
         borderTopWidth,
         borderBottomWidth,
         borderRadius,
+        filter: isBlurred ? 'blur(6px)' : 'none',
       }}
       onClick={e => {
         if (isExportingPdf) return;
