@@ -55,15 +55,15 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       </span>
       <span
         ref={timeRef}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          whiteSpace: 'nowrap',
-          marginLeft: wrapped ? 0 : 8,
-          flexShrink: 0,
-          flexBasis: wrapped ? '100%' : 'auto',
-          marginTop: wrapped ? 2 : 0
-        }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            whiteSpace: 'nowrap',
+            marginLeft: wrapped ? 0 : 5,
+            flexShrink: 0,
+            flexBasis: wrapped ? '100%' : 'auto',
+            marginTop: wrapped ? 2 : 0
+          }}
       >
         <span style={{ fontSize: 12, opacity: 0.8 }}>
           {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
