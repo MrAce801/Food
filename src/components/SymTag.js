@@ -9,25 +9,9 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
   const tagTextColor = "#1a1f3d";
   const displayStrength = Math.min(parseInt(strength) || 1, 3);
 
-  const containerRef = React.useRef(null);
-  const timeRef = React.useRef(null);
-  const [wrapped, setWrapped] = React.useState(false);
-
-  React.useLayoutEffect(() => {
-    const update = () => {
-      const c = containerRef.current;
-      const tEl = timeRef.current;
-      if (c && tEl) {
-        setWrapped(tEl.offsetTop > c.offsetTop);
-      }
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [txt, time, strength]);
 
   return (
-    <div ref={containerRef} onClick={onClick} style={{
+    <div onClick={onClick} style={{
       display: "inline-flex",
       alignItems: "center",
       background: tagBackgroundColor,
@@ -44,7 +28,7 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
       flexWrap: "wrap"
     }}>
       <span style={{
-        flex: '0 1 auto',
+        flex: '1 1 auto',
         minWidth: 0,
         overflowWrap: 'break-word',
         wordBreak: 'break-word',
@@ -54,16 +38,13 @@ const SymTag = ({ txt, time, strength, dark, onDel, onClick }) => {
         {txt}
       </span>
       <span
-        ref={timeRef}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          whiteSpace: 'nowrap',
-          marginLeft: wrapped ? 0 : 8,
-          flexShrink: 0,
-          flexBasis: wrapped ? '100%' : 'auto',
-          marginTop: wrapped ? 2 : 0
-        }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            whiteSpace: 'nowrap',
+            marginLeft: 5,
+            flexShrink: 0
+          }}
       >
         <span style={{ fontSize: 12, opacity: 0.8 }}>
           {t(TIME_CHOICES.find(opt => opt.value === time)?.label || `${time} min`)}
