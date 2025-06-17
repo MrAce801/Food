@@ -187,7 +187,6 @@ export default function NewEntryForm({
             style={{ top: '40px', left: 0 }}
           />
         )}
-        <CameraButton onClick={() => fileRefNew.current?.click()} dark={dark} />
         <input
           ref={fileRefNew}
           type="file"
@@ -208,16 +207,11 @@ export default function NewEntryForm({
           marginTop: newForm.imgs.length > 0 ? 8 : 0,
           marginBottom: 8,
           alignItems: 'center',
+          justifyContent: 'flex-end',
         }}
       >
-        <button
-          type="button"
-          onClick={() => setShowCategories(s => !s)}
-          style={styles.glassyButton(dark)}
-        >
-          {t('Kategorien')} {showCategories ? '▼' : '▶'}
-        </button>
-        <div style={{ position: 'relative', marginLeft: 4 }}>
+        <CameraButton onClick={() => fileRefNew.current?.click()} dark={dark} />
+        <div style={{ position: 'relative' }}>
           <button
             ref={portionBtnRef}
             type="button"
@@ -264,6 +258,13 @@ export default function NewEntryForm({
             </div>
           )}
         </div>
+        <button
+          type="button"
+          onClick={() => setShowCategories(s => !s)}
+          style={styles.glassyButton(dark)}
+        >
+          {t('Kategorien')} {showCategories ? '▼' : '▶'}
+        </button>
         {showCategories &&
           [
             TAG_COLORS.PURPLE,
