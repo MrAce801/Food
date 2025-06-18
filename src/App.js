@@ -21,6 +21,8 @@ import PersonModal from "./components/PersonModal";
 import { LanguageContext } from './LanguageContext';
 import useTranslation from './useTranslation';
 import useNewEntryForm from "./hooks/useNewEntryForm";
+import useBlurCategories from './hooks/useBlurCategories';
+import { dayOf, entriesForDay, getNextLinkId, getExistingIdsForDay } from './utils/linking';
 import { sortEntries, sortEntriesByCategory } from "./utils";
 
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
@@ -122,56 +124,8 @@ export default function App() {
     }
   });
 
-  const [blurCategories, setBlurCategories] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('fd-blur-cats'));
-      if (Array.isArray(saved)) return saved;
-    } catch {}
-    return [TAG_COLORS.BROWN];
-  });
+  const { blurCategories, toggleBlurCategory } = useBlurCategories();
 
-  const toggleBlurCategory = cat => {
-    setBlurCategories(prev => {
-      const updated = prev.includes(cat)
-        ? prev.filter(c => c !== cat)
-        : [...prev, cat];
-      localStorage.setItem('fd-blur-cats', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('fd-blur-cats', JSON.stringify(blurCategories));
-    } catch {}
-  }, [blurCategories]);
-
-  const dayOf = (entry) => entry.date.split(' ')[0];
-
-  const entriesForDay = (currentEntries, day) =>
-    currentEntries.filter(e => dayOf(e) === day);
-
-  const getNextLinkId = (currentEntries, day) => {
-    const used = new Set(
-      entriesForDay(currentEntries, day)
-        .map(e => e.linkId)
-        .filter(id => id != null)
-    );
-    let id = 1;
-    while (used.has(id)) id++;
-    return id;
-  };
-
-  const getExistingIdsForDay = (currentEntries, day) => {
-    const counts = {};
-    entriesForDay(currentEntries, day).forEach(e => {
-      if (e.linkId != null) counts[e.linkId] = (counts[e.linkId] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .filter(([, c]) => c >= 2)
-      .map(([id]) => Number(id))
-      .sort((a, b) => a - b);
-  };
 
   // keep ref in sync so event handlers see latest state immediately
   useEffect(() => {
