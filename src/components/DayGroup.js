@@ -13,7 +13,6 @@ export default function DayGroup({
   isExportingPdf,
   isPrinting,
   entryRefs,
-  entryCardProps,
   styles,
   TAG_COLORS,
   TAG_COLOR_ICONS,
@@ -97,7 +96,6 @@ export default function DayGroup({
                 idx={idx}
                 marginBottom={marginBottom}
                 linkPosition={linkPosition}
-                {...entryCardProps}
               />
             );
           })}
