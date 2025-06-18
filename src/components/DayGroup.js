@@ -13,11 +13,11 @@ export default function DayGroup({
   isExportingPdf,
   isPrinting,
   entryRefs,
-  entryCardProps,
   styles,
   TAG_COLORS,
   TAG_COLOR_ICONS,
   language,
+  ...entryCardProps
 }) {
   const t = useTranslation();
   const colorCounts = entries.reduce((acc, { entry }) => {

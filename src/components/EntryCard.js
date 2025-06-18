@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
+import { useEntriesContext } from '../context/EntriesContext';
 
 function lightenColor(color, factor = 0.3) {
   const nameMap = {
@@ -77,25 +78,19 @@ export default function EntryCard({
   setEditForm,
   startEdit,
   cancelEdit,
-  saveEdit,
-  deleteEntry,
   addEditSymptom,
   removeEditSymptom,
   handleEditFile,
   fileRefEdit,
   removeEditImg,
-  handlePinClick,
-  linkingInfo,
+  
   colorPickerOpenForIdx,
   setColorPickerOpenForIdx,
-  handleTagColorChange,
-  handlePortionChange,
   noteOpenIdx,
   setNoteOpenIdx,
   toggleNote,
   noteDraft,
   setNoteDraft,
-  saveNote,
   favoriteFoods,
   favoriteSymptoms,
   toggleFavoriteFood,
@@ -123,6 +118,15 @@ export default function EntryCard({
   linkPosition = null
 }) {
   const t = useTranslation();
+  const {
+    saveEdit,
+    deleteEntry,
+    saveNote,
+    handleTagColorChange,
+    handlePortionChange,
+    handlePinClick,
+    linkingInfo
+  } = useEntriesContext();
   const [quickGrams, setQuickGrams] = useState(
     entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
   );
