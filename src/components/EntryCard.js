@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import useTranslation from '../useTranslation';
 import { PORTION_COLORS } from '../constants';
+import { useEntriesContext } from '../context/EntriesContext';
 
 function lightenColor(color, factor = 0.3) {
   const nameMap = {
@@ -77,25 +78,19 @@ export default function EntryCard({
   setEditForm,
   startEdit,
   cancelEdit,
-  saveEdit,
-  deleteEntry,
   addEditSymptom,
   removeEditSymptom,
   handleEditFile,
   fileRefEdit,
   removeEditImg,
-  handlePinClick,
-  linkingInfo,
+  
   colorPickerOpenForIdx,
   setColorPickerOpenForIdx,
-  handleTagColorChange,
-  handlePortionChange,
   noteOpenIdx,
   setNoteOpenIdx,
   toggleNote,
   noteDraft,
   setNoteDraft,
-  saveNote,
   favoriteFoods,
   favoriteSymptoms,
   toggleFavoriteFood,
@@ -123,6 +118,15 @@ export default function EntryCard({
   linkPosition = null
 }) {
   const t = useTranslation();
+  const {
+    saveEdit,
+    deleteEntry,
+    saveNote,
+    handleTagColorChange,
+    handlePortionChange,
+    handlePinClick,
+    linkingInfo
+  } = useEntriesContext();
   const [quickGrams, setQuickGrams] = useState(
     entry.portion?.size === 'custom' ? entry.portion.grams || '' : ''
   );
@@ -649,7 +653,7 @@ export default function EntryCard({
             ))}
           </div>
           <div style={{ display: 'flex', gap: 5, marginTop: '16px', alignItems: 'center' }}>
-            <button onClick={saveEdit} style={styles.buttonSecondary('#1976d2')}>
+            <button onClick={() => saveEdit(idx, editForm)} style={styles.buttonSecondary('#1976d2')}>
               {t('Speichern')}
             </button>
             <button onClick={cancelEdit} style={styles.buttonSecondary('#888')}>
@@ -672,7 +676,7 @@ export default function EntryCard({
               />
               <button
                 id={`note-save-button-${idx}`}
-                onClick={() => saveNote(idx)}
+                onClick={() => saveNote(idx, noteDraft)}
                 style={{ ...styles.buttonSecondary(dark ? '#555' : '#FBC02D'), color: dark ? '#fff' : '#333', marginTop: 8 }}
               >
                 {t('Notiz speichern')}
@@ -736,7 +740,7 @@ export default function EntryCard({
               />
               <button
                 id={`note-save-button-${idx}`}
-                onClick={() => saveNote(idx)}
+                onClick={() => saveNote(idx, noteDraft)}
                 style={{ ...styles.buttonSecondary(dark ? '#555' : '#FBC02D'), color: dark ? '#fff' : '#333', marginTop: 8 }}
               >
                 {t('Notiz speichern')}

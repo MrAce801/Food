@@ -5,7 +5,7 @@ import { exportTableToPdf } from "./utils/pdf";
 
 import styles from "./styles";
 import { SYMPTOM_CHOICES, TIME_CHOICES, TAG_COLORS, TAG_COLOR_NAMES, TAG_COLOR_ICONS } from "./constants";
-import { resizeToJpeg, now, vibrate, getTodayDateString, parseDateString, toDateTimePickerFormat, fromDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
+import { resizeToJpeg, getTodayDateString, parseDateString, toDateTimePickerFormat, sortSymptomsByTime, determineTagColor } from "./utils";
 import ExportButton from "./components/ExportButton";
 import LanguageButton from "./components/LanguageButton";
 import PersonButton from "./components/PersonButton";
@@ -20,6 +20,7 @@ import { LanguageContext } from './LanguageContext';
 import useTranslation from './useTranslation';
 import useNewEntryForm from "./hooks/useNewEntryForm";
 import { sortEntries, sortEntriesByCategory } from "./utils";
+import { useEntriesContext } from './context/EntriesContext';
 
 // --- HAUPTANWENDUNGSKOMPONENTE: App ---
 export default function App() {
@@ -27,36 +28,15 @@ export default function App() {
   const [dark, setDark] = useState(false);
   const [language, setLanguage] = useState(() => localStorage.getItem('fd-lang') || 'de');
   const t = useTranslation();
-  const [entries, setEntries] = useState(() => {
-    try {
-      const initialArr = JSON.parse(localStorage.getItem("fd-entries") || "[]");
-      const loadedEntries = initialArr
-        .map((e, i) => {
-          const symptoms = (e.symptoms || []).map(s => ({
-            ...s,
-            strength: Math.min(parseInt(s.strength) || 1, 3),
-          }));
-          const base = {
-            ...e,
-            comment: e.comment || "",
-            food: e.food || "",
-            symptoms,
-            tagColor: e.tagColor || TAG_COLORS.GREEN,
-            tagColorManual: e.tagColorManual || false,
-            portion: e.portion || { size: null, grams: null },
-            linkId: typeof e.linkId === 'number'
-              ? e.linkId
-              : (e.linkId ? parseInt(e.linkId, 10) || null : null),
-            createdAt: e.createdAt || (parseDateString(e.date).getTime() + i / 1000),
-          };
-          if (!base.tagColorManual) {
-            base.tagColor = determineTagColor(base.food, base.symptoms);
-          }
-          return base;
-        });
-      return loadedEntries.sort(sortEntries);
-    } catch { return []; }
-  });
+  const {
+    entries,
+    setEntries,
+    linkChoice,
+    linkingInfoRef,
+    setLinkChoice,
+    cancelLinking,
+    chooseLink
+  } = useEntriesContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef(null);
@@ -74,9 +54,6 @@ export default function App() {
   const isExporting = exportStatus !== 'idle';
   const [colorPickerOpenForIdx, setColorPickerOpenForIdx] = useState(null);
   const [collapsedDays, setCollapsedDays] = useState(new Set());
-  const [linkingInfo, setLinkingInfo] = useState(null); // { baseIdx, id }
-  const linkingInfoRef = useRef(null);
-  const [linkChoice, setLinkChoice] = useState(null); // { idx, options, day }
   const containerRef = useRef(null);
   const entryRefs = useRef([]);
   const [favoriteFoods, setFavoriteFoods] = useState(() => {
@@ -144,37 +121,6 @@ export default function App() {
     } catch {}
   }, [blurCategories]);
 
-  const dayOf = (entry) => entry.date.split(' ')[0];
-
-  const entriesForDay = (currentEntries, day) =>
-    currentEntries.filter(e => dayOf(e) === day);
-
-  const getNextLinkId = (currentEntries, day) => {
-    const used = new Set(
-      entriesForDay(currentEntries, day)
-        .map(e => e.linkId)
-        .filter(id => id != null)
-    );
-    let id = 1;
-    while (used.has(id)) id++;
-    return id;
-  };
-
-  const getExistingIdsForDay = (currentEntries, day) => {
-    const counts = {};
-    entriesForDay(currentEntries, day).forEach(e => {
-      if (e.linkId != null) counts[e.linkId] = (counts[e.linkId] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .filter(([, c]) => c >= 2)
-      .map(([id]) => Number(id))
-      .sort((a, b) => a - b);
-  };
-
-  // keep ref in sync so event handlers see latest state immediately
-  useEffect(() => {
-    linkingInfoRef.current = linkingInfo;
-  }, [linkingInfo]);
 
   useEffect(() => {
     const handleDocMouseDown = (e) => {
@@ -196,21 +142,6 @@ export default function App() {
     setDark(saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("fd-entries", JSON.stringify(entries));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError' ||
-          e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-          (e.code && (e.code === 22 || e.code === 1014))) {
-        console.error("LocalStorage Quota Exceeded:", e);
-        addToast(t('Speicherlimit erreicht! Neue Einträge können evtl. nicht gespeichert werden.'));
-      } else {
-        console.error("Fehler beim Speichern der Einträge in localStorage:", e);
-        addToast(t('Ein Fehler ist beim Speichern der Daten aufgetreten.'));
-      }
-    }
-  }, [entries]);
 
 
   useEffect(() => {
@@ -555,216 +486,18 @@ export default function App() {
     });
   };
 
-  const saveEdit = () => {
-    if (!editForm) return;
-    const displayDateToSave = fromDateTimePickerFormat(editForm.date);
-    if (!displayDateToSave) { addToast(t('Ungültiges Datum/Zeit Format. Bitte prüfen.')); return; }
-
-    const pendingSymptom = editForm.symptomInput.trim()
-      ? {
-          txt: editForm.symptomInput.trim(),
-          time: editForm.symptomTime,
-          strength: editForm.newSymptomStrength,
-        }
-      : null;
-
-    const symptomsToSave = [
-      ...editForm.symptoms,
-      ...(pendingSymptom ? [pendingSymptom] : [])
-    ].map(s => ({ ...s, strength: Math.min(parseInt(s.strength) || 1, 3) }));
-
-    const manual = entries[editingIdx]?.tagColorManual;
-    const newColor = manual
-      ? entries[editingIdx].tagColor
-      : determineTagColor(editForm.food.trim(), symptomsToSave);
-    setEntries(prevEntries =>
-      prevEntries
-        .map((ent, j) =>
-          j === editingIdx
-            ? {
-                ...ent,
-                food: editForm.food.trim(),
-                imgs: editForm.imgs,
-                symptoms: sortSymptomsByTime(symptomsToSave),
-                date: displayDateToSave,
-                linkId: editForm.linkId || null,
-                tagColor: newColor,
-                portion: editForm.portion,
-              }
-            : ent
-        )
-        .sort(sortEntries)
-    );
-    cancelEdit();
-    addToast(t('Eintrag aktualisiert'));
-    vibrate(30);
-  };
-  const deleteEntry = i => {
-    setEntries(e => e.filter((_, j) => j !== i));
-    if (editingIdx === i) cancelEdit();
-    setColorPickerOpenForIdx(null);
-    setNoteOpenIdx(null);
-    addToast(t('Eintrag gelöscht'));
-    vibrate(100);
-  };
-
   const toggleNote = idx => {
     setNoteOpenIdx(prevOpenIdx => {
-        if (prevOpenIdx === idx) {
-            return null;
-        } else {
-            setNoteDraft(entries[idx].comment || "");
-            setColorPickerOpenForIdx(null);
-            return idx;
-        }
+      if (prevOpenIdx === idx) {
+        return null;
+      } else {
+        setNoteDraft(entries[idx].comment || "");
+        setColorPickerOpenForIdx(null);
+        return idx;
+      }
     });
   };
-  const saveNote = idx => {
-    setEntries(e => e.map((ent, j) => j === idx ? { ...ent, comment: noteDraft } : ent));
-    setNoteOpenIdx(null);
-    addToast(t('Notiz gespeichert'));
-  };
 
-  const handleTagColorChange = (entryIdx, newColor) => {
-    setEntries(prevEntries =>
-        prevEntries.map((entry, i) =>
-            i === entryIdx ? { ...entry, tagColor: newColor, tagColorManual: true } : entry
-        )
-    );
-    const colorName = TAG_COLOR_NAMES[newColor] || newColor;
-    addToast(
-      t('Markierung auf "{{color}}" geändert.').replace(
-        '{{color}}',
-        t(colorName)
-      )
-    );
-    setColorPickerOpenForIdx(null);
-  };
-
-  const handlePortionChange = (entryIdx, portion) => {
-    setEntries(prevEntries =>
-      prevEntries.map((entry, i) =>
-        i === entryIdx ? { ...entry, portion } : entry
-      )
-    );
-    addToast(t('Portion geändert'));
-    setShowEditPortionQuickIdx(null);
-  };
-
-  const handlePinClick = (idx) => {
-    const day = dayOf(entries[idx]);
-
-    if (!linkingInfoRef.current) {
-      const currentId = entries[idx].linkId;
-      if (currentId) {
-        if (window.confirm(t('Verknüpfung entfernen?'))) {
-          const count = entries.filter(
-            e => e.linkId === currentId && dayOf(e) === day
-          ).length;
-          setEntries(prev =>
-            prev
-              .map((e, i) => {
-                if (dayOf(e) === day && e.linkId === currentId) {
-                  if (count === 2) {
-                    return { ...e, linkId: null };
-                  }
-                  if (i === idx) {
-                    return { ...e, linkId: null };
-                  }
-                }
-                return e;
-              })
-              .sort(sortEntries)
-          );
-        }
-      } else {
-        const existing = getExistingIdsForDay(entries, day);
-        if (existing.length === 0) {
-          const newId = getNextLinkId(entries, day);
-          setEntries(prev => prev.map((e,i) =>
-            dayOf(e) === day && i === idx ? { ...e, linkId: newId } : e
-          ));
-          linkingInfoRef.current = { baseIdx: idx, id: newId };
-          setLinkingInfo(linkingInfoRef.current);
-        } else {
-          setLinkChoice({ idx, options: existing, day });
-        }
-      }
-    } else {
-      if (idx === linkingInfoRef.current.baseIdx) {
-        cancelLinking();
-        return;
-      }
-      const baseGroupId = linkingInfoRef.current.id;
-      const targetGroupId = entries[idx].linkId;
-      const baseDay = dayOf(entries[linkingInfoRef.current.baseIdx]);
-      if (day !== baseDay) {
-        cancelLinking();
-        return;
-      }
-      if (linkingInfoRef.current.baseIdx === null && targetGroupId === baseGroupId) {
-        cancelLinking();
-        return;
-      }
-      if (targetGroupId) {
-        setEntries(prev => prev.map(e => e.linkId === baseGroupId ? { ...e, linkId: targetGroupId } : e));
-      } else {
-        setEntries(prev => prev.map((e,i) => i === idx ? { ...e, linkId: baseGroupId } : e));
-      }
-      linkingInfoRef.current = null;
-      setLinkingInfo(null);
-    }
-  };
-
-  const cancelLinking = () => {
-    // Check if there is an active linking process.
-    if (linkingInfoRef.current) {
-      const { baseIdx, id } = linkingInfoRef.current;
-
-      // A non-null 'baseIdx' indicates that the linking process was started
-      // by clicking a specific pin to create a *new* chain.
-      // This is the scenario that needs cleaning up on cancellation.
-      if (baseIdx !== null) {
-        // We know this link was temporary. Remove the linkId from any entry
-        // that has it. Using the functional update form `setEntries(prev => ...)`
-        // guarantees this logic runs on the latest state, resolving the race condition.
-        setEntries(prev =>
-          prev.map(e => (e.linkId === id ? { ...e, linkId: null } : e))
-        );
-      }
-
-      // For all cancellation scenarios (whether from a new link or from
-      // deselecting an existing one), we must reset the linking state to exit
-      // "linking mode".
-      linkingInfoRef.current = null;
-      setLinkingInfo(null);
-    }
-  };
-
-  const chooseLink = (choice) => {
-    if (!linkChoice) return;
-    const { idx, options, day } = linkChoice;
-    if (choice === null) {
-      setLinkChoice(null);
-      return;
-    }
-    if (choice === 'new') {
-      const newId = getNextLinkId(entries, day);
-      setEntries(prev => prev.map((e,i) =>
-        i === idx && dayOf(e) === day ? { ...e, linkId: newId } : e
-      ));
-      linkingInfoRef.current = { baseIdx: idx, id: newId };
-      setLinkingInfo(linkingInfoRef.current);
-    } else {
-      const id = choice;
-      if (options.includes(id)) {
-        setEntries(prev => prev.map((e,i) =>
-          i === idx && dayOf(e) === day ? { ...e, linkId: id } : e
-        ));
-      }
-    }
-    setLinkChoice(null);
-  };
 
   const handleRootMouseDown = (e) => {
     if (linkingInfoRef.current !== null) {
@@ -980,63 +713,47 @@ export default function App() {
             isExportingPdf={isExporting}
             isPrinting={isExporting}
             entryRefs={entryRefs}
-            entryCardProps={{
-              isMobile,
-              dark,
-              isExportingPdf: isExporting,
-              isPrinting: isExporting,
-              editingIdx,
-              editForm,
-              setEditForm,
-              startEdit,
-              cancelEdit,
-              saveEdit,
-              deleteEntry,
-              addEditSymptom,
-              removeEditSymptom,
-              handleEditFile,
-              fileRefEdit,
-              removeEditImg,
-              handlePinClick,
-              linkingInfo,
-              colorPickerOpenForIdx,
-              setColorPickerOpenForIdx,
-              handleTagColorChange,
-              handlePortionChange,
-              noteOpenIdx,
-              setNoteOpenIdx,
-              toggleNote,
-              noteDraft,
-              setNoteDraft,
-              saveNote,
-              favoriteFoods,
-              favoriteSymptoms,
-              toggleFavoriteFood,
-              toggleFavoriteSymptom,
-              SYMPTOM_CHOICES,
-              TIME_CHOICES,
-              sortSymptomsByTime,
-              TAG_COLORS,
-              TAG_COLOR_NAMES,
-              TAG_COLOR_ICONS,
-              handleFocus,
-              ImgStack,
-              CameraButton,
-              SymTag,
-              styles,
-              QuickMenu,
-              showEditFoodQuick,
-              setShowEditFoodQuick,
-              showEditSymptomQuick,
-              setShowEditSymptomQuick,
-              showEditPortionQuickIdx,
-              setShowEditPortionQuickIdx,
-              blurCategories,
-            }}
-            styles={styles}
+            isMobile={isMobile}
+            editingIdx={editingIdx}
+            editForm={editForm}
+            setEditForm={setEditForm}
+            startEdit={startEdit}
+            cancelEdit={cancelEdit}
+            addEditSymptom={addEditSymptom}
+            removeEditSymptom={removeEditSymptom}
+            handleEditFile={handleEditFile}
+            fileRefEdit={fileRefEdit}
+            removeEditImg={removeEditImg}
+            colorPickerOpenForIdx={colorPickerOpenForIdx}
+            setColorPickerOpenForIdx={setColorPickerOpenForIdx}
+            noteOpenIdx={noteOpenIdx}
+            setNoteOpenIdx={setNoteOpenIdx}
+            toggleNote={toggleNote}
+            noteDraft={noteDraft}
+            setNoteDraft={setNoteDraft}
+            favoriteFoods={favoriteFoods}
+            favoriteSymptoms={favoriteSymptoms}
+            toggleFavoriteFood={toggleFavoriteFood}
+            toggleFavoriteSymptom={toggleFavoriteSymptom}
+            SYMPTOM_CHOICES={SYMPTOM_CHOICES}
+            TIME_CHOICES={TIME_CHOICES}
+            sortSymptomsByTime={sortSymptomsByTime}
             TAG_COLORS={TAG_COLORS}
+            TAG_COLOR_NAMES={TAG_COLOR_NAMES}
             TAG_COLOR_ICONS={TAG_COLOR_ICONS}
-            language={language}
+            handleFocus={handleFocus}
+            ImgStack={ImgStack}
+            CameraButton={CameraButton}
+            SymTag={SymTag}
+            styles={styles}
+            QuickMenu={QuickMenu}
+            showEditFoodQuick={showEditFoodQuick}
+            setShowEditFoodQuick={setShowEditFoodQuick}
+            showEditSymptomQuick={showEditSymptomQuick}
+            setShowEditSymptomQuick={setShowEditSymptomQuick}
+            showEditPortionQuickIdx={showEditPortionQuickIdx}
+            setShowEditPortionQuickIdx={setShowEditPortionQuickIdx}
+            blurCategories={blurCategories}
           />
         ))}
       </div>
